@@ -2,7 +2,7 @@ extern crate which;
 #[macro_use]
 extern crate error_chain;
 
-mod errors {
+mod error {
     error_chain!{
         foreign_links {
             Io(::std::io::Error);
@@ -11,7 +11,11 @@ mod errors {
     }
 }
 
-use errors::*;
+mod git;
+
+use error::*;
+use git::Git;
+use std::collections::HashSet;
 use std::env::home_dir;
 use std::path::PathBuf;
 use std::process::{Command, ExitStatus};
@@ -39,11 +43,10 @@ impl Chain for ExitStatus {
     }
 }
 
-#[cfg(unix)]
-fn zplug_exists() -> bool {
+fn home_path(p: &str) -> PathBuf {
     let mut path = home_dir().unwrap();
-    path.push(".zplug");
-    path.exists()
+    path.push(p);
+    path
 }
 
 #[cfg(unix)]
@@ -58,9 +61,27 @@ fn tpm() -> Option<PathBuf> {
 }
 
 fn run() -> Result<()> {
+    let git = Git::new();
+    let mut git_repos: HashSet<String> = HashSet::new();
+
+    {
+        let mut collect_repo = |path| {
+            if let Some(repo) = git.get_repo_root(path) {
+                git_repos.insert(repo);
+            }
+        };
+
+        collect_repo(home_path(".emacs.d"));
+
+        if cfg!(unix) {
+            collect_repo(home_path(".zshrc"));
+            collect_repo(home_path(".tmux"));
+        }
+    }
+
     if cfg!(unix) {
         if let Ok(zsh) = which("zsh") {
-            if zplug_exists() {
+            if home_path(".zplug").exists() {
                 Command::new(&zsh)
                     .arg("-ic")
                     .arg("zplug update")
@@ -70,10 +91,12 @@ fn run() -> Result<()> {
         }
 
         if let Some(tpm) = tpm() {
-            if zplug_exists() {
-                Command::new(&tpm).arg("all").spawn()?.wait()?;
-            }
+            Command::new(&tpm).arg("all").spawn()?.wait()?;
         }
+    }
+
+    for repo in git_repos {
+        git.pull(repo)?;
     }
 
     if cfg!(target_os = "macos") {
