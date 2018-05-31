@@ -48,6 +48,11 @@ impl Chain for ExitStatus {
     }
 }
 
+const EMACS_UPGRADE: &str = "(progn (let ((package-menu-async nil))
+         (package-list-packages))
+       (package-menu-mark-upgrades)
+       (package-menu-execute 'noquery))";
+
 fn home_path(p: &str) -> PathBuf {
     let mut path = home_dir().unwrap();
     path.push(p);
@@ -117,6 +122,18 @@ fn run() -> Result<()> {
             .arg("--all")
             .spawn()?
             .wait()?;
+    }
+
+    if let Ok(emacs) = which("emacs") {
+        terminal.print_separator("Emacs");
+        if home_path(".emacs.d").exists() {
+            Command::new(&emacs)
+                .arg("--batch")
+                .arg("--eval")
+                .arg(EMACS_UPGRADE)
+                .spawn()?
+                .wait()?;
+        }
     }
 
     if cfg!(target_os = "linux") {
