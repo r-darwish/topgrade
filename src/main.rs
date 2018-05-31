@@ -1,3 +1,4 @@
+extern crate os_type;
 extern crate which;
 #[macro_use]
 extern crate error_chain;
@@ -15,6 +16,7 @@ mod git;
 
 use error::*;
 use git::Git;
+use os_type::OSType;
 use std::collections::HashSet;
 use std::env::home_dir;
 use std::path::PathBuf;
@@ -99,6 +101,33 @@ fn run() -> Result<()> {
         git.pull(repo)?;
     }
 
+    if cfg!(target_os = "linux") {
+        let sudo = which("sudo");
+
+        match os_type::current_platform().os_type {
+            OSType::Arch => {
+                if let Ok(yay) = which("yay") {
+                    Command::new(yay).spawn()?.wait()?;
+                } else {
+                    if let Ok(sudo) = &sudo {
+                        Command::new(&sudo)
+                            .arg("pacman")
+                            .arg("-Syu")
+                            .spawn()?
+                            .wait()?;
+                    }
+                }
+            }
+            _ => (),
+        }
+
+        if let Ok(sudo) = &sudo {
+            if let Ok(needrestart) = which("needrestart") {
+                Command::new(&sudo).arg(&needrestart).spawn()?.wait()?;
+            }
+        }
+    }
+
     if cfg!(target_os = "macos") {
         if let Ok(brew) = which("brew") {
             Command::new(&brew)
@@ -114,9 +143,7 @@ fn run() -> Result<()> {
                         .wait()
                 })?;
         }
-    }
 
-    if cfg!(target_os = "macos") {
         Command::new("softwareupdate")
             .arg("--install")
             .arg("--all")
