@@ -83,8 +83,8 @@ fn run() -> Result<()> {
         if let Ok(zsh) = which("zsh") {
             if home_path(".zplug").exists() {
                 Command::new(&zsh)
-                    .arg("-ic")
-                    .arg("zplug update")
+                    .arg("-c")
+                    .arg("source ~/.zshrc && zplug update")
                     .spawn()?
                     .wait()?;
             }
