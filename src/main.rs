@@ -2,6 +2,7 @@ extern crate os_type;
 extern crate which;
 #[macro_use]
 extern crate error_chain;
+extern crate termion;
 
 mod error {
     error_chain!{
@@ -13,6 +14,7 @@ mod error {
 }
 
 mod git;
+mod terminal;
 
 use error::*;
 use git::Git;
@@ -21,6 +23,7 @@ use std::collections::HashSet;
 use std::env::home_dir;
 use std::path::PathBuf;
 use std::process::{Command, ExitStatus};
+use terminal::Terminal;
 use which::which;
 
 trait Chain
@@ -65,6 +68,7 @@ fn tpm() -> Option<PathBuf> {
 fn run() -> Result<()> {
     let git = Git::new();
     let mut git_repos: HashSet<String> = HashSet::new();
+    let terminal = Terminal::new();
 
     {
         let mut collect_repo = |path| {
@@ -83,12 +87,13 @@ fn run() -> Result<()> {
     }
 
     for repo in git_repos {
-        terminal.print_seperator(format!("Pulling {}", repo));
+        terminal.print_separator(format!("Pulling {}", repo));
         git.pull(repo)?;
     }
 
     if cfg!(unix) {
         if let Ok(zsh) = which("zsh") {
+            terminal.print_separator("zplug");
             if home_path(".zplug").exists() {
                 Command::new(&zsh)
                     .arg("-c")
@@ -99,6 +104,7 @@ fn run() -> Result<()> {
         }
 
         if let Some(tpm) = tpm() {
+            terminal.print_separator("tmux plugins");
             Command::new(&tpm).arg("all").spawn()?.wait()?;
         }
     }
@@ -108,6 +114,7 @@ fn run() -> Result<()> {
 
         match os_type::current_platform().os_type {
             OSType::Arch => {
+                terminal.print_separator("System update");
                 if let Ok(yay) = which("yay") {
                     Command::new(yay).spawn()?.wait()?;
                 } else {
@@ -125,6 +132,7 @@ fn run() -> Result<()> {
 
         if let Ok(sudo) = &sudo {
             if let Ok(needrestart) = which("needrestart") {
+                terminal.print_separator("Check for needed restarts");
                 Command::new(&sudo).arg(&needrestart).spawn()?.wait()?;
             }
         }
@@ -132,6 +140,7 @@ fn run() -> Result<()> {
 
     if cfg!(target_os = "macos") {
         if let Ok(brew) = which("brew") {
+            terminal.print_separator("Homebrew");
             Command::new(&brew)
                 .arg("update")
                 .spawn()?
@@ -146,6 +155,7 @@ fn run() -> Result<()> {
                 })?;
         }
 
+        terminal.print_separator("System update");
         Command::new("softwareupdate")
             .arg("--install")
             .arg("--all")
