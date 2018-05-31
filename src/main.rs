@@ -109,6 +109,16 @@ fn run() -> Result<()> {
         }
     }
 
+    let cargo_upgrade = home_path(".cargo/bin/cargo-install-update");
+    if cargo_upgrade.exists() {
+        terminal.print_separator("Cargo");
+        Command::new(&cargo_upgrade)
+            .arg("install-update")
+            .arg("--all")
+            .spawn()?
+            .wait()?;
+    }
+
     if cfg!(target_os = "linux") {
         let sudo = which("sudo");
 
