@@ -77,8 +77,14 @@ fn run() -> Result<()> {
 
         if cfg!(unix) {
             collect_repo(home_path(".zshrc"));
+            collect_repo(home_path(".oh-my-zsh"));
             collect_repo(home_path(".tmux"));
         }
+    }
+
+    for repo in git_repos {
+        terminal.print_seperator(format!("Pulling {}", repo));
+        git.pull(repo)?;
     }
 
     if cfg!(unix) {
@@ -95,10 +101,6 @@ fn run() -> Result<()> {
         if let Some(tpm) = tpm() {
             Command::new(&tpm).arg("all").spawn()?.wait()?;
         }
-    }
-
-    for repo in git_repos {
-        git.pull(repo)?;
     }
 
     if cfg!(target_os = "linux") {
