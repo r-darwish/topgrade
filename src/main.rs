@@ -129,6 +129,8 @@ fn run() -> Result<()> {
         if home_path(".emacs.d").exists() {
             Command::new(&emacs)
                 .arg("--batch")
+                .arg("-l")
+                .arg(home_path(".emacs.d/init.el"))
                 .arg("--eval")
                 .arg(EMACS_UPGRADE)
                 .spawn()?
