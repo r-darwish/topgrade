@@ -125,8 +125,8 @@ fn run() -> Result<()> {
     }
 
     if let Ok(emacs) = which("emacs") {
-        terminal.print_separator("Emacs");
         if home_path(".emacs.d").exists() {
+            terminal.print_separator("Emacs");
             Command::new(&emacs)
                 .arg("--batch")
                 .arg("-l")
