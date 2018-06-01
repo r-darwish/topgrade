@@ -156,6 +156,34 @@ fn run() -> Result<()> {
                     }
                 }
             }
+
+            OSType::CentOS | OSType::Redhat => {
+                if let Ok(sudo) = &sudo {
+                    Command::new(&sudo)
+                        .arg("yum")
+                        .arg("upgrade")
+                        .spawn()?
+                        .wait()?;
+                }
+            }
+
+            OSType::Ubuntu | OSType::Debian => {
+                if let Ok(sudo) = &sudo {
+                    Command::new(&sudo)
+                        .arg("apt")
+                        .arg("update")
+                        .spawn()?
+                        .wait()?
+                        .and_then(|| {
+                            Command::new(&sudo)
+                                .arg("apt")
+                                .arg("dist-upgrade")
+                                .spawn()?
+                                .wait()
+                        })?;
+                }
+            }
+
             _ => (),
         }
 

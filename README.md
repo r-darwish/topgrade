@@ -24,6 +24,8 @@ Just invoke `topgrade`. It will invoke the following steps:
 * Upgrade Emacs packages
 * *Linux*: Invoke the system package manager:
   * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
+  * *Redhat based*: Invoke `yum upgrade`
+  * *Debian based*: Invoke `apt update && apt dist-upgrade`
 * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
 * *macOS*: Upgrade [Homebrew](https://brew.sh/) packages
 * *macOS*: Upgrade App Store applications
