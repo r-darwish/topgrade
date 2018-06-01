@@ -184,6 +184,12 @@ fn run() -> Result<()> {
                 }
             }
 
+            OSType::Unknown => {
+                println!(
+                    "Could not detect your Linux distribution. Do you have lsb-release installed?"
+                );
+            }
+
             _ => (),
         }
 
