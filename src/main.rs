@@ -6,11 +6,13 @@ extern crate failure_derive;
 extern crate termion;
 
 mod git;
+mod report;
 mod terminal;
 
 use failure::Error;
 use git::Git;
 use os_type::OSType;
+use report::{Report, Reporter};
 use std::collections::HashSet;
 use std::env::home_dir;
 use std::path::PathBuf;
@@ -36,10 +38,7 @@ impl Check for ExitStatus {
     }
 }
 
-const EMACS_UPGRADE: &str = "(progn (let ((package-menu-async nil))
-         (package-list-packages))
-       (package-menu-mark-upgrades)
-       (package-menu-execute 'noquery))";
+const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
 fn home_path(p: &str) -> PathBuf {
     let mut path = home_dir().unwrap();
@@ -62,6 +61,7 @@ fn main() -> Result<(), Error> {
     let git = Git::new();
     let mut git_repos: HashSet<String> = HashSet::new();
     let terminal = Terminal::new();
+    let mut reports = Report::new();
 
     {
         let mut collect_repo = |path| {
@@ -81,7 +81,9 @@ fn main() -> Result<(), Error> {
 
     for repo in git_repos {
         terminal.print_separator(format!("Pulling {}", repo));
-        git.pull(repo)?;
+        if let Some(success) = git.pull(&repo)? {
+            success.report(format!("git: {}", repo), &mut reports);
+        }
     }
 
     if cfg!(unix) {
@@ -91,13 +93,18 @@ fn main() -> Result<(), Error> {
                 Command::new(&zsh)
                     .args(&["-c", "source ~/.zshrc && zplug update"])
                     .spawn()?
-                    .wait()?;
+                    .wait()?
+                    .report("zplug", &mut reports);
             }
         }
 
         if let Some(tpm) = tpm() {
             terminal.print_separator("tmux plugins");
-            Command::new(&tpm).arg("all").spawn()?.wait()?;
+            Command::new(&tpm)
+                .arg("all")
+                .spawn()?
+                .wait()?
+                .report("tmux", &mut reports);
         }
     }
 
@@ -107,7 +114,8 @@ fn main() -> Result<(), Error> {
         Command::new(&cargo_upgrade)
             .args(&["install-update", "--all"])
             .spawn()?
-            .wait()?;
+            .wait()?
+            .report("Cargo", &mut reports);
     }
 
     if let Ok(emacs) = which("emacs") {
@@ -122,7 +130,8 @@ fn main() -> Result<(), Error> {
                     EMACS_UPGRADE,
                 ])
                 .spawn()?
-                .wait()?;
+                .wait()?
+                .report("Emacs", &mut reports);
         }
     }
 
@@ -133,13 +142,17 @@ fn main() -> Result<(), Error> {
         match os_type::current_platform().os_type {
             OSType::Arch => {
                 if let Ok(yay) = which("yay") {
-                    Command::new(yay).spawn()?.wait()?;
+                    Command::new(yay)
+                        .spawn()?
+                        .wait()?
+                        .report("System upgrade", &mut reports);
                 } else {
                     if let Ok(sudo) = &sudo {
                         Command::new(&sudo)
                             .args(&["pacman", "-Syu"])
                             .spawn()?
-                            .wait()?;
+                            .wait()?
+                            .report("System upgrade", &mut reports);
                     } else {
                         terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
                     }
@@ -151,7 +164,8 @@ fn main() -> Result<(), Error> {
                     Command::new(&sudo)
                         .args(&["yum", "upgrade"])
                         .spawn()?
-                        .wait()?;
+                        .wait()?
+                        .report("System upgrade", &mut reports);;
                 }
             }
 
@@ -168,7 +182,8 @@ fn main() -> Result<(), Error> {
                                 .spawn()?
                                 .wait()
                                 .map_err(Error::from)
-                        })?;
+                        })?
+                        .report("System upgrade", &mut reports);;
                 }
             }
 
@@ -194,13 +209,18 @@ fn main() -> Result<(), Error> {
                         .spawn()?
                         .wait()
                         .map_err(Error::from)
-                })?;
+                })?
+                .report("Firmware upgrade", &mut reports);
         }
 
         if let Ok(sudo) = &sudo {
             if let Ok(needrestart) = which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
-                Command::new(&sudo).arg(&needrestart).spawn()?.wait()?;
+                Command::new(&sudo)
+                    .arg(&needrestart)
+                    .spawn()?
+                    .wait()?
+                    .report("Restarts", &mut reports);
             }
         }
     }
@@ -219,14 +239,27 @@ fn main() -> Result<(), Error> {
                         .spawn()?
                         .wait()
                         .map_err(Error::from)
-                })?;
+                })?
+                .report("Homebrew", &mut reports);
         }
 
         terminal.print_separator("System update");
         Command::new("softwareupdate")
             .args(&["--install", "--all"])
             .spawn()?
-            .wait()?;
+            .wait()?
+            .report("System upgrade", &mut reports);;
+    }
+
+    let mut reports: Vec<_> = reports.into_iter().collect();
+    reports.sort();
+
+    if !reports.is_empty() {
+        terminal.print_separator("Summary");
+
+        for (key, succeeded) in reports {
+            terminal.print_result(key, succeeded);
+        }
     }
 
     Ok(())

@@ -38,7 +38,7 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<Option<bool>, Error> {
         if let Some(git) = &self.git {
             if let Ok(mut command) = Command::new(&git)
                 .arg("pull")
@@ -47,10 +47,10 @@ impl Git {
                 .current_dir(path)
                 .spawn()
             {
-                command.wait()?;
+                return Ok(Some(command.wait()?.success()));
             }
         }
 
-        Ok(())
+        Ok(None)
     }
 }

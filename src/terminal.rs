@@ -47,4 +47,31 @@ impl Terminal {
             }
         }
     }
+
+    pub fn print_result<P: AsRef<str>>(&self, key: P, succeeded: bool) {
+        let key = key.as_ref();
+
+        match self.width {
+            Some(_) => {
+                if succeeded {
+                    println!(
+                        "{}: {}OK{}",
+                        key,
+                        color::Fg(color::LightGreen),
+                        color::Fg(color::Reset)
+                    );
+                } else {
+                    println!(
+                        "{}: {}FAILED{}",
+                        key,
+                        color::Fg(color::LightRed),
+                        color::Fg(color::Reset)
+                    );
+                }
+            }
+            None => {
+                println!("{}: {}", key, if succeeded { "OK" } else { "FAILED" });
+            }
+        }
+    }
 }
