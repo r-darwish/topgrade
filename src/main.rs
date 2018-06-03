@@ -10,6 +10,12 @@ mod error {
             Io(::std::io::Error);
         }
 
+        errors {
+            ProcessFailed {
+                description("Process failed")
+                    display("Process failed")
+            }
+        }
     }
 }
 
@@ -26,24 +32,16 @@ use std::process::{Command, ExitStatus};
 use terminal::Terminal;
 use which::which;
 
-trait Chain
-where
-    Self: std::marker::Sized,
-{
-    fn and_then<F>(self, f: F) -> ::std::io::Result<Self>
-    where
-        F: FnOnce() -> ::std::io::Result<Self>;
+trait Check {
+    fn check(self) -> Result<()>;
 }
 
-impl Chain for ExitStatus {
-    fn and_then<F>(self, f: F) -> ::std::io::Result<Self>
-    where
-        F: FnOnce() -> ::std::io::Result<Self>,
-    {
-        if !self.success() {
-            Ok(self)
+impl Check for ExitStatus {
+    fn check(self) -> Result<()> {
+        if self.success() {
+            Ok(())
         } else {
-            f()
+            Err(ErrorKind::ProcessFailed.into())
         }
     }
 }
@@ -176,12 +174,14 @@ fn run() -> Result<()> {
                         .arg("update")
                         .spawn()?
                         .wait()?
-                        .and_then(|| {
+                        .check()
+                        .and_then(|()| {
                             Command::new(&sudo)
                                 .arg("apt")
                                 .arg("dist-upgrade")
                                 .spawn()?
                                 .wait()
+                                .map_err(|e| e.into())
                         })?;
                 }
             }
@@ -201,7 +201,14 @@ fn run() -> Result<()> {
                 .arg("refresh")
                 .spawn()?
                 .wait()?
-                .and_then(|| Command::new(&fwupdmgr).arg("get-updates").spawn()?.wait())?;
+                .check()
+                .and_then(|()| {
+                    Command::new(&fwupdmgr)
+                        .arg("get-updates")
+                        .spawn()?
+                        .wait()
+                        .map_err(|e| e.into())
+                })?;
         }
 
         if let Ok(sudo) = &sudo {
@@ -219,13 +226,15 @@ fn run() -> Result<()> {
                 .arg("update")
                 .spawn()?
                 .wait()?
-                .and_then(|| Command::new(&brew).arg("upgrade").spawn()?.wait())?
-                .and_then(|| {
+                .check()
+                .and_then(|()| Command::new(&brew).arg("upgrade").spawn()?.wait()?.check())
+                .and_then(|()| {
                     Command::new(&brew)
                         .arg("cleanup")
                         .arg("-sbr")
                         .spawn()?
                         .wait()
+                        .map_err(|e| e.into())
                 })?;
         }
 
