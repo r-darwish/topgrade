@@ -7,7 +7,7 @@ usually results in big shell one-liners saved in your shell history. Topgrades t
 problem by detecting which tools you use and invoke their appropriate package managers.
 
 ## Installation
-Use `cargo install` to install it from Github. I'll post precompiled binaries in the future.
+You can either use `cargo install` or use the compiled binaries from the release page.
 
 ## Usage
 Just invoke `topgrade`. It will invoke the following steps:
