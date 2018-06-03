@@ -40,7 +40,13 @@ impl Git {
 
     pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<()> {
         if let Some(git) = &self.git {
-            if let Ok(mut command) = Command::new(&git).arg("pull").current_dir(path).spawn() {
+            if let Ok(mut command) = Command::new(&git)
+                .arg("pull")
+                .arg("--rebase")
+                .arg("--autostash")
+                .current_dir(path)
+                .spawn()
+            {
                 command.wait()?;
             }
         }
