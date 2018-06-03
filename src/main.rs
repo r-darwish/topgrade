@@ -193,6 +193,15 @@ fn run() -> Result<()> {
             _ => (),
         }
 
+        if let Ok(fwupdmgr) = which("fwupdmgr") {
+            terminal.print_separator("Firmware upgrades");
+            Command::new(&fwupdmgr)
+                .arg("refresh")
+                .spawn()?
+                .wait()?
+                .and_then(|| Command::new(&fwupdmgr).arg("get-updates").spawn()?.wait())?;
+        }
+
         if let Ok(sudo) = &sudo {
             if let Ok(needrestart) = which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
