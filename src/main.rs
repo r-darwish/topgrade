@@ -141,9 +141,9 @@ fn run() -> Result<()> {
     if cfg!(target_os = "linux") {
         let sudo = which("sudo");
 
+        terminal.print_separator("System update");
         match os_type::current_platform().os_type {
             OSType::Arch => {
-                terminal.print_separator("System update");
                 if let Ok(yay) = which("yay") {
                     Command::new(yay).spawn()?.wait()?;
                 } else {
@@ -153,6 +153,8 @@ fn run() -> Result<()> {
                             .arg("-Syu")
                             .spawn()?
                             .wait()?;
+                    } else {
+                        terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
                     }
                 }
             }
@@ -185,8 +187,8 @@ fn run() -> Result<()> {
             }
 
             OSType::Unknown => {
-                println!(
-                    "Could not detect your Linux distribution. Do you have lsb-release installed?"
+                terminal.print_warning(
+                    "Could not detect your Linux distribution. Do you have lsb-release installed?",
                 );
             }
 

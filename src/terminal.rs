@@ -26,4 +26,15 @@ impl Terminal {
             println!("―― {} ――", message);
         }
     }
+
+    pub fn print_warning<P: AsRef<str>>(&self, message: P) {
+        if let Some(_) = self.width {
+            println!(
+                "{}{}{}",
+                color::Fg(color::LightYellow),
+                message.as_ref(),
+                color::Fg(color::Reset)
+            );
+        }
+    }
 }
