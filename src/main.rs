@@ -99,8 +99,7 @@ fn run() -> Result<()> {
             terminal.print_separator("zplug");
             if home_path(".zplug").exists() {
                 Command::new(&zsh)
-                    .arg("-c")
-                    .arg("source ~/.zshrc && zplug update")
+                    .args(&["-c", "source ~/.zshrc && zplug update"])
                     .spawn()?
                     .wait()?;
             }
@@ -116,8 +115,7 @@ fn run() -> Result<()> {
     if cargo_upgrade.exists() {
         terminal.print_separator("Cargo");
         Command::new(&cargo_upgrade)
-            .arg("install-update")
-            .arg("--all")
+            .args(&["install-update", "--all"])
             .spawn()?
             .wait()?;
     }
@@ -126,11 +124,13 @@ fn run() -> Result<()> {
         if home_path(".emacs.d").exists() {
             terminal.print_separator("Emacs");
             Command::new(&emacs)
-                .arg("--batch")
-                .arg("-l")
-                .arg(home_path(".emacs.d/init.el"))
-                .arg("--eval")
-                .arg(EMACS_UPGRADE)
+                .args(&[
+                    "--batch",
+                    "-l",
+                    home_path(".emacs.d/init.el").to_str().unwrap(),
+                    "--eval",
+                    EMACS_UPGRADE,
+                ])
                 .spawn()?
                 .wait()?;
         }
@@ -147,8 +147,7 @@ fn run() -> Result<()> {
                 } else {
                     if let Ok(sudo) = &sudo {
                         Command::new(&sudo)
-                            .arg("pacman")
-                            .arg("-Syu")
+                            .args(&["pacman", "-Syu"])
                             .spawn()?
                             .wait()?;
                     } else {
@@ -160,8 +159,7 @@ fn run() -> Result<()> {
             OSType::CentOS | OSType::Redhat => {
                 if let Ok(sudo) = &sudo {
                     Command::new(&sudo)
-                        .arg("yum")
-                        .arg("upgrade")
+                        .args(&["yum", "upgrade"])
                         .spawn()?
                         .wait()?;
                 }
@@ -170,15 +168,13 @@ fn run() -> Result<()> {
             OSType::Ubuntu | OSType::Debian => {
                 if let Ok(sudo) = &sudo {
                     Command::new(&sudo)
-                        .arg("apt")
-                        .arg("update")
+                        .args(&["apt", "update"])
                         .spawn()?
                         .wait()?
                         .check()
                         .and_then(|()| {
                             Command::new(&sudo)
-                                .arg("apt")
-                                .arg("dist-upgrade")
+                                .args(&["apt", "dist-upgrade"])
                                 .spawn()?
                                 .wait()
                                 .map_err(|e| e.into())
@@ -227,11 +223,9 @@ fn run() -> Result<()> {
                 .spawn()?
                 .wait()?
                 .check()
-                .and_then(|()| Command::new(&brew).arg("upgrade").spawn()?.wait()?.check())
                 .and_then(|()| {
                     Command::new(&brew)
-                        .arg("cleanup")
-                        .arg("-sbr")
+                        .arg("upgrade")
                         .spawn()?
                         .wait()
                         .map_err(|e| e.into())
@@ -240,8 +234,7 @@ fn run() -> Result<()> {
 
         terminal.print_separator("System update");
         Command::new("softwareupdate")
-            .arg("--install")
-            .arg("--all")
+            .args(&["--install", "--all"])
             .spawn()?
             .wait()?;
     }
