@@ -1,4 +1,4 @@
-use super::error::*;
+use failure::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use which::which;
@@ -38,7 +38,7 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<(), Error> {
         if let Some(git) = &self.git {
             if let Ok(mut command) = Command::new(&git)
                 .arg("pull")

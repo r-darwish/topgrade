@@ -1,28 +1,14 @@
+extern crate failure;
 extern crate os_type;
 extern crate which;
 #[macro_use]
-extern crate error_chain;
+extern crate failure_derive;
 extern crate termion;
-
-mod error {
-    error_chain!{
-        foreign_links {
-            Io(::std::io::Error);
-        }
-
-        errors {
-            ProcessFailed {
-                description("Process failed")
-                    display("Process failed")
-            }
-        }
-    }
-}
 
 mod git;
 mod terminal;
 
-use error::*;
+use failure::Error;
 use git::Git;
 use os_type::OSType;
 use std::collections::HashSet;
@@ -32,16 +18,20 @@ use std::process::{Command, ExitStatus};
 use terminal::Terminal;
 use which::which;
 
+#[derive(Fail, Debug)]
+#[fail(display = "Process failed")]
+struct ProcessFailed;
+
 trait Check {
-    fn check(self) -> Result<()>;
+    fn check(self) -> Result<(), Error>;
 }
 
 impl Check for ExitStatus {
-    fn check(self) -> Result<()> {
+    fn check(self) -> Result<(), Error> {
         if self.success() {
             Ok(())
         } else {
-            Err(ErrorKind::ProcessFailed.into())
+            Err(Error::from(ProcessFailed {}))
         }
     }
 }
@@ -68,7 +58,7 @@ fn tpm() -> Option<PathBuf> {
     }
 }
 
-fn run() -> Result<()> {
+fn main() -> Result<(), Error> {
     let git = Git::new();
     let mut git_repos: HashSet<String> = HashSet::new();
     let terminal = Terminal::new();
@@ -177,7 +167,7 @@ fn run() -> Result<()> {
                                 .args(&["apt", "dist-upgrade"])
                                 .spawn()?
                                 .wait()
-                                .map_err(|e| e.into())
+                                .map_err(Error::from)
                         })?;
                 }
             }
@@ -203,7 +193,7 @@ fn run() -> Result<()> {
                         .arg("get-updates")
                         .spawn()?
                         .wait()
-                        .map_err(|e| e.into())
+                        .map_err(Error::from)
                 })?;
         }
 
@@ -228,7 +218,7 @@ fn run() -> Result<()> {
                         .arg("upgrade")
                         .spawn()?
                         .wait()
-                        .map_err(|e| e.into())
+                        .map_err(Error::from)
                 })?;
         }
 
@@ -241,5 +231,3 @@ fn run() -> Result<()> {
 
     Ok(())
 }
-
-quick_main!(run);
