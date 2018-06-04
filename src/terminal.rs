@@ -15,26 +15,36 @@ impl Terminal {
 
     pub fn print_separator<P: AsRef<str>>(&self, message: P) {
         let message = message.as_ref();
-        if let Some(width) = self.width {
-            print!("\n{}―― {} ", color::Fg(color::LightWhite), message);
-            let border = max(2, min(80, width as usize) - 3 - message.len());
-            for _ in 0..border {
-                print!("―");
+        match self.width {
+            Some(width) => {
+                print!("\n{}―― {} ", color::Fg(color::LightWhite), message);
+                let border = max(2, min(80, width as usize) - 3 - message.len());
+                for _ in 0..border {
+                    print!("―");
+                }
+                println!("{}", color::Fg(color::Reset));
             }
-            println!("{}", color::Fg(color::Reset));
-        } else {
-            println!("―― {} ――", message);
+            None => {
+                println!("―― {} ――", message);
+            }
         }
     }
 
     pub fn print_warning<P: AsRef<str>>(&self, message: P) {
-        if let Some(_) = self.width {
-            println!(
-                "{}{}{}",
-                color::Fg(color::LightYellow),
-                message.as_ref(),
-                color::Fg(color::Reset)
-            );
+        let message = message.as_ref();
+
+        match self.width {
+            Some(_) => {
+                println!(
+                    "{}{}{}",
+                    color::Fg(color::LightYellow),
+                    message,
+                    color::Fg(color::Reset)
+                );
+            }
+            None => {
+                println!("{}", message);
+            }
         }
     }
 }
