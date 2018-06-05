@@ -1,4 +1,4 @@
-# Topgrade ![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)
+# Topgrade [![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
 
 ![Alt Text](doc/screenshot.gif)
 
