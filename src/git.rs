@@ -1,3 +1,4 @@
+use super::Check;
 use failure::Error;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -38,17 +39,18 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<Option<bool>, Error> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<Option<()>, Error> {
         if let Some(git) = &self.git {
-            if let Ok(mut command) = Command::new(&git)
+            Command::new(&git)
                 .arg("pull")
                 .arg("--rebase")
                 .arg("--autostash")
                 .current_dir(path)
-                .spawn()
-            {
-                return Ok(Some(command.wait()?.success()));
-            }
+                .spawn()?
+                .wait()?
+                .check()?;
+
+            return Ok(Some(()));
         }
 
         Ok(None)
