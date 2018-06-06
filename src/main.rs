@@ -135,6 +135,25 @@ fn main() -> Result<(), Error> {
         }
     }
 
+    if let Ok(npm) = which("npm") {
+        terminal.print_separator("Node Package Manager");
+        Command::new(&npm)
+            .args(&["update", "-g"])
+            .spawn()?
+            .wait()?
+            .report("Node Package Manager", &mut reports);
+    }
+
+    if let Ok(apm) = which("apm") {
+        terminal.print_separator("Atom Package Manager");
+        Command::new(&apm)
+            .args(&["upgrade", "--confirm=false"])
+            .spawn()?
+            .wait()
+            .map_err(Error::from)?
+            .report("Atom Package Manager", &mut reports);
+    }
+
     if cfg!(target_os = "linux") {
         let sudo = which("sudo");
 
@@ -249,33 +268,6 @@ fn main() -> Result<(), Error> {
             .spawn()?
             .wait()?
             .report("System upgrade", &mut reports);;
-    }
-
-    if let Ok(npm) = which("npm") {
-        terminal.print_separator("Node Package Manager");
-        Command::new(&npm)
-            .args(&["install", "npm"])
-            .spawn()?
-            .wait()?
-            .check()
-            .and_then(|()| {
-                Command::new(&npm)
-                    .args(&["update", "-g"])
-                    .spawn()?
-                    .wait()
-                    .map_err(Error::from)
-            })?
-            .report("Node Package Manager", &mut reports);
-    }
-
-    if let Ok(apm) = which("apm") {
-        terminal.print_separator("Atom Package Manager");
-        Command::new(&apm)
-            .args(&["upgrade", "--confirm=false"])
-            .spawn()?
-            .wait()
-            .map_err(Error::from)?
-            .report("Atom Package Manager", &mut reports);
     }
 
     let mut reports: Vec<_> = reports.into_iter().collect();
