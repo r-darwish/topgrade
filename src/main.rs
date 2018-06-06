@@ -268,6 +268,16 @@ fn main() -> Result<(), Error> {
             .report("Node Package Manager", &mut reports);
     }
 
+    if let Ok(apm) = which("apm") {
+        terminal.print_separator("Atom Package Manager");
+        Command::new(&apm)
+            .args(&["upgrade", "--confirm=false"])
+            .spawn()?
+            .wait()
+            .map_err(Error::from)?
+            .report("Atom Package Manager", &mut reports);
+    }
+
     let mut reports: Vec<_> = reports.into_iter().collect();
     reports.sort();
 
