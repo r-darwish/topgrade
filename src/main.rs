@@ -135,6 +135,15 @@ fn main() -> Result<(), Error> {
         }
     }
 
+    if let Ok(gem) = which("gem") {
+        terminal.print_separator("RubyGems");
+        Command::new(&gem)
+            .args(&["update"])
+            .spawn()?
+            .wait()?
+            .report("RubyGems", &mut reports);
+    }
+
     if let Ok(npm) = which("npm") {
         terminal.print_separator("Node Package Manager");
         Command::new(&npm)
