@@ -22,6 +22,8 @@ Just invoke `topgrade`. It will invoke the following steps:
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Invoke Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages
+* Upgrade NPM globally installed packages
+* Upgrade Atom packages
 * *Linux*: Invoke the system package manager:
   * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
   * *Redhat based*: Invoke `yum upgrade`
