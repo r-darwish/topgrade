@@ -251,6 +251,23 @@ fn main() -> Result<(), Error> {
             .report("System upgrade", &mut reports);;
     }
 
+    if let Ok(npm) = which("npm") {
+        terminal.print_separator("Node Package Manager");
+        Command::new(&npm)
+            .args(&["install", "npm"])
+            .spawn()?
+            .wait()?
+            .check()
+            .and_then(|()| {
+                Command::new(&npm)
+                    .args(&["update", "-g"])
+                    .spawn()?
+                    .wait()
+                    .map_err(Error::from)
+            })?
+            .report("Node Package Manager", &mut reports);
+    }
+
     let mut reports: Vec<_> = reports.into_iter().collect();
     reports.sort();
 
