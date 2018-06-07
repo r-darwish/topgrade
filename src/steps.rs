@@ -119,6 +119,12 @@ pub fn run_fwupdmgr(fwupdmgr: &PathBuf) -> Result<(), failure::Error> {
     Ok(())
 }
 
+pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(rustup).arg("update").spawn()?.wait()?.check()?;
+
+    Ok(())
+}
+
 pub fn upgrade_macos() -> Result<(), failure::Error> {
     Command::new("softwareupdate")
         .args(&["--install", "--all"])
