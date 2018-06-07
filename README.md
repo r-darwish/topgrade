@@ -28,7 +28,6 @@ Just invoke `topgrade`. It will invoke the following steps:
   * [Plug](https://github.com/junegunn/vim-plug)
 * Upgrade NPM globally installed packages
 * Upgrade Atom packages
-* Upgrade RubyGems globally installed packages
 * *Linux*: Invoke the system package manager:
   * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
   * *Redhat based*: Invoke `yum upgrade`

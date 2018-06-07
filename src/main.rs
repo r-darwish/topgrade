@@ -125,11 +125,6 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    if let Ok(gem) = which("gem") {
-        terminal.print_separator("RubyGems");
-        run_gem(&gem).report("RubyGems", &mut reports);
-    }
-
     if let Ok(npm) = which("npm") {
         terminal.print_separator("Node Package Manager");
         run_npm(&npm).report("Node Package Manager", &mut reports);

@@ -73,16 +73,6 @@ pub fn run_vim(
     Ok(())
 }
 
-pub fn run_gem(gem: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&gem)
-        .args(&["update"])
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
 pub fn run_npm(npm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&npm)
         .args(&["update", "-g"])
