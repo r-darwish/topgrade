@@ -9,7 +9,6 @@ exclude = ["doc/screenshot.gif"]
 
 [dependencies]
 which = "2.0.0"
-os_type = "2.0.0"
 termion = "1.5.1"
 failure = "0.1.1"
 failure_derive = "0.1.1"

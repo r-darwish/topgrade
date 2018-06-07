@@ -1,11 +1,11 @@
 extern crate failure;
-extern crate os_type;
 extern crate which;
 #[macro_use]
 extern crate failure_derive;
 extern crate termion;
 
 mod git;
+mod linux;
 mod report;
 mod steps;
 mod terminal;
@@ -13,7 +13,6 @@ mod vim;
 
 use failure::Error;
 use git::Git;
-use os_type::OSType;
 use report::{Report, Reporter};
 use std::collections::HashSet;
 use std::env::home_dir;
@@ -139,20 +138,23 @@ fn main() -> Result<(), Error> {
         let sudo = which("sudo");
 
         terminal.print_separator("System update");
-        match os_type::current_platform().os_type {
-            OSType::Arch => Some(upgrade_arch_linux(&sudo, &terminal)),
-            OSType::CentOS | OSType::Redhat => Some(upgrade_redhat(&sudo, &terminal)),
-            OSType::Ubuntu | OSType::Debian => Some(upgrade_debian(&sudo, &terminal)),
-            OSType::Unknown => {
-                terminal.print_warning(
-                    "Could not detect your Linux distribution. Do you have lsb-release installed?",
-                );
-
-                None
+        match linux::Distribution::detect() {
+            Ok(distribution) => {
+                match distribution {
+                    linux::Distribution::Arch => upgrade_arch_linux(&sudo, &terminal),
+                    linux::Distribution::CentOS | linux::Distribution::Fedora => {
+                        upgrade_redhat(&sudo, &terminal)
+                    }
+                    linux::Distribution::Ubuntu | linux::Distribution::Debian => {
+                        upgrade_debian(&sudo, &terminal)
+                    }
+                }.report("System upgrade", &mut reports);
             }
 
-            _ => None,
-        }.report("System upgrade", &mut reports);
+            Err(e) => {
+                println!("Error detecting current distribution: {}", e);
+            }
+        }
 
         if let Ok(fwupdmgr) = which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
