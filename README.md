@@ -22,6 +22,10 @@ Just invoke `topgrade`. It will invoke the following steps:
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Invoke Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages
+* Upgrade Vim packages. Works with the following plugin frameworks:
+  * [NeoBundle](https://github.com/Shougo/neobundle.vim)
+  * [Vundle](https://github.com/VundleVim/Vundle.vim)
+  * [Plug](https://github.com/junegunn/vim-plug)
 * Upgrade NPM globally installed packages
 * Upgrade Atom packages
 * Upgrade RubyGems globally installed packages

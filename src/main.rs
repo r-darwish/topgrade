@@ -9,6 +9,7 @@ mod git;
 mod report;
 mod steps;
 mod terminal;
+mod vim;
 
 use failure::Error;
 use git::Git;
@@ -110,7 +111,18 @@ fn main() -> Result<(), Error> {
         let init_file = home_path(".emacs.d/init.el");
         if init_file.exists() {
             terminal.print_separator("Emacs");
-            run_emacs(&emacs, &home_path(".emacs.d/init.el")).report("Emacs", &mut reports);
+            run_emacs(&emacs, &init_file).report("Emacs", &mut reports);
+        }
+    }
+
+    if let Ok(vim) = which("Vim") {
+        let vimrc = home_path(".vimrc");
+        if vimrc.exists() {
+            if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
+                terminal.print_separator(&format!("vim ({:?})", plugin_framework));
+                run_vim(&vim, &vimrc, plugin_framework.upgrade_command())
+                    .report("Vim", &mut reports);
+            }
         }
     }
 
