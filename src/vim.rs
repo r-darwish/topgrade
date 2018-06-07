@@ -1,3 +1,4 @@
+use super::home_path;
 use std::fs;
 use std::path::PathBuf;
 
@@ -30,4 +31,22 @@ impl PluginFramework {
             PluginFramework::Plug => "PlugUpdate",
         }
     }
+}
+
+pub fn vimrc() -> Option<PathBuf> {
+    {
+        let vimrc = home_path(".vimrc");
+        if vimrc.exists() {
+            return Some(vimrc);
+        }
+    }
+
+    {
+        let vimrc = home_path(".vim/vimrc");
+        if vimrc.exists() {
+            return Some(vimrc);
+        }
+    }
+
+    None
 }

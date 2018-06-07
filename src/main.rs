@@ -115,9 +115,8 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    if let Ok(vim) = which("Vim") {
-        let vimrc = home_path(".vimrc");
-        if vimrc.exists() {
+    if let Ok(vim) = which("vim") {
+        if let Some(vimrc) = vim::vimrc() {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("vim ({:?})", plugin_framework));
                 run_vim(&vim, &vimrc, plugin_framework.upgrade_command())
