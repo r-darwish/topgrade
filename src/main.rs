@@ -1,9 +1,15 @@
+extern crate directories;
 extern crate failure;
 extern crate which;
 #[macro_use]
 extern crate failure_derive;
 extern crate termion;
+extern crate toml;
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
 
+mod config;
 mod git;
 mod linux;
 mod npm;
@@ -12,6 +18,7 @@ mod steps;
 mod terminal;
 mod vim;
 
+use config::Config;
 use failure::Error;
 use git::Git;
 use report::{Report, Reporter};
@@ -76,20 +83,19 @@ fn main() -> Result<(), Error> {
     let mut git_repos: HashSet<String> = HashSet::new();
     let terminal = Terminal::new();
     let mut reports = Report::new();
+    let config = Config::read()?;
 
-    {
-        let mut collect_repo = |path| {
-            if let Some(repo) = git.get_repo_root(path) {
-                git_repos.insert(repo);
-            }
-        };
+    git.insert_if_valid(&mut git_repos, home_path(".emacs.d"));
 
-        collect_repo(home_path(".emacs.d"));
+    if cfg!(unix) {
+        git.insert_if_valid(&mut git_repos, home_path(".zshrc"));
+        git.insert_if_valid(&mut git_repos, home_path(".oh-my-zsh"));
+        git.insert_if_valid(&mut git_repos, home_path(".tmux"));
+    }
 
-        if cfg!(unix) {
-            collect_repo(home_path(".zshrc"));
-            collect_repo(home_path(".oh-my-zsh"));
-            collect_repo(home_path(".tmux"));
+    if let Some(custom_git_repos) = config.git_repos() {
+        for git_repo in custom_git_repos {
+            git.insert_if_valid(&mut git_repos, git_repo);
         }
     }
 
@@ -199,6 +205,13 @@ fn main() -> Result<(), Error> {
 
         terminal.print_separator("System update");
         upgrade_macos().report("System upgrade", &mut reports);;
+    }
+
+    if let Some(commands) = config.commands() {
+        for (name, command) in commands {
+            terminal.print_separator(name);
+            run_custom_command(&command).report(name.as_ref(), &mut reports);
+        }
     }
 
     let mut reports: Vec<_> = reports.into_iter().collect();

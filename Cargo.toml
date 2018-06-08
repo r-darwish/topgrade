@@ -8,7 +8,11 @@ authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 
 [dependencies]
-which = "2.0.0"
-termion = "1.5.1"
+directories = "0.10.0"
 failure = "0.1.1"
 failure_derive = "0.1.1"
+serde = "1.0.66"
+serde_derive = "1.0.66"
+termion = "1.5.1"
+toml = "0.4.6"
+which = "2.0.0"

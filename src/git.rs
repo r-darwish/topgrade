@@ -1,5 +1,6 @@
 use super::Check;
 use failure::Error;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use which::which;
@@ -54,5 +55,11 @@ impl Git {
         }
 
         Ok(None)
+    }
+
+    pub fn insert_if_valid<P: AsRef<Path>>(&self, git_repos: &mut HashSet<String>, path: P) {
+        if let Some(repo) = self.get_repo_root(path) {
+            git_repos.insert(repo);
+        }
     }
 }
