@@ -220,3 +220,14 @@ pub fn upgrade_debian(
 
     Ok(())
 }
+
+pub fn run_custom_command(command: &str) -> Result<(), failure::Error> {
+    Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
