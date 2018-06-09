@@ -73,16 +73,6 @@ pub fn run_vim(
     Ok(())
 }
 
-pub fn run_npm(npm: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&npm)
-        .args(&["update", "-g"])
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
 pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&apm)
         .args(&["upgrade", "--confirm=false"])

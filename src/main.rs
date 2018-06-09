@@ -6,6 +6,7 @@ extern crate termion;
 
 mod git;
 mod linux;
+mod npm;
 mod report;
 mod steps;
 mod terminal;
@@ -16,7 +17,7 @@ use git::Git;
 use report::{Report, Reporter};
 use std::collections::HashSet;
 use std::env::home_dir;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
 use steps::*;
 use terminal::Terminal;
@@ -44,6 +45,19 @@ fn home_path(p: &str) -> PathBuf {
     let mut path = home_dir().unwrap();
     path.push(p);
     path
+}
+
+fn is_ancestor(ancestor: &Path, path: &Path) -> bool {
+    let mut p = path;
+    while let Some(parent) = p.parent() {
+        if parent == ancestor {
+            return true;
+        }
+
+        p = parent;
+    }
+
+    false
 }
 
 #[cfg(unix)]
@@ -129,9 +143,13 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    if let Ok(npm) = which("npm") {
-        terminal.print_separator("Node Package Manager");
-        run_npm(&npm).report("Node Package Manager", &mut reports);
+    if let Ok(npm) = which("npm").map(npm::NPM::new) {
+        if let Ok(npm_root) = npm.root() {
+            if is_ancestor(&home_dir().unwrap(), &npm_root) {
+                terminal.print_separator("Node Package Manager");
+                npm.upgrade().report("Node Package Manager", &mut reports);
+            }
+        }
     }
 
     if let Ok(apm) = which("apm") {
