@@ -30,8 +30,9 @@ Just invoke `topgrade`. It will invoke the following steps:
 * Upgrade Atom packages
 * *Linux*: Invoke the system package manager:
   * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
-  * *Redhat based*: Invoke `yum upgrade`
-  * *Debian based*: Invoke `apt update && apt dist-upgrade`
+  * *CentOS/RHEL*: Invoke `yum upgrade`
+  * *Fedora* - Invoke `dnf upgrade`
+  * *Debian/Ubuntu*: Invoke `apt update && apt dist-upgrade`
 * *Linux*: Invoke [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View only. No upgrades will actually be performed)
 * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
 * *macOS*: Upgrade [Homebrew](https://brew.sh/) packages
