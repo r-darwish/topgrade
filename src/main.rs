@@ -95,7 +95,7 @@ fn main() -> Result<(), Error> {
 
     for repo in git_repos {
         terminal.print_separator(format!("Pulling {}", repo));
-        if let Some(success) = git.pull(&repo)? {
+        if let Some(success) = git.pull(&repo).ok().and_then(|i| i) {
             success.report(format!("git: {}", repo), &mut reports);
         }
     }
