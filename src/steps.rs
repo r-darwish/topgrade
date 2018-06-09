@@ -70,6 +70,8 @@ pub fn run_vim(
         .wait()?
         .check()?;
 
+    println!("");
+
     Ok(())
 }
 
