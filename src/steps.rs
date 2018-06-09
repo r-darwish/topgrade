@@ -210,7 +210,7 @@ pub fn upgrade_debian(
             .check()?;
 
         Command::new(&sudo)
-            .args(&["apt", "upgrade"])
+            .args(&["apt", "dist-upgrade"])
             .spawn()?
             .wait()?
             .check()?;
