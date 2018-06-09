@@ -189,6 +189,23 @@ pub fn upgrade_redhat(
     Ok(())
 }
 
+pub fn upgrade_fedora(
+    sudo: &Result<PathBuf, which::Error>,
+    terminal: &Terminal,
+) -> Result<(), failure::Error> {
+    if let Ok(sudo) = &sudo {
+        Command::new(&sudo)
+            .args(&["dnf", "upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
 pub fn upgrade_debian(
     sudo: &Result<PathBuf, which::Error>,
     terminal: &Terminal,
