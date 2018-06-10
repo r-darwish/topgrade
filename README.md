@@ -7,7 +7,9 @@ usually results in big shell one-liners saved in your shell history. Topgrade tr
 problem by detecting which tools you use and invoke their appropriate package managers.
 
 ## Installation
-You can either use `cargo install` or use the compiled binaries from the release page.
+Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
+
+Other systems users can either use `cargo install` or use the compiled binaries from the release page.
 
 ## Usage
 Just invoke `topgrade`. It will invoke the following steps:
