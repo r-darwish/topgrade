@@ -20,9 +20,8 @@ mod vim;
 
 use config::Config;
 use failure::Error;
-use git::Git;
+use git::{Git, Repositories};
 use report::{Report, Reporter};
-use std::collections::HashSet;
 use std::env::home_dir;
 use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
@@ -80,26 +79,26 @@ fn tpm() -> Option<PathBuf> {
 
 fn main() -> Result<(), Error> {
     let git = Git::new();
-    let mut git_repos: HashSet<String> = HashSet::new();
+    let mut git_repos = Repositories::new(&git);
     let terminal = Terminal::new();
     let mut reports = Report::new();
     let config = Config::read()?;
 
-    git.insert_if_valid(&mut git_repos, home_path(".emacs.d"));
+    git_repos.insert(home_path(".emacs.d"));
 
     if cfg!(unix) {
-        git.insert_if_valid(&mut git_repos, home_path(".zshrc"));
-        git.insert_if_valid(&mut git_repos, home_path(".oh-my-zsh"));
-        git.insert_if_valid(&mut git_repos, home_path(".tmux"));
+        git_repos.insert(home_path(".zshrc"));
+        git_repos.insert(home_path(".oh-my-zsh"));
+        git_repos.insert(home_path(".tmux"));
     }
 
     if let Some(custom_git_repos) = config.git_repos() {
         for git_repo in custom_git_repos {
-            git.insert_if_valid(&mut git_repos, git_repo);
+            git_repos.insert(git_repo);
         }
     }
 
-    for repo in git_repos {
+    for repo in git_repos.repositories() {
         terminal.print_separator(format!("Pulling {}", repo));
         if let Some(success) = git.pull(&repo).ok().and_then(|i| i) {
             success.report(format!("git: {}", repo), &mut reports);

@@ -9,6 +9,11 @@ pub struct Git {
     git: Option<PathBuf>,
 }
 
+pub struct Repositories<'a> {
+    git: &'a Git,
+    repositories: HashSet<String>,
+}
+
 impl Git {
     pub fn new() -> Self {
         Self {
@@ -56,10 +61,23 @@ impl Git {
 
         Ok(None)
     }
+}
 
-    pub fn insert_if_valid<P: AsRef<Path>>(&self, git_repos: &mut HashSet<String>, path: P) {
-        if let Some(repo) = self.get_repo_root(path) {
-            git_repos.insert(repo);
+impl<'a> Repositories<'a> {
+    pub fn new(git: &'a Git) -> Self {
+        Self {
+            git,
+            repositories: HashSet::new(),
         }
+    }
+
+    pub fn insert<P: AsRef<Path>>(&mut self, path: P) {
+        if let Some(repo) = self.git.get_repo_root(path) {
+            self.repositories.insert(repo);
+        }
+    }
+
+    pub fn repositories(&self) -> &HashSet<String> {
+        &self.repositories
     }
 }
