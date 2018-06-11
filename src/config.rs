@@ -1,5 +1,6 @@
 use directories;
 use failure;
+use shellexpand;
 use std::collections::BTreeMap;
 use std::fs;
 use toml;
@@ -18,7 +19,15 @@ impl Config {
             return Ok(Default::default());
         }
 
-        Ok(toml::from_str(&fs::read_to_string(config_path)?)?)
+        let mut result: Self = toml::from_str(&fs::read_to_string(config_path)?)?;
+
+        if let Some(ref mut paths) = &mut result.git_repos {
+            for path in paths.iter_mut() {
+                *path = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
+            }
+        }
+
+        Ok(result)
     }
 
     pub fn commands(&self) -> &Option<BTreeMap<String, String>> {

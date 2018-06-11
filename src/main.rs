@@ -8,6 +8,7 @@ extern crate toml;
 #[macro_use]
 extern crate serde_derive;
 extern crate serde;
+extern crate shellexpand;
 
 mod config;
 mod git;
