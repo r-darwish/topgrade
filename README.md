@@ -26,6 +26,7 @@ Just invoke `topgrade`. It will invoke the following steps:
   * [~/.oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
   * ~/.tmux
   * ~/.config/fish/config.fish
+  * Custom defined paths
 * *Unix*: Invoke [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Invoke Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
@@ -36,7 +37,22 @@ Just invoke `topgrade`. It will invoke the following steps:
   * [Plug](https://github.com/junegunn/vim-plug)
 * Upgrade NPM globally installed packages
 * Upgrade Atom packages
-* *Linux*: Invoke [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View only. No upgrades will actually be performed)
+* *Linux*: Invoke [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
+  only. No upgrades will actually be performed)
+* Run custom defined commands
 * Final stage
   * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
   * *macOS*: Upgrade App Store applications
+
+## Customization
+You can place a configuration file at `~/.config/topgrade.toml`. Here's an example:
+
+
+``` toml
+git_repos = [
+    "~/dev/topgrade",
+]
+
+[commands]
+"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
+```
