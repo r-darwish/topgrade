@@ -24,7 +24,7 @@ use git::{Git, Repositories};
 use report::{Report, Reporter};
 use std::env::home_dir;
 use std::path::{Path, PathBuf};
-use std::process::ExitStatus;
+use std::process::{exit, ExitStatus};
 use steps::*;
 use terminal::Terminal;
 use which::which;
@@ -32,6 +32,10 @@ use which::which;
 #[derive(Fail, Debug)]
 #[fail(display = "Process failed")]
 struct ProcessFailed;
+
+#[derive(Fail, Debug)]
+#[fail(display = "A step failed")]
+struct StepFailed;
 
 trait Check {
     fn check(self) -> Result<(), Error>;
@@ -77,7 +81,7 @@ fn tpm() -> Option<PathBuf> {
     }
 }
 
-fn main() -> Result<(), Error> {
+fn run() -> Result<(), Error> {
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
     let terminal = Terminal::new();
@@ -224,10 +228,29 @@ fn main() -> Result<(), Error> {
     if !reports.is_empty() {
         terminal.print_separator("Summary");
 
-        for (key, succeeded) in reports {
-            terminal.print_result(key, succeeded);
+        for (key, succeeded) in &reports {
+            terminal.print_result(key, *succeeded);
         }
     }
 
-    Ok(())
+    if reports.iter().all(|(_, succeeded)| *succeeded) {
+        Ok(())
+    } else {
+        Err(StepFailed.into())
+    }
+}
+
+fn main() {
+    match run() {
+        Ok(()) => {
+            exit(0);
+        }
+        Err(error) => {
+            match error.downcast::<StepFailed>() {
+                Ok(_) => (),
+                Err(error) => println!("ERROR: {}", error),
+            };
+            exit(1);
+        }
+    }
 }
