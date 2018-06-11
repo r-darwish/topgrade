@@ -25,6 +25,7 @@ Just invoke `topgrade`. It will invoke the following steps:
   * ~/.zshrc
   * [~/.oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
   * ~/.tmux
+  * ~/.config/fish/config.fish
 * *Unix*: Invoke [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Invoke Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)

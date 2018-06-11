@@ -127,6 +127,7 @@ fn run() -> Result<(), Error> {
         git_repos.insert(home_path(".zshrc"));
         git_repos.insert(home_path(".oh-my-zsh"));
         git_repos.insert(home_path(".tmux"));
+        git_repos.insert(home_path(".config/fish/config.fish"));
     }
 
     if let Some(custom_git_repos) = config.git_repos() {
