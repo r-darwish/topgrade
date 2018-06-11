@@ -84,6 +84,39 @@ fn main() -> Result<(), Error> {
     let mut reports = Report::new();
     let config = Config::read()?;
 
+    let sudo = if cfg!(target_os = "linux") {
+        which("sudo").ok()
+    } else {
+        None
+    };
+
+    if cfg!(target_os = "linux") {
+        terminal.print_separator("System update");
+        match linux::Distribution::detect() {
+            Ok(distribution) => {
+                match distribution {
+                    linux::Distribution::Arch => upgrade_arch_linux(&sudo, &terminal),
+                    linux::Distribution::CentOS => upgrade_redhat(&sudo, &terminal),
+                    linux::Distribution::Fedora => upgrade_fedora(&sudo, &terminal),
+                    linux::Distribution::Ubuntu | linux::Distribution::Debian => {
+                        upgrade_debian(&sudo, &terminal)
+                    }
+                }.report("System upgrade", &mut reports);
+            }
+
+            Err(e) => {
+                println!("Error detecting current distribution: {}", e);
+            }
+        }
+    }
+
+    if cfg!(target_os = "macos") {
+        if let Ok(brew) = which("brew") {
+            terminal.print_separator("Homebrew");
+            run_homebrew(&brew).report("Homebrew", &mut reports);
+        }
+    }
+
     git_repos.insert(home_path(".emacs.d"));
 
     if cfg!(unix) {
@@ -163,32 +196,12 @@ fn main() -> Result<(), Error> {
     }
 
     if cfg!(target_os = "linux") {
-        let sudo = which("sudo");
-
-        terminal.print_separator("System update");
-        match linux::Distribution::detect() {
-            Ok(distribution) => {
-                match distribution {
-                    linux::Distribution::Arch => upgrade_arch_linux(&sudo, &terminal),
-                    linux::Distribution::CentOS => upgrade_redhat(&sudo, &terminal),
-                    linux::Distribution::Fedora => upgrade_fedora(&sudo, &terminal),
-                    linux::Distribution::Ubuntu | linux::Distribution::Debian => {
-                        upgrade_debian(&sudo, &terminal)
-                    }
-                }.report("System upgrade", &mut reports);
-            }
-
-            Err(e) => {
-                println!("Error detecting current distribution: {}", e);
-            }
-        }
-
         if let Ok(fwupdmgr) = which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
             run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
         }
 
-        if let Ok(sudo) = &sudo {
+        if let Some(sudo) = &sudo {
             if let Ok(_) = which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
                 run_needrestart(&sudo).report("Restarts", &mut reports);
@@ -197,13 +210,8 @@ fn main() -> Result<(), Error> {
     }
 
     if cfg!(target_os = "macos") {
-        if let Ok(brew) = which("brew") {
-            terminal.print_separator("Homebrew");
-            run_homebrew(&brew).report("Homebrew", &mut reports);
-        }
-
-        terminal.print_separator("System update");
-        upgrade_macos().report("System upgrade", &mut reports);;
+        terminal.print_separator("App Store");
+        upgrade_macos().report("App Store", &mut reports);;
     }
 
     if let Some(commands) = config.commands() {

@@ -144,13 +144,13 @@ pub fn run_homebrew(homebrew: &PathBuf) -> Result<(), failure::Error> {
 }
 
 pub fn upgrade_arch_linux(
-    sudo: &Result<PathBuf, which::Error>,
+    sudo: &Option<PathBuf>,
     terminal: &Terminal,
 ) -> Result<(), failure::Error> {
     if let Ok(yay) = which("yay") {
         Command::new(yay).spawn()?.wait()?.check()?;
     } else {
-        if let Ok(sudo) = &sudo {
+        if let Some(sudo) = &sudo {
             Command::new(&sudo)
                 .args(&["pacman", "-Syu"])
                 .spawn()?
@@ -164,11 +164,8 @@ pub fn upgrade_arch_linux(
     Ok(())
 }
 
-pub fn upgrade_redhat(
-    sudo: &Result<PathBuf, which::Error>,
-    terminal: &Terminal,
-) -> Result<(), failure::Error> {
-    if let Ok(sudo) = &sudo {
+pub fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["yum", "upgrade"])
             .spawn()?
@@ -181,11 +178,8 @@ pub fn upgrade_redhat(
     Ok(())
 }
 
-pub fn upgrade_fedora(
-    sudo: &Result<PathBuf, which::Error>,
-    terminal: &Terminal,
-) -> Result<(), failure::Error> {
-    if let Ok(sudo) = &sudo {
+pub fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["dnf", "upgrade"])
             .spawn()?
@@ -198,11 +192,8 @@ pub fn upgrade_fedora(
     Ok(())
 }
 
-pub fn upgrade_debian(
-    sudo: &Result<PathBuf, which::Error>,
-    terminal: &Terminal,
-) -> Result<(), failure::Error> {
-    if let Ok(sudo) = &sudo {
+pub fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["apt", "update"])
             .spawn()?

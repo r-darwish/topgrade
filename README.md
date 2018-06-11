@@ -14,12 +14,17 @@ Other systems users can either use `cargo install` or use the compiled binaries 
 ## Usage
 Just invoke `topgrade`. It will invoke the following steps:
 
+* Invoke the system package manager:
+  * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
+  * *CentOS/RHEL*: Invoke `yum upgrade`
+  * *Fedora* - Invoke `dnf upgrade`
+  * *Debian/Ubuntu*: Invoke `apt update && apt dist-upgrade`
+  * *macOS*: Invoke `brew update && brew upgrade`
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
   * ~/.zshrc
   * [~/.oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
   * ~/.tmux
-
 * *Unix*: Invoke [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Invoke Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
@@ -30,12 +35,7 @@ Just invoke `topgrade`. It will invoke the following steps:
   * [Plug](https://github.com/junegunn/vim-plug)
 * Upgrade NPM globally installed packages
 * Upgrade Atom packages
-* *Linux*: Invoke the system package manager:
-  * *Arch*: Invoke [yay](https://github.com/Jguer/yay) or fall back to pacman
-  * *CentOS/RHEL*: Invoke `yum upgrade`
-  * *Fedora* - Invoke `dnf upgrade`
-  * *Debian/Ubuntu*: Invoke `apt update && apt dist-upgrade`
 * *Linux*: Invoke [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View only. No upgrades will actually be performed)
-* *Linux*: Run [needrestart](https://github.com/liske/needrestart)
-* *macOS*: Upgrade [Homebrew](https://brew.sh/) packages
-* *macOS*: Upgrade App Store applications
+* Final stage
+  * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
+  * *macOS*: Upgrade App Store applications
