@@ -24,7 +24,7 @@ pub fn run_tpm(tpm: &PathBuf) -> Result<(), failure::Error> {
 
 pub fn run_cargo_update(cargo_update: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&cargo_update)
-        .args(&["install-update", "--all"])
+        .args(&["install-update", "--git", "--all"])
         .spawn()?
         .wait()?
         .check()?;
