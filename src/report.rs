@@ -1,7 +1,6 @@
 use std::borrow::Cow;
-use std::collections::HashMap;
 
-pub type Report = HashMap<String, bool>;
+pub type Report = Vec<(String, bool)>;
 
 pub trait Reporter {
     fn report<'a, M: Into<Cow<'a, str>>>(&self, key: M, report: &mut Report);
@@ -14,7 +13,7 @@ where
     fn report<'a, M: Into<Cow<'a, str>>>(&self, key: M, report: &mut Report) {
         match self {
             Err(_) => {
-                report.insert(key.into().into_owned(), false);
+                report.push((key.into().into_owned(), false));
             }
             Ok(item) => {
                 item.report(key, report);
@@ -36,12 +35,12 @@ where
 
 impl Reporter for bool {
     fn report<'a, M: Into<Cow<'a, str>>>(&self, key: M, report: &mut Report) {
-        report.insert(key.into().into_owned(), *self);
+        report.push((key.into().into_owned(), *self));
     }
 }
 
 impl Reporter for () {
     fn report<'a, M: Into<Cow<'a, str>>>(&self, key: M, report: &mut Report) {
-        report.insert(key.into().into_owned(), true);
+        report.push((key.into().into_owned(), true));
     }
 }

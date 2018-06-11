@@ -221,9 +221,6 @@ fn main() -> Result<(), Error> {
         }
     }
 
-    let mut reports: Vec<_> = reports.into_iter().collect();
-    reports.sort();
-
     if !reports.is_empty() {
         terminal.print_separator("Summary");
 
