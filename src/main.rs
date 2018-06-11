@@ -195,6 +195,13 @@ fn main() -> Result<(), Error> {
         run_apm(&apm).report("Atom Package Manager", &mut reports);
     }
 
+    if let Some(commands) = config.commands() {
+        for (name, command) in commands {
+            terminal.print_separator(name);
+            run_custom_command(&command).report(name.as_ref(), &mut reports);
+        }
+    }
+
     if cfg!(target_os = "linux") {
         if let Ok(fwupdmgr) = which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
@@ -212,13 +219,6 @@ fn main() -> Result<(), Error> {
     if cfg!(target_os = "macos") {
         terminal.print_separator("App Store");
         upgrade_macos().report("App Store", &mut reports);;
-    }
-
-    if let Some(commands) = config.commands() {
-        for (name, command) in commands {
-            terminal.print_separator(name);
-            run_custom_command(&command).report(name.as_ref(), &mut reports);
-        }
     }
 
     if !reports.is_empty() {
