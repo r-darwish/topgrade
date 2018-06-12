@@ -7,6 +7,8 @@ extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate clap;
 extern crate serde;
 extern crate shellexpand;
 
@@ -19,6 +21,7 @@ mod steps;
 mod terminal;
 mod vim;
 
+use clap::App;
 use config::Config;
 use failure::Error;
 use git::{Git, Repositories};
@@ -83,6 +86,11 @@ fn tpm() -> Option<PathBuf> {
 }
 
 fn run() -> Result<(), Error> {
+    let _ = App::new("Topgrade")
+        .version(crate_version!())
+        .about("Upgrade all the things")
+        .get_matches();
+
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
     let terminal = Terminal::new();
