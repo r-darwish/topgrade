@@ -108,11 +108,11 @@ fn run() -> Result<(), Error> {
         match linux::Distribution::detect() {
             Ok(distribution) => {
                 match distribution {
-                    linux::Distribution::Arch => upgrade_arch_linux(&sudo, &terminal),
-                    linux::Distribution::CentOS => upgrade_redhat(&sudo, &terminal),
-                    linux::Distribution::Fedora => upgrade_fedora(&sudo, &terminal),
+                    linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &terminal),
+                    linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &terminal),
+                    linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &terminal),
                     linux::Distribution::Ubuntu | linux::Distribution::Debian => {
-                        upgrade_debian(&sudo, &terminal)
+                        linux::upgrade_debian(&sudo, &terminal)
                     }
                 }.report("System upgrade", &mut reports);
             }

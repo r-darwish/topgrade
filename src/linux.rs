@@ -1,5 +1,10 @@
+use super::terminal::Terminal;
+use super::Check;
 use failure;
 use std::fs;
+use std::path::PathBuf;
+use std::process::Command;
+use which::which;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Distribution {
@@ -40,4 +45,73 @@ impl Distribution {
 
         Err(UnknownLinuxDistribution.into())
     }
+}
+
+pub fn upgrade_arch_linux(
+    sudo: &Option<PathBuf>,
+    terminal: &Terminal,
+) -> Result<(), failure::Error> {
+    if let Ok(yay) = which("yay") {
+        Command::new(yay).spawn()?.wait()?.check()?;
+    } else {
+        if let Some(sudo) = &sudo {
+            Command::new(&sudo)
+                .args(&["pacman", "-Syu"])
+                .spawn()?
+                .wait()?
+                .check()?;
+        } else {
+            terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
+        }
+    }
+
+    Ok(())
+}
+
+pub fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        Command::new(&sudo)
+            .args(&["yum", "upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+pub fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        Command::new(&sudo)
+            .args(&["dnf", "upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+pub fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        Command::new(&sudo)
+            .args(&["apt", "update"])
+            .spawn()?
+            .wait()?
+            .check()?;
+
+        Command::new(&sudo)
+            .args(&["apt", "dist-upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
 }
