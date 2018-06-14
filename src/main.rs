@@ -171,6 +171,11 @@ fn run() -> Result<(), Error> {
         run_rustup(&rustup).report("rustup", &mut reports);
     }
 
+    if let Ok(flatpak) = which("flatpak") {
+        terminal.print_separator("Flatpak");
+        run_flatpak(&flatpak).report("Flatpak", &mut reports);
+    }
+
     let cargo_upgrade = home_path(".cargo/bin/cargo-install-update");
     if cargo_upgrade.exists() {
         terminal.print_separator("Cargo");

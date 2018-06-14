@@ -152,3 +152,13 @@ pub fn run_custom_command(command: &str) -> Result<(), failure::Error> {
 
     Ok(())
 }
+
+pub fn run_flatpak(flatpak: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&flatpak)
+        .arg("update")
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
