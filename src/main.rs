@@ -171,11 +171,6 @@ fn run() -> Result<(), Error> {
         run_rustup(&rustup).report("rustup", &mut reports);
     }
 
-    if let Ok(flatpak) = which("flatpak") {
-        terminal.print_separator("Flatpak");
-        run_flatpak(&flatpak).report("Flatpak", &mut reports);
-    }
-
     let cargo_upgrade = home_path(".cargo/bin/cargo-install-update");
     if cargo_upgrade.exists() {
         terminal.print_separator("Cargo");
@@ -212,6 +207,20 @@ fn run() -> Result<(), Error> {
     if let Ok(apm) = which("apm") {
         terminal.print_separator("Atom Package Manager");
         run_apm(&apm).report("Atom Package Manager", &mut reports);
+    }
+
+    if cfg!(target_os = "linux") {
+        if let Ok(flatpak) = which("flatpak") {
+            terminal.print_separator("Flatpak");
+            run_flatpak(&flatpak).report("Flatpak", &mut reports);
+        }
+
+        if let Some(sudo) = &sudo {
+            if let Ok(snap) = which("snap") {
+                terminal.print_separator("snap");
+                run_snap(&sudo, &snap).report("snap", &mut reports);
+            }
+        }
     }
 
     if let Some(commands) = config.commands() {

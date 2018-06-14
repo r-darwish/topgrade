@@ -162,3 +162,13 @@ pub fn run_flatpak(flatpak: &PathBuf) -> Result<(), failure::Error> {
 
     Ok(())
 }
+
+pub fn run_snap(sudo: &PathBuf, snap: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&sudo)
+        .args(&[snap.to_str().unwrap(), "refresh"])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}

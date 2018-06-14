@@ -37,6 +37,8 @@ Just run `topgrade`. It will run the following steps:
   * [Plug](https://github.com/junegunn/vim-plug)
 * Upgrade NPM globally installed packages
 * Upgrade Atom packages
+* *Linux*: Update Flatpak packages
+* *Linux*: Update snap packages
 * *Linux*: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
   only. No upgrades will actually be performed)
 * Run custom defined commands
