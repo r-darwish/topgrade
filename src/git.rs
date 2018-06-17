@@ -1,4 +1,4 @@
-use super::Check;
+use super::utils::Check;
 use failure::Error;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};

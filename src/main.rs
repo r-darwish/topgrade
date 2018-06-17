@@ -19,6 +19,7 @@ mod npm;
 mod report;
 mod steps;
 mod terminal;
+mod utils;
 mod vim;
 
 use clap::App;
@@ -27,52 +28,16 @@ use failure::Error;
 use git::{Git, Repositories};
 use report::{Report, Reporter};
 use std::env::home_dir;
-use std::path::{Path, PathBuf};
-use std::process::{exit, ExitStatus};
+use std::path::PathBuf;
+use std::process::exit;
 use steps::*;
 use terminal::Terminal;
+use utils::{home_path, is_ancestor};
 use which::which;
-
-#[derive(Fail, Debug)]
-#[fail(display = "Process failed")]
-struct ProcessFailed;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
 struct StepFailed;
-
-trait Check {
-    fn check(self) -> Result<(), Error>;
-}
-
-impl Check for ExitStatus {
-    fn check(self) -> Result<(), Error> {
-        if self.success() {
-            Ok(())
-        } else {
-            Err(Error::from(ProcessFailed {}))
-        }
-    }
-}
-
-fn home_path(p: &str) -> PathBuf {
-    let mut path = home_dir().unwrap();
-    path.push(p);
-    path
-}
-
-fn is_ancestor(ancestor: &Path, path: &Path) -> bool {
-    let mut p = path;
-    while let Some(parent) = p.parent() {
-        if parent == ancestor {
-            return true;
-        }
-
-        p = parent;
-    }
-
-    false
-}
 
 #[cfg(unix)]
 fn tpm() -> Option<PathBuf> {

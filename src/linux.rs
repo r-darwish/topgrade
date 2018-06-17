@@ -1,5 +1,5 @@
 use super::terminal::Terminal;
-use super::Check;
+use super::utils::Check;
 use failure;
 use std::fs;
 use std::path::PathBuf;

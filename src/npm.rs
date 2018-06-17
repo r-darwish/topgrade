@@ -1,4 +1,4 @@
-use super::Check;
+use super::utils::Check;
 use failure;
 use std::path::PathBuf;
 use std::process::Command;
