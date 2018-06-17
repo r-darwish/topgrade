@@ -1,9 +1,8 @@
-use super::utils::Check;
+use super::utils::{which, Check};
 use failure::Error;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use which::which;
 
 pub struct Git {
     git: Option<PathBuf>,
@@ -16,9 +15,7 @@ pub struct Repositories<'a> {
 
 impl Git {
     pub fn new() -> Self {
-        Self {
-            git: which("git").ok(),
-        }
+        Self { git: which("git") }
     }
 
     pub fn get_repo_root<P: AsRef<Path>>(&self, path: P) -> Option<String> {

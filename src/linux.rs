@@ -1,10 +1,9 @@
 use super::terminal::Terminal;
-use super::utils::Check;
+use super::utils::{which, Check};
 use failure;
 use std::fs;
 use std::path::PathBuf;
 use std::process::Command;
-use which::which;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Distribution {
@@ -55,8 +54,8 @@ pub fn upgrade_arch_linux(
     sudo: &Option<PathBuf>,
     terminal: &Terminal,
 ) -> Result<(), failure::Error> {
-    if let Ok(yay) = which("yay") {
-        if let Ok(python) = which("python") {
+    if let Some(yay) = which("yay") {
+        if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
                 terminal.print_warning(format!(
                     "Python detected at {:?}, which is probably not the system Python.

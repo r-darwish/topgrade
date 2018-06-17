@@ -11,6 +11,9 @@ extern crate serde_derive;
 extern crate clap;
 extern crate serde;
 extern crate shellexpand;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 
 mod config;
 mod git;
@@ -33,7 +36,6 @@ use std::process::exit;
 use steps::*;
 use terminal::Terminal;
 use utils::{home_path, is_ancestor};
-use which::which;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
@@ -56,6 +58,7 @@ fn run() -> Result<(), Error> {
         .about("Upgrade all the things")
         .get_matches();
 
+    env_logger::init();
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
     let terminal = Terminal::new();
@@ -63,7 +66,7 @@ fn run() -> Result<(), Error> {
     let config = Config::read()?;
 
     let sudo = if cfg!(target_os = "linux") {
-        which("sudo").ok()
+        utils::which("sudo")
     } else {
         None
     };
@@ -89,7 +92,7 @@ fn run() -> Result<(), Error> {
     }
 
     if cfg!(target_os = "macos") {
-        if let Ok(brew) = which("brew") {
+        if let Some(brew) = utils::which("brew") {
             terminal.print_separator("Homebrew");
             run_homebrew(&brew).report("Homebrew", &mut reports);
         }
@@ -118,7 +121,7 @@ fn run() -> Result<(), Error> {
     }
 
     if cfg!(unix) {
-        if let Ok(zsh) = which("zsh") {
+        if let Some(zsh) = utils::which("zsh") {
             if home_path(".zplug").exists() {
                 terminal.print_separator("zplug");
                 run_zplug(&zsh).report("zplug", &mut reports);
@@ -131,7 +134,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if let Ok(rustup) = which("rustup") {
+    if let Some(rustup) = utils::which("rustup") {
         terminal.print_separator("rustup");
         run_rustup(&rustup).report("rustup", &mut reports);
     }
@@ -142,7 +145,7 @@ fn run() -> Result<(), Error> {
         run_cargo_update(&cargo_upgrade).report("Cargo", &mut reports);
     }
 
-    if let Ok(emacs) = which("emacs") {
+    if let Some(emacs) = utils::which("emacs") {
         let init_file = home_path(".emacs.d/init.el");
         if init_file.exists() {
             terminal.print_separator("Emacs");
@@ -150,7 +153,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if let Ok(vim) = which("vim") {
+    if let Some(vim) = utils::which("vim") {
         if let Some(vimrc) = vim::vimrc() {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("vim ({:?})", plugin_framework));
@@ -160,7 +163,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if let Ok(npm) = which("npm").map(npm::NPM::new) {
+    if let Some(npm) = utils::which("npm").map(npm::NPM::new) {
         if let Ok(npm_root) = npm.root() {
             if is_ancestor(&home_dir().unwrap(), &npm_root) {
                 terminal.print_separator("Node Package Manager");
@@ -169,19 +172,19 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if let Ok(apm) = which("apm") {
+    if let Some(apm) = utils::which("apm") {
         terminal.print_separator("Atom Package Manager");
         run_apm(&apm).report("Atom Package Manager", &mut reports);
     }
 
     if cfg!(target_os = "linux") {
-        if let Ok(flatpak) = which("flatpak") {
+        if let Some(flatpak) = utils::which("flatpak") {
             terminal.print_separator("Flatpak");
             run_flatpak(&flatpak).report("Flatpak", &mut reports);
         }
 
         if let Some(sudo) = &sudo {
-            if let Ok(snap) = which("snap") {
+            if let Some(snap) = utils::which("snap") {
                 terminal.print_separator("snap");
                 run_snap(&sudo, &snap).report("snap", &mut reports);
             }
@@ -196,13 +199,13 @@ fn run() -> Result<(), Error> {
     }
 
     if cfg!(target_os = "linux") {
-        if let Ok(fwupdmgr) = which("fwupdmgr") {
+        if let Some(fwupdmgr) = utils::which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
             run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
         }
 
         if let Some(sudo) = &sudo {
-            if let Ok(_) = which("needrestart") {
+            if let Some(_) = utils::which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
                 run_needrestart(&sudo).report("Restarts", &mut reports);
             }

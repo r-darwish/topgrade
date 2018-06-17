@@ -1,7 +1,10 @@
 use failure::Error;
 use std::env::home_dir;
+use std::ffi::OsStr;
+use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::ExitStatus;
+use which as which_mod;
 
 #[derive(Fail, Debug)]
 #[fail(display = "Process failed")]
@@ -38,4 +41,25 @@ pub fn is_ancestor(ancestor: &Path, path: &Path) -> bool {
     }
 
     false
+}
+
+pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
+    match which_mod::which(&binary_name) {
+        Ok(path) => {
+            debug!("Detected {:?} as {:?}", &path, &binary_name);
+            Some(path)
+        }
+        Err(e) => {
+            match e.kind() {
+                which_mod::ErrorKind::CannotFindBinaryPath => {
+                    debug!("Cannot find {:?}", &binary_name);
+                }
+                _ => {
+                    error!("Detecting {:?} failed: {}", &binary_name, e);
+                }
+            }
+
+            None
+        }
+    }
 }
