@@ -25,14 +25,18 @@ mod terminal;
 mod utils;
 mod vim;
 
-use clap::App;
+use clap::{App, Arg};
 use config::Config;
 use failure::Error;
 use git::{Git, Repositories};
 use report::{Report, Reporter};
+use std::env;
 use std::env::home_dir;
+#[cfg(unix)]
+use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::exit;
+use std::process::Command;
 use steps::*;
 use terminal::Terminal;
 use utils::{home_path, is_ancestor};
@@ -53,10 +57,39 @@ fn tpm() -> Option<PathBuf> {
 }
 
 fn run() -> Result<(), Error> {
-    let _ = App::new("Topgrade")
+    let matches = App::new("Topgrade")
         .version(crate_version!())
         .about("Upgrade all the things")
+        .arg(
+            Arg::with_name("tmux")
+                .help("Invoke inside tmux")
+                .short("t")
+                .long("tmux"),
+        )
         .get_matches();
+
+    if matches.is_present("tmux") && !env::var("TMUX").is_ok() {
+        if cfg!(unix) {
+            let tmux = utils::which("tmux").expect("Could not find tmux");
+            let err = Command::new(tmux)
+                .args(&[
+                    "new-session",
+                    "-s",
+                    "topgrade",
+                    "-n",
+                    "topgrade",
+                    &env::args().collect::<Vec<String>>().join(" "),
+                    ";",
+                    "set",
+                    "remain-on-exit",
+                    "on",
+                ])
+                .exec();
+            panic!("{:?}", err);
+        } else {
+            panic!("This flag is only implemented in Unix systems");
+        }
+    }
 
     env_logger::init();
     let git = Git::new();

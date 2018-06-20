@@ -46,6 +46,10 @@ Just run `topgrade`. It will run the following steps:
   * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
   * *macOS*: Upgrade App Store applications
 
+## Flags
+* `-t/--tmux` - Topgrade will launch itself in a new tmux session. This flag has no effect if
+  Topgrade already runs inside tmux. This is useful when using topgrade on remote systems.
+
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml`. Here's an example:
 
