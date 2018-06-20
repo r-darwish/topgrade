@@ -71,6 +71,13 @@ fn run() -> Result<(), Error> {
         None
     };
 
+    if let Some(commands) = config.pre_commands() {
+        for (name, command) in commands {
+            terminal.print_separator(name);
+            run_custom_command(&command)?;
+        }
+    }
+
     if cfg!(target_os = "linux") {
         terminal.print_separator("System update");
         match linux::Distribution::detect() {

@@ -5,9 +5,12 @@ use std::collections::BTreeMap;
 use std::fs;
 use toml;
 
+type Commands = BTreeMap<String, String>;
+
 #[derive(Deserialize, Default)]
 pub struct Config {
-    commands: Option<BTreeMap<String, String>>,
+    pre_commands: Option<Commands>,
+    commands: Option<Commands>,
     git_repos: Option<Vec<String>>,
 }
 
@@ -30,7 +33,11 @@ impl Config {
         Ok(result)
     }
 
-    pub fn commands(&self) -> &Option<BTreeMap<String, String>> {
+    pub fn pre_commands(&self) -> &Option<Commands> {
+        &self.pre_commands
+    }
+
+    pub fn commands(&self) -> &Option<Commands> {
         &self.commands
     }
 
