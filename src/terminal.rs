@@ -17,12 +17,14 @@ impl Terminal {
         let message = message.as_ref();
         match self.width {
             Some(width) => {
-                print!("\n{}―― {} ", color::Fg(color::LightWhite), message);
-                let border = max(2, min(80, width as usize) - 3 - message.len());
-                for _ in 0..border {
-                    print!("―");
-                }
-                println!("{}", color::Fg(color::Reset));
+                println!(
+                    "\n{}―― {} {:―^border$}{}",
+                    color::Fg(color::LightWhite),
+                    message,
+                    "",
+                    color::Fg(color::Reset),
+                    border = max(2, min(80, width as usize) - 3 - message.len())
+                );
             }
             None => {
                 println!("―― {} ――", message);
