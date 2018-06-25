@@ -29,6 +29,7 @@ Just run `topgrade`. It will run the following steps:
   * Custom defined paths
 * *Unix*: Run [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
+* Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages
 * Upgrade Vim packages. Works with the following plugin frameworks:

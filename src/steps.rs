@@ -1,7 +1,9 @@
 use super::utils::Check;
 use failure;
+use std::env::home_dir;
 use std::path::PathBuf;
 use std::process::Command;
+use utils::is_ancestor;
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
@@ -111,6 +113,14 @@ pub fn run_fwupdmgr(fwupdmgr: &PathBuf) -> Result<(), failure::Error> {
 }
 
 pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
+    if is_ancestor(&home_dir().unwrap(), &rustup) {
+        Command::new(rustup)
+            .args(&["self", "update"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    }
+
     Command::new(rustup).arg("update").spawn()?.wait()?.check()?;
 
     Ok(())
