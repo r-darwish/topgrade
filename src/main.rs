@@ -131,11 +131,9 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if cfg!(target_os = "macos") {
-        if let Some(brew) = utils::which("brew") {
-            terminal.print_separator("Homebrew");
-            run_homebrew(&brew).report("Homebrew", &mut reports);
-        }
+    if let Some(brew) = utils::which("brew") {
+        terminal.print_separator("Brew");
+        run_homebrew(&brew).report("Brew", &mut reports);
     }
 
     git_repos.insert(home_path(".emacs.d"));

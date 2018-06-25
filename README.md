@@ -19,7 +19,7 @@ Just run `topgrade`. It will run the following steps:
   * *CentOS/RHEL*: Run `yum upgrade`
   * *Fedora* - Run `dnf upgrade`
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
-  * *macOS*: Run `brew update && brew upgrade`
+* *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew.
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
   * ~/.zshrc
