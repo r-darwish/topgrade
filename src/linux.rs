@@ -52,7 +52,7 @@ impl Distribution {
 
 pub fn upgrade_arch_linux(
     sudo: &Option<PathBuf>,
-    terminal: &Terminal,
+    terminal: &mut Terminal,
 ) -> Result<(), failure::Error> {
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
@@ -82,7 +82,10 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
     Ok(())
 }
 
-pub fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+pub fn upgrade_redhat(
+    sudo: &Option<PathBuf>,
+    terminal: &mut Terminal,
+) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["yum", "upgrade"])
@@ -96,7 +99,10 @@ pub fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(),
     Ok(())
 }
 
-pub fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+pub fn upgrade_fedora(
+    sudo: &Option<PathBuf>,
+    terminal: &mut Terminal,
+) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["dnf", "upgrade"])
@@ -110,7 +116,10 @@ pub fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(),
     Ok(())
 }
 
-pub fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &Terminal) -> Result<(), failure::Error> {
+pub fn upgrade_debian(
+    sudo: &Option<PathBuf>,
+    terminal: &mut Terminal,
+) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
             .args(&["apt", "update"])

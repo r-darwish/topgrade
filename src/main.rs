@@ -3,7 +3,6 @@ extern crate failure;
 extern crate which;
 #[macro_use]
 extern crate failure_derive;
-extern crate termion;
 extern crate toml;
 #[macro_use]
 extern crate serde_derive;
@@ -14,6 +13,8 @@ extern crate shellexpand;
 #[macro_use]
 extern crate log;
 extern crate env_logger;
+extern crate term_size;
+extern crate termcolor;
 
 mod config;
 mod git;
@@ -94,7 +95,7 @@ fn run() -> Result<(), Error> {
     env_logger::init();
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
-    let terminal = Terminal::new();
+    let mut terminal = Terminal::new();
     let config = Config::read()?;
     let mut reports = Report::new();
 
@@ -116,11 +117,11 @@ fn run() -> Result<(), Error> {
         match linux::Distribution::detect() {
             Ok(distribution) => {
                 match distribution {
-                    linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &terminal),
-                    linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &terminal),
-                    linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &terminal),
+                    linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &mut terminal),
+                    linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &mut terminal),
+                    linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &mut terminal),
                     linux::Distribution::Ubuntu | linux::Distribution::Debian => {
-                        linux::upgrade_debian(&sudo, &terminal)
+                        linux::upgrade_debian(&sudo, &mut terminal)
                     }
                 }.report("System upgrade", &mut reports);
             }

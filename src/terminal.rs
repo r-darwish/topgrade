@@ -1,79 +1,70 @@
 use std::cmp::{max, min};
-use termion;
-use termion::color;
+use std::io::Write;
+use term_size;
+use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 pub struct Terminal {
-    width: Option<u16>,
+    width: Option<usize>,
+    stdout: StandardStream,
 }
 
 impl Terminal {
     pub fn new() -> Self {
         Self {
-            width: termion::terminal_size().map(|(w, _)| w).ok(),
+            width: term_size::dimensions().map(|(w, _)| w),
+            stdout: StandardStream::stdout(ColorChoice::Auto),
         }
     }
 
-    pub fn print_separator<P: AsRef<str>>(&self, message: P) {
+    pub fn print_separator<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
         match self.width {
             Some(width) => {
-                println!(
-                    "\n{}―― {} {:―^border$}{}",
-                    color::Fg(color::LightWhite),
+                let _ = self.stdout
+                    .set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true));
+                let _ = write!(
+                    &mut self.stdout,
+                    "\n―― {} {:―^border$}\n",
                     message,
                     "",
-                    color::Fg(color::Reset),
                     border = max(2, min(80, width as usize) - 3 - message.len())
                 );
+                let _ = self.stdout.reset();
+                let _ = self.stdout.flush();
             }
             None => {
-                println!("―― {} ――", message);
+                let _ = write!(&mut self.stdout, "―― {} ――\n", message);
             }
         }
     }
 
-    pub fn print_warning<P: AsRef<str>>(&self, message: P) {
+    pub fn print_warning<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
 
-        match self.width {
-            Some(_) => {
-                println!(
-                    "{}{}{}",
-                    color::Fg(color::LightYellow),
-                    message,
-                    color::Fg(color::Reset)
-                );
-            }
-            None => {
-                println!("{}", message);
-            }
-        }
+        let _ = self.stdout
+            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
+        let _ = write!(&mut self.stdout, "{}", message);
+        let _ = self.stdout.reset();
+        let _ = self.stdout.flush();
     }
 
-    pub fn print_result<P: AsRef<str>>(&self, key: P, succeeded: bool) {
+    pub fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
         let key = key.as_ref();
+        let _ = write!(&mut self.stdout, "{}: ", key);
 
-        match self.width {
-            Some(_) => {
-                if succeeded {
-                    println!(
-                        "{}: {}OK{}",
-                        key,
-                        color::Fg(color::LightGreen),
-                        color::Fg(color::Reset)
-                    );
-                } else {
-                    println!(
-                        "{}: {}FAILED{}",
-                        key,
-                        color::Fg(color::LightRed),
-                        color::Fg(color::Reset)
-                    );
-                }
-            }
-            None => {
-                println!("{}: {}", key, if succeeded { "OK" } else { "FAILED" });
-            }
-        }
+        let _ = self.stdout.set_color(
+            ColorSpec::new()
+                .set_fg(Some(if succeeded { Color::Green } else { Color::Red }))
+                .set_bold(true),
+        );
+
+        let _ = write!(
+            &mut self.stdout,
+            "{}",
+            if succeeded { "OK" } else { "FAILED" }
+        );
+
+        let _ = self.stdout.reset();
+        let _ = self.stdout.flush();
     }
 }
