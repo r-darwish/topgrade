@@ -38,6 +38,7 @@ impl Terminal {
         }
     }
 
+    #[allow(dead_code)]
     pub fn print_warning<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
 

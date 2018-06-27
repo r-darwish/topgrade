@@ -18,6 +18,7 @@ extern crate termcolor;
 
 mod config;
 mod git;
+#[cfg(target_os = "linux")]
 mod linux;
 mod npm;
 mod report;
@@ -35,8 +36,10 @@ use std::env;
 use std::env::home_dir;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
+#[cfg(unix)]
 use std::path::PathBuf;
 use std::process::exit;
+#[cfg(unix)]
 use std::process::Command;
 use steps::*;
 use terminal::Terminal;
@@ -70,7 +73,8 @@ fn run() -> Result<(), Error> {
         .get_matches();
 
     if matches.is_present("tmux") && !env::var("TMUX").is_ok() {
-        if cfg!(unix) {
+        #[cfg(unix)]
+        {
             let tmux = utils::which("tmux").expect("Could not find tmux");
             let err = Command::new(tmux)
                 .args(&[
@@ -87,8 +91,6 @@ fn run() -> Result<(), Error> {
                 ])
                 .exec();
             panic!("{:?}", err);
-        } else {
-            panic!("This flag is only implemented in Unix systems");
         }
     }
 
@@ -99,11 +101,8 @@ fn run() -> Result<(), Error> {
     let config = Config::read()?;
     let mut reports = Report::new();
 
-    let sudo = if cfg!(target_os = "linux") {
-        utils::which("sudo")
-    } else {
-        None
-    };
+    #[cfg(target_os = "linux")]
+    let sudo = utils::which("sudo");
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
@@ -112,7 +111,8 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if cfg!(target_os = "linux") {
+    #[cfg(target_os = "linux")]
+    {
         terminal.print_separator("System update");
         match linux::Distribution::detect() {
             Ok(distribution) => {
@@ -139,7 +139,8 @@ fn run() -> Result<(), Error> {
 
     git_repos.insert(home_path(".emacs.d"));
 
-    if cfg!(unix) {
+    #[cfg(unix)]
+    {
         git_repos.insert(home_path(".zshrc"));
         git_repos.insert(home_path(".oh-my-zsh"));
         git_repos.insert(home_path(".tmux"));
@@ -159,7 +160,8 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if cfg!(unix) {
+    #[cfg(unix)]
+    {
         if let Some(zsh) = utils::which("zsh") {
             if home_path(".zplug").exists() {
                 terminal.print_separator("zplug");
@@ -216,7 +218,8 @@ fn run() -> Result<(), Error> {
         run_apm(&apm).report("Atom Package Manager", &mut reports);
     }
 
-    if cfg!(target_os = "linux") {
+    #[cfg(target_os = "linux")]
+    {
         if let Some(flatpak) = utils::which("flatpak") {
             terminal.print_separator("Flatpak");
             run_flatpak(&flatpak).report("Flatpak", &mut reports);
@@ -237,7 +240,8 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if cfg!(target_os = "linux") {
+    #[cfg(target_os = "linux")]
+    {
         if let Some(fwupdmgr) = utils::which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
             run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
@@ -251,7 +255,8 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if cfg!(target_os = "macos") {
+    #[cfg(target_os = "macos")]
+    {
         terminal.print_separator("App Store");
         upgrade_macos().report("App Store", &mut reports);;
     }
