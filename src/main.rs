@@ -95,8 +95,8 @@ fn run() -> Result<(), Error> {
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
     let terminal = Terminal::new();
-    let mut reports = Report::new();
     let config = Config::read()?;
+    let mut reports = Report::new();
 
     let sudo = if cfg!(target_os = "linux") {
         utils::which("sudo")
@@ -232,7 +232,7 @@ fn run() -> Result<(), Error> {
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             terminal.print_separator(name);
-            run_custom_command(&command).report(name.as_ref(), &mut reports);
+            run_custom_command(&command).report(name.as_str(), &mut reports);
         }
     }
 
