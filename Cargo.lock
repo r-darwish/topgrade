@@ -318,7 +318,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "directories 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
