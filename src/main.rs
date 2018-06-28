@@ -16,10 +16,17 @@ extern crate env_logger;
 extern crate term_size;
 extern crate termcolor;
 
-mod config;
-mod git;
 #[cfg(target_os = "linux")]
 mod linux;
+#[cfg(target_os = "macos")]
+mod macos;
+#[cfg(unix)]
+mod unix;
+#[cfg(target_os = "windows")]
+mod windows;
+
+mod config;
+mod git;
 mod npm;
 mod report;
 mod steps;
@@ -34,13 +41,7 @@ use git::{Git, Repositories};
 use report::{Report, Reporter};
 use std::env;
 use std::env::home_dir;
-#[cfg(unix)]
-use std::os::unix::process::CommandExt;
-#[cfg(unix)]
-use std::path::PathBuf;
 use std::process::exit;
-#[cfg(unix)]
-use std::process::Command;
 use steps::*;
 use terminal::Terminal;
 use utils::{home_path, is_ancestor};
@@ -48,17 +49,6 @@ use utils::{home_path, is_ancestor};
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
 struct StepFailed;
-
-#[cfg(unix)]
-fn tpm() -> Option<PathBuf> {
-    let mut path = home_dir().unwrap();
-    path.push(".tmux/plugins/tpm/bin/update_plugins");
-    if path.exists() {
-        Some(path)
-    } else {
-        None
-    }
-}
 
 fn run() -> Result<(), Error> {
     let matches = App::new("Topgrade")
@@ -75,22 +65,7 @@ fn run() -> Result<(), Error> {
     if matches.is_present("tmux") && !env::var("TMUX").is_ok() {
         #[cfg(unix)]
         {
-            let tmux = utils::which("tmux").expect("Could not find tmux");
-            let err = Command::new(tmux)
-                .args(&[
-                    "new-session",
-                    "-s",
-                    "topgrade",
-                    "-n",
-                    "topgrade",
-                    &env::args().collect::<Vec<String>>().join(" "),
-                    ";",
-                    "set",
-                    "remain-on-exit",
-                    "on",
-                ])
-                .exec();
-            panic!("{:?}", err);
+            unix::run_in_tmux();
         }
     }
 
@@ -141,7 +116,7 @@ fn run() -> Result<(), Error> {
     {
         if let Some(choco) = utils::which("choco") {
             terminal.print_separator("Chocolatey");
-            run_chocolatey(&choco).report("Chocolatey", &mut reports);
+            windows::run_chocolatey(&choco).report("Chocolatey", &mut reports);
         }
     }
 
@@ -173,13 +148,13 @@ fn run() -> Result<(), Error> {
         if let Some(zsh) = utils::which("zsh") {
             if home_path(".zplug").exists() {
                 terminal.print_separator("zplug");
-                run_zplug(&zsh).report("zplug", &mut reports);
+                unix::run_zplug(&zsh).report("zplug", &mut reports);
             }
         }
 
-        if let Some(tpm) = tpm() {
+        if let Some(tpm) = unix::tpm_path() {
             terminal.print_separator("tmux plugins");
-            run_tpm(&tpm).report("tmux", &mut reports);
+            unix::run_tpm(&tpm).report("tmux", &mut reports);
         }
     }
 
@@ -230,13 +205,13 @@ fn run() -> Result<(), Error> {
     {
         if let Some(flatpak) = utils::which("flatpak") {
             terminal.print_separator("Flatpak");
-            run_flatpak(&flatpak).report("Flatpak", &mut reports);
+            linux::run_flatpak(&flatpak).report("Flatpak", &mut reports);
         }
 
         if let Some(sudo) = &sudo {
             if let Some(snap) = utils::which("snap") {
                 terminal.print_separator("snap");
-                run_snap(&sudo, &snap).report("snap", &mut reports);
+                linux::run_snap(&sudo, &snap).report("snap", &mut reports);
             }
         }
     }
@@ -252,13 +227,13 @@ fn run() -> Result<(), Error> {
     {
         if let Some(fwupdmgr) = utils::which("fwupdmgr") {
             terminal.print_separator("Firmware upgrades");
-            run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
+            linux::run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
         }
 
         if let Some(sudo) = &sudo {
             if let Some(_) = utils::which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
-                run_needrestart(&sudo).report("Restarts", &mut reports);
+                linux::run_needrestart(&sudo).report("Restarts", &mut reports);
             }
         }
     }
@@ -266,7 +241,7 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "macos")]
     {
         terminal.print_separator("App Store");
-        upgrade_macos().report("App Store", &mut reports);;
+        macos::upgrade_macos().report("App Store", &mut reports);
     }
 
     if !reports.is_empty() {

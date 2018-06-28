@@ -7,24 +7,6 @@ use utils::is_ancestor;
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
-#[cfg(unix)]
-pub fn run_zplug(zsh: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(zsh)
-        .args(&["-c", "source ~/.zshrc && zplug update"])
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
-#[cfg(unix)]
-pub fn run_tpm(tpm: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&tpm).arg("all").spawn()?.wait()?.check()?;
-
-    Ok(())
-}
-
 pub fn run_cargo_update(cargo_update: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&cargo_update)
         .args(&["install-update", "--git", "--all"])
@@ -88,34 +70,6 @@ pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
-pub fn run_needrestart(sudo: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&sudo)
-        .arg("needrestart")
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-pub fn run_fwupdmgr(fwupdmgr: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&fwupdmgr)
-        .arg("refresh")
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Command::new(&fwupdmgr)
-        .arg("get-updates")
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
 pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
     if is_ancestor(&home_dir().unwrap(), &rustup) {
         Command::new(rustup)
@@ -126,28 +80,6 @@ pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
     }
 
     Command::new(rustup).arg("update").spawn()?.wait()?.check()?;
-
-    Ok(())
-}
-
-#[cfg(target_os = "macos")]
-pub fn upgrade_macos() -> Result<(), failure::Error> {
-    Command::new("softwareupdate")
-        .args(&["--install", "--all"])
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
-#[cfg(windows)]
-pub fn run_chocolatey(choco: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&choco)
-        .args(&["upgrade", "all"])
-        .spawn()?
-        .wait()?
-        .check()?;
 
     Ok(())
 }
@@ -172,28 +104,6 @@ pub fn run_custom_command(command: &str) -> Result<(), failure::Error> {
     Command::new("sh")
         .arg("-c")
         .arg(command)
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-pub fn run_flatpak(flatpak: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&flatpak)
-        .arg("update")
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    Ok(())
-}
-
-#[cfg(target_os = "linux")]
-pub fn run_snap(sudo: &PathBuf, snap: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&sudo)
-        .args(&[snap.to_str().unwrap(), "refresh"])
         .spawn()?
         .wait()?
         .check()?;

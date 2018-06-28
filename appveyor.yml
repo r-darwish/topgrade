@@ -46,12 +46,6 @@ cache:
   - C:\Users\appveyor\.cargo\registry
   - target
 
-branches:
-  only:
-    # Release tags
-    - /^v\d+\.\d+\.\d+.*$/
-    - master
-
 notifications:
   - provider: Email
     on_build_success: false

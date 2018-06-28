@@ -138,3 +138,49 @@ pub fn upgrade_debian(
 
     Ok(())
 }
+
+pub fn run_needrestart(sudo: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&sudo)
+        .arg("needrestart")
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
+pub fn run_fwupdmgr(fwupdmgr: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&fwupdmgr)
+        .arg("refresh")
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Command::new(&fwupdmgr)
+        .arg("get-updates")
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
+pub fn run_flatpak(flatpak: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&flatpak)
+        .arg("update")
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
+pub fn run_snap(sudo: &PathBuf, snap: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&sudo)
+        .args(&[snap.to_str().unwrap(), "refresh"])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
