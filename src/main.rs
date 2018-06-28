@@ -137,6 +137,14 @@ fn run() -> Result<(), Error> {
         run_homebrew(&brew).report("Brew", &mut reports);
     }
 
+    #[cfg(windows)]
+    {
+        if let Some(choco) = utils::which("choco") {
+            terminal.print_separator("Chocolatey");
+            run_chocolatey(&choco).report("Chocolatey", &mut reports);
+        }
+    }
+
     git_repos.insert(home_path(".emacs.d"));
 
     #[cfg(unix)]

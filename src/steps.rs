@@ -141,6 +141,17 @@ pub fn upgrade_macos() -> Result<(), failure::Error> {
     Ok(())
 }
 
+#[cfg(windows)]
+pub fn run_chocolatey(choco: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&choco)
+        .args(&["upgrade", "all"])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
 pub fn run_homebrew(homebrew: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&homebrew)
         .arg("update")
