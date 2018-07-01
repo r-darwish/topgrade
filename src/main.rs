@@ -231,9 +231,9 @@ fn run() -> Result<(), Error> {
         }
 
         if let Some(sudo) = &sudo {
-            if let Some(_) = utils::which("needrestart") {
+            if let Some(needrestart) = utils::which("needrestart") {
                 terminal.print_separator("Check for needed restarts");
-                linux::run_needrestart(&sudo).report("Restarts", &mut reports);
+                linux::run_needrestart(&sudo, &needrestart).report("Restarts", &mut reports);
             }
         }
     }

@@ -70,7 +70,7 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
     } else {
         if let Some(sudo) = &sudo {
             Command::new(&sudo)
-                .args(&["pacman", "-Syu"])
+                .args(&["/usr/bin/pacman", "-Syu"])
                 .spawn()?
                 .wait()?
                 .check()?;
@@ -88,7 +88,7 @@ pub fn upgrade_redhat(
 ) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
-            .args(&["yum", "upgrade"])
+            .args(&["/usr/bin/yum", "upgrade"])
             .spawn()?
             .wait()?
             .check()?;
@@ -105,7 +105,7 @@ pub fn upgrade_fedora(
 ) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
-            .args(&["dnf", "upgrade"])
+            .args(&["/usr/bin/dnf", "upgrade"])
             .spawn()?
             .wait()?
             .check()?;
@@ -122,13 +122,13 @@ pub fn upgrade_debian(
 ) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Command::new(&sudo)
-            .args(&["apt", "update"])
+            .args(&["/usr/bin/apt", "update"])
             .spawn()?
             .wait()?
             .check()?;
 
         Command::new(&sudo)
-            .args(&["apt", "dist-upgrade"])
+            .args(&["/usr/bin/apt", "dist-upgrade"])
             .spawn()?
             .wait()?
             .check()?;
@@ -139,9 +139,9 @@ pub fn upgrade_debian(
     Ok(())
 }
 
-pub fn run_needrestart(sudo: &PathBuf) -> Result<(), failure::Error> {
+pub fn run_needrestart(sudo: &PathBuf, needrestart: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&sudo)
-        .arg("needrestart")
+        .arg(needrestart)
         .spawn()?
         .wait()?
         .check()?;
