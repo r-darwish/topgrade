@@ -1,6 +1,7 @@
 use super::utils::{which, Check};
 use failure::Error;
 use std::collections::HashSet;
+use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -19,24 +20,30 @@ impl Git {
     }
 
     pub fn get_repo_root<P: AsRef<Path>>(&self, path: P) -> Option<String> {
-        if !path.as_ref().exists() {
-            return None;
-        }
+        match path.as_ref().canonicalize() {
+            Ok(path) => {
+                debug_assert!(path.exists());
 
-        if let Some(git) = &self.git {
-            let output = Command::new(&git)
-                .arg("rev-parse")
-                .arg("--show-toplevel")
-                .current_dir(path)
-                .output();
+                if let Some(git) = &self.git {
+                    let output = Command::new(&git)
+                        .arg("rev-parse")
+                        .arg("--show-toplevel")
+                        .current_dir(path)
+                        .output();
 
-            if let Ok(output) = output {
-                if !output.status.success() {
-                    return None;
+                    if let Ok(output) = output {
+                        if !output.status.success() {
+                            return None;
+                        }
+
+                        return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
+                    }
                 }
-
-                return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
             }
+            Err(e) => match e.kind() {
+                io::ErrorKind::NotFound => debug!("{} does not exists", path.as_ref().display()),
+                _ => error!("Error looking for {}: {}", path.as_ref().display(), e),
+            },
         }
 
         None
