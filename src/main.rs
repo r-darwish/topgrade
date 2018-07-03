@@ -152,6 +152,13 @@ fn run() -> Result<(), Error> {
             }
         }
 
+        if let Some(fish) = utils::which("fish") {
+            if home_path(".config/fish/functions/fisher.fish").exists() {
+                terminal.print_separator("fisherman");
+                unix::run_fisherman(&fish).report("fisherman", &mut reports);
+            }
+        }
+
         if let Some(tpm) = unix::tpm_path() {
             terminal.print_separator("tmux plugins");
             unix::run_tpm(&tpm).report("tmux", &mut reports);

@@ -17,6 +17,16 @@ pub fn run_zplug(zsh: &PathBuf) -> Result<(), failure::Error> {
     Ok(())
 }
 
+pub fn run_fisherman(fish: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(fish)
+        .args(&["-c", "fisher update"])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
 pub fn run_tpm(tpm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&tpm).arg("all").spawn()?.wait()?.check()?;
 

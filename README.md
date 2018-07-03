@@ -31,6 +31,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/fish/config.fish
   * Custom defined paths
 * *Unix*: Run [zplug](https://github.com/zplug/zplug) update
+* *Unix*: Run [fisherman](https://github.com/fisherman/fisherman) update
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
