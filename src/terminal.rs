@@ -59,11 +59,7 @@ impl Terminal {
                 .set_bold(true),
         );
 
-        let _ = write!(
-            &mut self.stdout,
-            "{}\n",
-            if succeeded { "OK" } else { "FAILED" }
-        );
+        let _ = write!(&mut self.stdout, "{}\n", if succeeded { "OK" } else { "FAILED" });
 
         let _ = self.stdout.reset();
         let _ = self.stdout.flush();

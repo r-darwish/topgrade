@@ -19,13 +19,7 @@ pub fn run_cargo_update(cargo_update: &PathBuf) -> Result<(), failure::Error> {
 
 pub fn run_emacs(emacs: &PathBuf, init: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&emacs)
-        .args(&[
-            "--batch",
-            "-l",
-            init.to_str().unwrap(),
-            "--eval",
-            EMACS_UPGRADE,
-        ])
+        .args(&["--batch", "-l", init.to_str().unwrap(), "--eval", EMACS_UPGRADE])
         .spawn()?
         .wait()?
         .check()?;
@@ -33,11 +27,7 @@ pub fn run_emacs(emacs: &PathBuf, init: &PathBuf) -> Result<(), failure::Error> 
     Ok(())
 }
 
-pub fn run_vim(
-    vim: &PathBuf,
-    vimrc: &PathBuf,
-    upgrade_command: &str,
-) -> Result<(), failure::Error> {
+pub fn run_vim(vim: &PathBuf, vimrc: &PathBuf, upgrade_command: &str) -> Result<(), failure::Error> {
     Command::new(&vim)
         .args(&[
             "-N",
@@ -72,11 +62,7 @@ pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
 
 pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
     if is_ancestor(&home_dir().unwrap(), &rustup) {
-        Command::new(rustup)
-            .args(&["self", "update"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        Command::new(rustup).args(&["self", "update"]).spawn()?.wait()?.check()?;
     }
 
     Command::new(rustup).arg("update").spawn()?.wait()?.check()?;
@@ -85,28 +71,15 @@ pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
 }
 
 pub fn run_homebrew(homebrew: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&homebrew)
-        .arg("update")
-        .spawn()?
-        .wait()?
-        .check()?;
+    Command::new(&homebrew).arg("update").spawn()?.wait()?.check()?;
 
-    Command::new(&homebrew)
-        .arg("upgrade")
-        .spawn()?
-        .wait()?
-        .check()?;
+    Command::new(&homebrew).arg("upgrade").spawn()?.wait()?.check()?;
 
     Ok(())
 }
 
 pub fn run_custom_command(command: &str) -> Result<(), failure::Error> {
-    Command::new("sh")
-        .arg("-c")
-        .arg(command)
-        .spawn()?
-        .wait()?
-        .check()?;
+    Command::new("sh").arg("-c").arg(command).spawn()?.wait()?.check()?;
 
     Ok(())
 }

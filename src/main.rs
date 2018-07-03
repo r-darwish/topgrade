@@ -188,8 +188,7 @@ fn run() -> Result<(), Error> {
         if let Some(vimrc) = vim::vimrc() {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("vim ({:?})", plugin_framework));
-                run_vim(&vim, &vimrc, plugin_framework.upgrade_command())
-                    .report("Vim", &mut reports);
+                run_vim(&vim, &vimrc, plugin_framework.upgrade_command()).report("Vim", &mut reports);
             }
         }
     }
