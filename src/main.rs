@@ -15,6 +15,7 @@ extern crate log;
 extern crate env_logger;
 extern crate term_size;
 extern crate termcolor;
+extern crate app_dirs;
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -183,6 +184,16 @@ fn run() -> Result<(), Error> {
                 terminal.print_separator(&format!("vim ({:?})", plugin_framework));
                 run_vim(&vim, &vimrc, plugin_framework.upgrade_command())
                     .report("Vim", &mut reports);
+            }
+        }
+    }
+
+    if let Some(nvim) = utils::which("nvim") {
+        if let Some(nvimrc) = vim::nvimrc() {
+            if let Some(plugin_framework) = vim::PluginFramework::detect(&nvimrc) {
+                terminal.print_separator(&format!("neovim ({:?})", plugin_framework));
+                run_nvim(&nvim, &nvimrc, plugin_framework.upgrade_command())
+                    .report("neovim", &mut reports);
             }
         }
     }

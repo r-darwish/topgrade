@@ -1,6 +1,7 @@
 use super::home_path;
 use std::fs;
 use std::path::PathBuf;
+use app_dirs::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PluginFramework {
@@ -45,6 +46,28 @@ pub fn vimrc() -> Option<PathBuf> {
         let vimrc = home_path(".vim/vimrc");
         if vimrc.exists() {
             return Some(vimrc);
+        }
+    }
+
+    None
+}
+
+pub fn nvimrc() -> Option<PathBuf> {
+    {
+        let mut nvimrc = get_data_root(AppDataType::UserConfig).unwrap();
+        nvimrc.push("nvim/init.vim");
+
+        if nvimrc.exists() {
+            return Some(nvimrc);
+        }
+    }
+
+    {
+        let mut nvimrc = get_data_root(AppDataType::UserCache).unwrap();
+        nvimrc.push("nvim/init.vim");
+
+        if nvimrc.exists() {
+            return Some(nvimrc);
         }
     }
 

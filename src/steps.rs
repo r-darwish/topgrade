@@ -60,6 +60,32 @@ pub fn run_vim(
     Ok(())
 }
 
+pub fn run_nvim(
+    nvim: &PathBuf,
+    nvimrc: &PathBuf,
+    upgrade_command: &str,
+) -> Result<(), failure::Error> {
+    Command::new(&nvim)
+        .args(&[
+            "-N",
+            "-u",
+            nvimrc.to_str().unwrap(),
+            "-c",
+            upgrade_command,
+            "-c",
+            "quitall",
+            "-es",
+            "-V1"
+        ])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    println!("");
+
+    Ok(())
+}
+
 pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&apm)
         .args(&["upgrade", "--confirm=false"])
