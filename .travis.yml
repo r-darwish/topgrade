@@ -31,6 +31,7 @@ matrix:
 before_install:
   - set -e
   - rustup self update
+  - rustup component add rustfmt-preview
 
 install:
   - sh ci/install.sh

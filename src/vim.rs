@@ -1,7 +1,7 @@
 use super::home_path;
+use app_dirs::*;
 use std::fs;
 use std::path::PathBuf;
-use app_dirs::*;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PluginFramework {
