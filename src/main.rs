@@ -192,7 +192,7 @@ fn run() -> Result<(), Error> {
         if let Some(nvimrc) = vim::nvimrc() {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&nvimrc) {
                 terminal.print_separator(&format!("neovim ({:?})", plugin_framework));
-                run_nvim(&nvim, &nvimrc, plugin_framework.upgrade_command())
+                run_vim(&nvim, &nvimrc, plugin_framework.upgrade_command())
                     .report("neovim", &mut reports);
             }
         }
