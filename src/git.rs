@@ -55,7 +55,17 @@ impl Git {
                 .arg("pull")
                 .arg("--rebase")
                 .arg("--autostash")
-                .current_dir(path)
+                .current_dir(&path)
+                .spawn()?
+                .wait()?
+                .check()?;
+
+            Command::new(&git)
+                .arg("submodule")
+                .arg("update")
+                .arg("--init")
+                .arg("--recursive")
+                .current_dir(&path)
                 .spawn()?
                 .wait()?
                 .check()?;
