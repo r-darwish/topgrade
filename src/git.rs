@@ -21,8 +21,15 @@ impl Git {
 
     pub fn get_repo_root<P: AsRef<Path>>(&self, path: P) -> Option<String> {
         match path.as_ref().canonicalize() {
-            Ok(path) => {
+            Ok(mut path) => {
                 debug_assert!(path.exists());
+
+                if path.is_file() {
+                    debug!("{} is a file. Checking {}", path.display(), path.parent()?.display());
+                    path = path.parent()?.to_path_buf();
+                }
+
+                debug!("Checking if {} is a git repository", path.display());
 
                 if let Some(git) = &self.git {
                     let output = Command::new(&git)
