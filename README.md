@@ -29,7 +29,9 @@ Just run `topgrade`. It will run the following steps:
   * ~/.zshrc
   * [~/.oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
   * ~/.tmux
-  * ~/.config/fish/config.fish
+  * ~/.config/fish
+  * ~/.config/nvim
+  * ~/.vim
   * Custom defined paths
 * *Unix*: Run [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Run [fisherman](https://github.com/fisherman/fisherman) update

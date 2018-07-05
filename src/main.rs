@@ -122,6 +122,8 @@ fn run() -> Result<(), Error> {
     }
 
     git_repos.insert(home_path(".emacs.d"));
+    git_repos.insert(home_path(".vim"));
+    git_repos.insert(home_path(".config/nvim"));
 
     #[cfg(unix)]
     {
