@@ -1,4 +1,4 @@
-use directories;
+use directories::BaseDirs;
 use failure;
 use shellexpand;
 use std::collections::BTreeMap;
@@ -15,8 +15,7 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn read() -> Result<Config, failure::Error> {
-        let base_dirs = directories::BaseDirs::new().unwrap();
+    pub fn read(base_dirs: &BaseDirs) -> Result<Config, failure::Error> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
             return Ok(Default::default());

@@ -12,7 +12,6 @@ extern crate serde;
 extern crate shellexpand;
 #[macro_use]
 extern crate log;
-extern crate app_dirs;
 extern crate env_logger;
 extern crate term_size;
 extern crate termcolor;
@@ -41,15 +40,18 @@ use failure::Error;
 use git::{Git, Repositories};
 use report::{Report, Reporter};
 use std::env;
-use std::env::home_dir;
 use std::process::exit;
 use steps::*;
 use terminal::Terminal;
-use utils::{home_path, is_ancestor};
+use utils::is_ancestor;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
 struct StepFailed;
+
+#[derive(Fail, Debug)]
+#[fail(display = "Cannot find the user base directories")]
+struct NoBaseDirectories;
 
 fn run() -> Result<(), Error> {
     let matches = App::new("Topgrade")
@@ -71,10 +73,11 @@ fn run() -> Result<(), Error> {
     }
 
     env_logger::init();
+    let base_dirs = directories::BaseDirs::new().ok_or(NoBaseDirectories)?;
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
     let mut terminal = Terminal::new();
-    let config = Config::read()?;
+    let config = Config::read(&base_dirs)?;
     let mut reports = Report::new();
 
     #[cfg(target_os = "linux")]
@@ -121,16 +124,16 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    git_repos.insert(home_path(".emacs.d"));
-    git_repos.insert(home_path(".vim"));
-    git_repos.insert(home_path(".config/nvim"));
+    git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
+    git_repos.insert(base_dirs.home_dir().join(".vim"));
+    git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
 
     #[cfg(unix)]
     {
-        git_repos.insert(home_path(".zshrc"));
-        git_repos.insert(home_path(".oh-my-zsh"));
-        git_repos.insert(home_path(".tmux"));
-        git_repos.insert(home_path(".config/fish"));
+        git_repos.insert(base_dirs.home_dir().join(".zshrc"));
+        git_repos.insert(base_dirs.home_dir().join(".oh-my-zsh"));
+        git_repos.insert(base_dirs.home_dir().join(".tmux"));
+        git_repos.insert(base_dirs.home_dir().join(".config/fish"));
     }
 
     if let Some(custom_git_repos) = config.git_repos() {
@@ -149,14 +152,14 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     {
         if let Some(zsh) = utils::which("zsh") {
-            if home_path(".zplug").exists() {
+            if base_dirs.home_dir().join(".zplug").exists() {
                 terminal.print_separator("zplug");
                 unix::run_zplug(&zsh).report("zplug", &mut reports);
             }
         }
 
         if let Some(fish) = utils::which("fish") {
-            if home_path(".config/fish/functions/fisher.fish").exists() {
+            if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
                 terminal.print_separator("fisherman");
                 unix::run_fisherman(&fish).report("fisherman", &mut reports);
             }
@@ -173,14 +176,14 @@ fn run() -> Result<(), Error> {
         run_rustup(&rustup).report("rustup", &mut reports);
     }
 
-    let cargo_upgrade = home_path(".cargo/bin/cargo-install-update");
+    let cargo_upgrade = base_dirs.home_dir().join(".cargo/bin/cargo-install-update");
     if cargo_upgrade.exists() {
         terminal.print_separator("Cargo");
         run_cargo_update(&cargo_upgrade).report("Cargo", &mut reports);
     }
 
     if let Some(emacs) = utils::which("emacs") {
-        let init_file = home_path(".emacs.d/init.el");
+        let init_file = base_dirs.home_dir().join(".emacs.d/init.el");
         if init_file.exists() {
             terminal.print_separator("Emacs");
             run_emacs(&emacs, &init_file).report("Emacs", &mut reports);
@@ -188,7 +191,7 @@ fn run() -> Result<(), Error> {
     }
 
     if let Some(vim) = utils::which("vim") {
-        if let Some(vimrc) = vim::vimrc() {
+        if let Some(vimrc) = vim::vimrc(&base_dirs) {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("Vim ({:?})", plugin_framework));
                 run_vim(&vim, &vimrc, plugin_framework.upgrade_command()).report("Vim", &mut reports);
@@ -197,7 +200,7 @@ fn run() -> Result<(), Error> {
     }
 
     if let Some(nvim) = utils::which("nvim") {
-        if let Some(nvimrc) = vim::nvimrc() {
+        if let Some(nvimrc) = vim::nvimrc(&base_dirs) {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&nvimrc) {
                 terminal.print_separator(&format!("Neovim ({:?})", plugin_framework));
                 run_vim(&nvim, &nvimrc, plugin_framework.upgrade_command()).report("Neovim", &mut reports);
@@ -207,7 +210,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(npm) = utils::which("npm").map(npm::NPM::new) {
         if let Ok(npm_root) = npm.root() {
-            if is_ancestor(&home_dir().unwrap(), &npm_root) {
+            if is_ancestor(&base_dirs.home_dir(), &npm_root) {
                 terminal.print_separator("Node Package Manager");
                 npm.upgrade().report("Node Package Manager", &mut reports);
             }

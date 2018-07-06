@@ -1,5 +1,4 @@
-use super::home_path;
-use app_dirs::*;
+use directories::BaseDirs;
 use std::fs;
 use std::path::PathBuf;
 
@@ -34,16 +33,16 @@ impl PluginFramework {
     }
 }
 
-pub fn vimrc() -> Option<PathBuf> {
+pub fn vimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     {
-        let vimrc = home_path(".vimrc");
+        let vimrc = base_dirs.home_dir().join(".vimrc");
         if vimrc.exists() {
             return Some(vimrc);
         }
     }
 
     {
-        let vimrc = home_path(".vim/vimrc");
+        let vimrc = base_dirs.home_dir().join(".vim/vimrc");
         if vimrc.exists() {
             return Some(vimrc);
         }
@@ -52,10 +51,9 @@ pub fn vimrc() -> Option<PathBuf> {
     None
 }
 
-pub fn nvimrc() -> Option<PathBuf> {
+pub fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     {
-        let mut nvimrc = get_data_root(AppDataType::UserConfig).unwrap();
-        nvimrc.push("nvim/init.vim");
+        let nvimrc = base_dirs.config_dir().join("nvim/init.vim");
 
         if nvimrc.exists() {
             return Some(nvimrc);
@@ -63,8 +61,7 @@ pub fn nvimrc() -> Option<PathBuf> {
     }
 
     {
-        let mut nvimrc = get_data_root(AppDataType::UserCache).unwrap();
-        nvimrc.push("nvim/init.vim");
+        let nvimrc = base_dirs.cache_dir().join("nvim/init.vim");
 
         if nvimrc.exists() {
             return Some(nvimrc);

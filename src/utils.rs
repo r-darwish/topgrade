@@ -1,5 +1,4 @@
 use failure::Error;
-use std::env::home_dir;
 use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
@@ -23,13 +22,6 @@ impl Check for ExitStatus {
         }
     }
 }
-
-pub fn home_path(p: &str) -> PathBuf {
-    let mut path = home_dir().unwrap();
-    path.push(p);
-    path
-}
-
 pub fn is_ancestor(ancestor: &Path, path: &Path) -> bool {
     let mut p = path;
     while let Some(parent) = p.parent() {
