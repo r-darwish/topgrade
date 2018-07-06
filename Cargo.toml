@@ -8,16 +8,16 @@ authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 
 [dependencies]
-directories = "0.10.0"
+directories = "1.0.1"
 failure = "0.1.1"
 failure_derive = "0.1.1"
-serde = "1.0.67"
-serde_derive = "1.0.67"
+serde = "1.0.69"
+serde_derive = "1.0.69"
 toml = "0.4.6"
 which = "2.0.0"
 shellexpand = "1.0.0"
 clap = "2.32.0"
-log = "0.4.2"
+log = "0.4.3"
 env_logger = "0.5.10"
 term_size = "0.3.1"
 termcolor = "0.3.6"

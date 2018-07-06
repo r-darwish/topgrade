@@ -16,7 +16,7 @@ pub struct Config {
 
 impl Config {
     pub fn read() -> Result<Config, failure::Error> {
-        let base_dirs = directories::BaseDirs::new();
+        let base_dirs = directories::BaseDirs::new().unwrap();
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
             return Ok(Default::default());
