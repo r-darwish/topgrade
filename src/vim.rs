@@ -1,3 +1,4 @@
+use super::utils::PathExt;
 use directories::BaseDirs;
 use std::fs;
 use std::path::PathBuf;
@@ -34,39 +35,17 @@ impl PluginFramework {
 }
 
 pub fn vimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
-    {
-        let vimrc = base_dirs.home_dir().join(".vimrc");
-        if vimrc.exists() {
-            return Some(vimrc);
-        }
-    }
-
-    {
-        let vimrc = base_dirs.home_dir().join(".vim/vimrc");
-        if vimrc.exists() {
-            return Some(vimrc);
-        }
-    }
-
-    None
+    base_dirs
+        .home_dir()
+        .join(".vimrc")
+        .if_exists()
+        .or_else(|| base_dirs.home_dir().join(".vim/vimrc").if_exists())
 }
 
 pub fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
-    {
-        let nvimrc = base_dirs.config_dir().join("nvim/init.vim");
+    #[cfg(unix)]
+    return base_dirs.config_dir().join("nvim/init.vim").if_exists();
 
-        if nvimrc.exists() {
-            return Some(nvimrc);
-        }
-    }
-
-    {
-        let nvimrc = base_dirs.cache_dir().join("nvim/init.vim");
-
-        if nvimrc.exists() {
-            return Some(nvimrc);
-        }
-    }
-
-    None
+    #[cfg(windows)]
+    return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
 }

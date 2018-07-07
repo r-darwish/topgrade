@@ -1,9 +1,8 @@
-use super::utils::Check;
+use super::utils::{Check, PathExt};
+use directories::BaseDirs;
 use failure;
-use std::env::home_dir;
 use std::path::PathBuf;
 use std::process::Command;
-use utils::is_ancestor;
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
@@ -60,8 +59,8 @@ pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Ok(())
 }
 
-pub fn run_rustup(rustup: &PathBuf) -> Result<(), failure::Error> {
-    if is_ancestor(&home_dir().unwrap(), &rustup) {
+pub fn run_rustup(rustup: &PathBuf, base_dirs: &BaseDirs) -> Result<(), failure::Error> {
+    if rustup.is_descendant_of(base_dirs.home_dir()) {
         Command::new(rustup).args(&["self", "update"]).spawn()?.wait()?.check()?;
     }
 

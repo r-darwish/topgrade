@@ -22,17 +22,27 @@ impl Check for ExitStatus {
         }
     }
 }
-pub fn is_ancestor(ancestor: &Path, path: &Path) -> bool {
-    let mut p = path;
-    while let Some(parent) = p.parent() {
-        if parent == ancestor {
-            return true;
-        }
 
-        p = parent;
+pub trait PathExt
+where
+    Self: Sized,
+{
+    fn if_exists(self) -> Option<Self>;
+    fn is_descendant_of(&self, &Path) -> bool;
+}
+
+impl PathExt for PathBuf {
+    fn if_exists(self) -> Option<Self> {
+        if self.exists() {
+            Some(self)
+        } else {
+            None
+        }
     }
 
-    false
+    fn is_descendant_of(&self, ancestor: &Path) -> bool {
+        self.iter().zip(ancestor.iter()).all(|(a, b)| a == b)
+    }
 }
 
 pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {

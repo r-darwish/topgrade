@@ -43,7 +43,7 @@ use std::env;
 use std::process::exit;
 use steps::*;
 use terminal::Terminal;
-use utils::is_ancestor;
+use utils::PathExt;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
@@ -165,7 +165,7 @@ fn run() -> Result<(), Error> {
             }
         }
 
-        if let Some(tpm) = unix::tpm_path() {
+        if let Some(tpm) = unix::tpm_path(&base_dirs) {
             terminal.print_separator("tmux plugins");
             unix::run_tpm(&tpm).report("tmux", &mut reports);
         }
@@ -173,18 +173,16 @@ fn run() -> Result<(), Error> {
 
     if let Some(rustup) = utils::which("rustup") {
         terminal.print_separator("rustup");
-        run_rustup(&rustup).report("rustup", &mut reports);
+        run_rustup(&rustup, &base_dirs).report("rustup", &mut reports);
     }
 
-    let cargo_upgrade = base_dirs.home_dir().join(".cargo/bin/cargo-install-update");
-    if cargo_upgrade.exists() {
+    if let Some(cargo_upgrade) = base_dirs.home_dir().join(".cargo/bin/cargo-install-update").if_exists() {
         terminal.print_separator("Cargo");
         run_cargo_update(&cargo_upgrade).report("Cargo", &mut reports);
     }
 
     if let Some(emacs) = utils::which("emacs") {
-        let init_file = base_dirs.home_dir().join(".emacs.d/init.el");
-        if init_file.exists() {
+        if let Some(init_file) = base_dirs.home_dir().join(".emacs.d/init.el").if_exists() {
             terminal.print_separator("Emacs");
             run_emacs(&emacs, &init_file).report("Emacs", &mut reports);
         }
@@ -210,7 +208,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(npm) = utils::which("npm").map(npm::NPM::new) {
         if let Ok(npm_root) = npm.root() {
-            if is_ancestor(&base_dirs.home_dir(), &npm_root) {
+            if npm_root.is_descendant_of(base_dirs.home_dir()) {
                 terminal.print_separator("Node Package Manager");
                 npm.upgrade().report("Node Package Manager", &mut reports);
             }

@@ -1,8 +1,7 @@
-use super::utils;
-use super::utils::Check;
+use super::utils::{which, Check, PathExt};
+use directories::BaseDirs;
 use failure;
 use std::env;
-use std::env::home_dir;
 use std::os::unix::process::CommandExt;
 use std::path::PathBuf;
 use std::process::Command;
@@ -33,18 +32,15 @@ pub fn run_tpm(tpm: &PathBuf) -> Result<(), failure::Error> {
     Ok(())
 }
 
-pub fn tpm_path() -> Option<PathBuf> {
-    let mut path = home_dir().unwrap();
-    path.push(".tmux/plugins/tpm/bin/update_plugins");
-    if path.exists() {
-        Some(path)
-    } else {
-        None
-    }
+pub fn tpm_path(base_dirs: &BaseDirs) -> Option<PathBuf> {
+    base_dirs
+        .home_dir()
+        .join(".tmux/plugins/tpm/bin/update_plugins")
+        .if_exists()
 }
 
 pub fn run_in_tmux() -> ! {
-    let tmux = utils::which("tmux").expect("Could not find tmux");
+    let tmux = which("tmux").expect("Could not find tmux");
     let err = Command::new(tmux)
         .args(&[
             "new-session",
