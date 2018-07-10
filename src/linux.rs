@@ -64,16 +64,14 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
         }
 
         Command::new(yay).spawn()?.wait()?.check()?;
+    } else if let Some(sudo) = &sudo {
+        Command::new(&sudo)
+            .args(&["/usr/bin/pacman", "-Syu"])
+            .spawn()?
+            .wait()?
+            .check()?;
     } else {
-        if let Some(sudo) = &sudo {
-            Command::new(&sudo)
-                .args(&["/usr/bin/pacman", "-Syu"])
-                .spawn()?
-                .wait()?
-                .check()?;
-        } else {
-            terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
-        }
+        terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
     }
 
     Ok(())

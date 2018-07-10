@@ -22,9 +22,9 @@ impl Terminal {
             Some(width) => {
                 let _ = self.stdout
                     .set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true));
-                let _ = write!(
+                let _ = writeln!(
                     &mut self.stdout,
-                    "\n―― {} {:―^border$}\n",
+                    "\n―― {} {:―^border$}",
                     message,
                     "",
                     border = max(2, min(80, width as usize) - 3 - message.len())
@@ -33,7 +33,7 @@ impl Terminal {
                 let _ = self.stdout.flush();
             }
             None => {
-                let _ = write!(&mut self.stdout, "―― {} ――\n", message);
+                let _ = writeln!(&mut self.stdout, "―― {} ――", message);
             }
         }
     }
@@ -44,7 +44,7 @@ impl Terminal {
 
         let _ = self.stdout
             .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
-        let _ = write!(&mut self.stdout, "{}\n", message);
+        let _ = writeln!(&mut self.stdout, "{}", message);
         let _ = self.stdout.reset();
         let _ = self.stdout.flush();
     }
@@ -59,7 +59,7 @@ impl Terminal {
                 .set_bold(true),
         );
 
-        let _ = write!(&mut self.stdout, "{}\n", if succeeded { "OK" } else { "FAILED" });
+        let _ = writeln!(&mut self.stdout, "{}", if succeeded { "OK" } else { "FAILED" });
 
         let _ = self.stdout.reset();
         let _ = self.stdout.flush();

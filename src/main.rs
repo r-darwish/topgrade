@@ -53,6 +53,7 @@ struct StepFailed;
 #[fail(display = "Cannot find the user base directories")]
 struct NoBaseDirectories;
 
+#[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 fn run() -> Result<(), Error> {
     let matches = App::new("Topgrade")
         .version(crate_version!())
@@ -65,7 +66,7 @@ fn run() -> Result<(), Error> {
         )
         .get_matches();
 
-    if matches.is_present("tmux") && !env::var("TMUX").is_ok() {
+    if matches.is_present("tmux") && env::var("TMUX").is_err() {
         #[cfg(unix)]
         {
             unix::run_in_tmux();
@@ -144,9 +145,7 @@ fn run() -> Result<(), Error> {
 
     for repo in git_repos.repositories() {
         terminal.print_separator(format!("Pulling {}", repo));
-        if let Some(success) = git.pull(&repo).ok().and_then(|i| i) {
-            success.report(format!("git: {}", repo), &mut reports);
-        }
+        git.pull(&repo).report(format!("git: {}", repo), &mut reports);
     }
 
     #[cfg(unix)]

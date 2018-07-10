@@ -44,7 +44,7 @@ pub fn run_vim(vim: &PathBuf, vimrc: &PathBuf, upgrade_command: &str) -> Result<
         .wait()?
         .check()?;
 
-    println!("");
+    println!();
 
     Ok(())
 }
