@@ -26,7 +26,7 @@ impl Distribution {
     pub fn detect() -> Result<Self, failure::Error> {
         let content = fs::read_to_string("/etc/os-release")?;
 
-        if content.contains("Arch") | content.contains("Manjaro") {
+        if content.contains("Arch") | content.contains("Manjaro") | content.contains("Antergos") {
             return Ok(Distribution::Arch);
         }
 
