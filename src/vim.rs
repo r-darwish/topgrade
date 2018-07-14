@@ -1,7 +1,9 @@
-use super::utils::PathExt;
+use super::utils::{Check, PathExt};
 use directories::BaseDirs;
+use failure;
 use std::fs;
 use std::path::PathBuf;
+use std::process::Command;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PluginFramework {
@@ -48,4 +50,27 @@ pub fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 
     #[cfg(windows)]
     return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
+}
+
+pub fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: &PluginFramework) -> Result<(), failure::Error> {
+    Command::new(&vim)
+        .args(&[
+            "-N",
+            "-u",
+            vimrc.to_str().unwrap(),
+            "-c",
+            plugin_framework.upgrade_command(),
+            "-c",
+            "quitall",
+            "-e",
+            "-s",
+            "-V1",
+        ])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    println!();
+
+    Ok(())
 }

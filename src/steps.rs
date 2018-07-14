@@ -26,29 +26,6 @@ pub fn run_emacs(emacs: &PathBuf, init: &PathBuf) -> Result<(), failure::Error> 
     Ok(())
 }
 
-pub fn run_vim(vim: &PathBuf, vimrc: &PathBuf, upgrade_command: &str) -> Result<(), failure::Error> {
-    Command::new(&vim)
-        .args(&[
-            "-N",
-            "-u",
-            vimrc.to_str().unwrap(),
-            "-c",
-            upgrade_command,
-            "-c",
-            "quitall",
-            "-e",
-            "-s",
-            "-V1",
-        ])
-        .spawn()?
-        .wait()?
-        .check()?;
-
-    println!();
-
-    Ok(())
-}
-
 pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&apm)
         .args(&["upgrade", "--confirm=false"])

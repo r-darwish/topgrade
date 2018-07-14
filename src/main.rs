@@ -191,7 +191,7 @@ fn run() -> Result<(), Error> {
         if let Some(vimrc) = vim::vimrc(&base_dirs) {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("Vim ({:?})", plugin_framework));
-                run_vim(&vim, &vimrc, plugin_framework.upgrade_command()).report("Vim", &mut reports);
+                vim::upgrade(&vim, &vimrc, &plugin_framework).report("Vim", &mut reports);
             }
         }
     }
@@ -200,7 +200,7 @@ fn run() -> Result<(), Error> {
         if let Some(nvimrc) = vim::nvimrc(&base_dirs) {
             if let Some(plugin_framework) = vim::PluginFramework::detect(&nvimrc) {
                 terminal.print_separator(&format!("Neovim ({:?})", plugin_framework));
-                run_vim(&nvim, &nvimrc, plugin_framework.upgrade_command()).report("Neovim", &mut reports);
+                vim::upgrade(&nvim, &nvimrc, &plugin_framework).report("Neovim", &mut reports);
             }
         }
     }
