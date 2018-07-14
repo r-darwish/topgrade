@@ -29,7 +29,7 @@ impl PluginFramework {
         match self {
             PluginFramework::NeoBundle => "NeoBundleUpdate",
             PluginFramework::Vundle => "PluginUpdate",
-            PluginFramework::Plug => "PlugUpdate",
+            PluginFramework::Plug => "PlugUpgrade | PlugUpdate",
         }
     }
 }
