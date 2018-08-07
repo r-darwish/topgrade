@@ -214,6 +214,11 @@ fn run() -> Result<(), Error> {
         }
     }
 
+    if let Some(yarn) = utils::which("yarn") {
+        terminal.print_separator("Yarn");
+        yarn_global_update(&yarn).report("Yarn", &mut reports);
+    }
+
     if let Some(apm) = utils::which("apm") {
         terminal.print_separator("Atom Package Manager");
         run_apm(&apm).report("Atom Package Manager", &mut reports);

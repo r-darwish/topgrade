@@ -26,6 +26,16 @@ pub fn run_emacs(emacs: &PathBuf, init: &PathBuf) -> Result<(), failure::Error> 
     Ok(())
 }
 
+pub fn yarn_global_update(yarn: &PathBuf) -> Result<(), failure::Error> {
+    Command::new(&yarn)
+        .args(&["global", "upgrade", "-s"])
+        .spawn()?
+        .wait()?
+        .check()?;
+
+    Ok(())
+}
+
 pub fn run_apm(apm: &PathBuf) -> Result<(), failure::Error> {
     Command::new(&apm)
         .args(&["upgrade", "--confirm=false"])
