@@ -20,7 +20,8 @@ impl Terminal {
         let message = message.as_ref();
         match self.width {
             Some(width) => {
-                let _ = self.stdout
+                let _ = self
+                    .stdout
                     .set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true));
                 let _ = writeln!(
                     &mut self.stdout,
@@ -42,7 +43,8 @@ impl Terminal {
     pub fn print_warning<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
 
-        let _ = self.stdout
+        let _ = self
+            .stdout
             .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
         let _ = writeln!(&mut self.stdout, "{}", message);
         let _ = self.stdout.reset();
