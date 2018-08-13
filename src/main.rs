@@ -64,6 +64,11 @@ fn run() -> Result<(), Error> {
                 .short("t")
                 .long("tmux"),
         )
+        .arg(
+            Arg::with_name("no_system")
+                .help("Don't perform system upgrade")
+                .long("no-system"),
+        )
         .get_matches();
 
     if matches.is_present("tmux") && env::var("TMUX").is_err() {
@@ -91,37 +96,39 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    #[cfg(target_os = "linux")]
-    {
-        terminal.print_separator("System update");
-        match linux::Distribution::detect() {
-            Ok(distribution) => {
-                match distribution {
-                    linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &mut terminal),
-                    linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &mut terminal),
-                    linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &mut terminal),
-                    linux::Distribution::Ubuntu | linux::Distribution::Debian => {
-                        linux::upgrade_debian(&sudo, &mut terminal)
-                    }
-                }.report("System upgrade", &mut reports);
-            }
+    if !(matches.is_present("no_system")) {
+        #[cfg(target_os = "linux")]
+        {
+            terminal.print_separator("System update");
+            match linux::Distribution::detect() {
+                Ok(distribution) => {
+                    match distribution {
+                        linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &mut terminal),
+                        linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &mut terminal),
+                        linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &mut terminal),
+                        linux::Distribution::Ubuntu | linux::Distribution::Debian => {
+                            linux::upgrade_debian(&sudo, &mut terminal)
+                        }
+                    }.report("System upgrade", &mut reports);
+                }
 
-            Err(e) => {
-                println!("Error detecting current distribution: {}", e);
+                Err(e) => {
+                    println!("Error detecting current distribution: {}", e);
+                }
             }
         }
-    }
 
-    if let Some(brew) = utils::which("brew") {
-        terminal.print_separator("Brew");
-        run_homebrew(&brew).report("Brew", &mut reports);
-    }
+        if let Some(brew) = utils::which("brew") {
+            terminal.print_separator("Brew");
+            run_homebrew(&brew).report("Brew", &mut reports);
+        }
 
-    #[cfg(windows)]
-    {
-        if let Some(choco) = utils::which("choco") {
-            terminal.print_separator("Chocolatey");
-            windows::run_chocolatey(&choco).report("Chocolatey", &mut reports);
+        #[cfg(windows)]
+        {
+            if let Some(choco) = utils::which("choco") {
+                terminal.print_separator("Chocolatey");
+                windows::run_chocolatey(&choco).report("Chocolatey", &mut reports);
+            }
         }
     }
 
@@ -263,8 +270,10 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "macos")]
     {
-        terminal.print_separator("App Store");
-        macos::upgrade_macos().report("App Store", &mut reports);
+        if !(matches.is_present("no_system")) {
+            terminal.print_separator("App Store");
+            macos::upgrade_macos().report("App Store", &mut reports);
+        }
     }
 
     if !reports.is_empty() {
