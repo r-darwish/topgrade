@@ -21,3 +21,6 @@ log = "0.4.3"
 env_logger = "0.5.12"
 term_size = "0.3.1"
 termcolor = "1.0.1"
+
+[profile.release]
+lto = true
