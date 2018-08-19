@@ -26,20 +26,18 @@ mod unix;
 mod windows;
 
 mod config;
+mod generic;
 mod git;
-mod npm;
+mod node;
 mod report;
-mod steps;
 mod terminal;
 mod utils;
 mod vim;
 
 use self::config::Config;
 use self::git::{Git, Repositories};
-use self::report::{Report, Reporter};
-use self::steps::*;
+use self::report::{report, Report};
 use self::terminal::Terminal;
-use self::utils::PathExt;
 use clap::{App, Arg};
 use failure::Error;
 use std::env;
@@ -53,7 +51,6 @@ struct StepFailed;
 #[fail(display = "Cannot find the user base directories")]
 struct NoBaseDirectories;
 
-#[cfg_attr(feature = "cargo-clippy", allow(cyclomatic_complexity))]
 fn run() -> Result<(), Error> {
     let matches = App::new("Topgrade")
         .version(crate_version!())
@@ -91,46 +88,20 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            terminal.print_separator(name);
-            run_custom_command(&command)?;
+            generic::run_custom_command(&name, &command, &mut terminal)?;
         }
     }
 
     if !(matches.is_present("no_system")) {
         #[cfg(target_os = "linux")]
-        {
-            terminal.print_separator("System update");
-            match linux::Distribution::detect() {
-                Ok(distribution) => {
-                    match distribution {
-                        linux::Distribution::Arch => linux::upgrade_arch_linux(&sudo, &mut terminal),
-                        linux::Distribution::CentOS => linux::upgrade_redhat(&sudo, &mut terminal),
-                        linux::Distribution::Fedora => linux::upgrade_fedora(&sudo, &mut terminal),
-                        linux::Distribution::Ubuntu | linux::Distribution::Debian => {
-                            linux::upgrade_debian(&sudo, &mut terminal)
-                        }
-                    }.report("System upgrade", &mut reports);
-                }
-
-                Err(e) => {
-                    println!("Error detecting current distribution: {}", e);
-                }
-            }
-        }
-
-        if let Some(brew) = utils::which("brew") {
-            terminal.print_separator("Brew");
-            run_homebrew(&brew).report("Brew", &mut reports);
-        }
+        report(&mut reports, linux::upgrade(&sudo, &mut terminal));
 
         #[cfg(windows)]
-        {
-            if let Some(choco) = utils::which("choco") {
-                terminal.print_separator("Chocolatey");
-                windows::run_chocolatey(&choco).report("Chocolatey", &mut reports);
-            }
-        }
+        report(&mut reports, windows::run_chocolatey(&mut terminal));
     }
+
+    #[cfg(unix)]
+    report(&mut reports, unix::run_homebrew(&mut terminal));
 
     git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     git_repos.insert(base_dirs.home_dir().join(".vim"));
@@ -151,128 +122,53 @@ fn run() -> Result<(), Error> {
     }
 
     for repo in git_repos.repositories() {
-        terminal.print_separator(format!("Pulling {}", repo));
-        git.pull(&repo).report(format!("git: {}", repo), &mut reports);
+        report(&mut reports, git.pull(&repo, &mut terminal));
     }
 
     #[cfg(unix)]
     {
-        if let Some(zsh) = utils::which("zsh") {
-            if base_dirs.home_dir().join(".zplug").exists() {
-                terminal.print_separator("zplug");
-                unix::run_zplug(&zsh).report("zplug", &mut reports);
-            }
-        }
-
-        if let Some(fish) = utils::which("fish") {
-            if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
-                terminal.print_separator("fisherman");
-                unix::run_fisherman(&fish).report("fisherman", &mut reports);
-            }
-        }
-
-        if let Some(tpm) = unix::tpm_path(&base_dirs) {
-            terminal.print_separator("tmux plugins");
-            unix::run_tpm(&tpm).report("tmux", &mut reports);
-        }
+        report(&mut reports, unix::run_zplug(&base_dirs, &mut terminal));
+        report(&mut reports, unix::run_fisherman(&base_dirs, &mut terminal));
+        report(&mut reports, unix::run_tpm(&base_dirs, &mut terminal));
     }
 
-    if let Some(rustup) = utils::which("rustup") {
-        terminal.print_separator("rustup");
-        run_rustup(&rustup, &base_dirs).report("rustup", &mut reports);
-    }
-
-    if let Some(cargo_upgrade) = base_dirs.home_dir().join(".cargo/bin/cargo-install-update").if_exists() {
-        terminal.print_separator("Cargo");
-        run_cargo_update(&cargo_upgrade).report("Cargo", &mut reports);
-    }
-
-    if let Some(emacs) = utils::which("emacs") {
-        if let Some(init_file) = base_dirs.home_dir().join(".emacs.d/init.el").if_exists() {
-            terminal.print_separator("Emacs");
-            run_emacs(&emacs, &init_file).report("Emacs", &mut reports);
-        }
-    }
-
-    if let Some(vim) = utils::which("vim") {
-        if let Some(vimrc) = vim::vimrc(&base_dirs) {
-            if let Some(plugin_framework) = vim::PluginFramework::detect(&vimrc) {
-                terminal.print_separator(&format!("Vim ({:?})", plugin_framework));
-                vim::upgrade(&vim, &vimrc, &plugin_framework).report("Vim", &mut reports);
-            }
-        }
-    }
-
-    if let Some(nvim) = utils::which("nvim") {
-        if let Some(nvimrc) = vim::nvimrc(&base_dirs) {
-            if let Some(plugin_framework) = vim::PluginFramework::detect(&nvimrc) {
-                terminal.print_separator(&format!("Neovim ({:?})", plugin_framework));
-                vim::upgrade(&nvim, &nvimrc, &plugin_framework).report("Neovim", &mut reports);
-            }
-        }
-    }
-
-    if let Some(npm) = utils::which("npm").map(npm::NPM::new) {
-        if let Ok(npm_root) = npm.root() {
-            if npm_root.is_descendant_of(base_dirs.home_dir()) {
-                terminal.print_separator("Node Package Manager");
-                npm.upgrade().report("Node Package Manager", &mut reports);
-            }
-        }
-    }
-
-    if let Some(yarn) = utils::which("yarn") {
-        terminal.print_separator("Yarn");
-        yarn_global_update(&yarn).report("Yarn", &mut reports);
-    }
-
-    if let Some(apm) = utils::which("apm") {
-        terminal.print_separator("Atom Package Manager");
-        run_apm(&apm).report("Atom Package Manager", &mut reports);
-    }
+    report(&mut reports, generic::run_rustup(&base_dirs, &mut terminal));
+    report(&mut reports, generic::run_cargo_update(&base_dirs, &mut terminal));
+    report(&mut reports, generic::run_emacs(&base_dirs, &mut terminal));
+    report(&mut reports, vim::upgrade_vim(&base_dirs, &mut terminal));
+    report(&mut reports, vim::upgrade_neovim(&base_dirs, &mut terminal));
+    report(&mut reports, node::run_npm_upgrade(&base_dirs, &mut terminal));
+    report(&mut reports, node::yarn_global_update(&mut terminal));
+    report(&mut reports, generic::run_apm(&mut terminal));
 
     #[cfg(target_os = "linux")]
     {
-        if let Some(flatpak) = utils::which("flatpak") {
-            terminal.print_separator("Flatpak");
-            linux::run_flatpak(&flatpak).report("Flatpak", &mut reports);
-        }
-
-        if let Some(sudo) = &sudo {
-            if let Some(snap) = utils::which("snap") {
-                terminal.print_separator("snap");
-                linux::run_snap(&sudo, &snap).report("snap", &mut reports);
-            }
-        }
+        report(&mut reports, linux::run_flatpak(&mut terminal));
+        report(&mut reports, linux::run_snap(&sudo, &mut terminal));
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            terminal.print_separator(name);
-            run_custom_command(&command).report(name.as_str(), &mut reports);
+            report(
+                &mut reports,
+                Some((
+                    name,
+                    generic::run_custom_command(&name, &command, &mut terminal).is_ok(),
+                )),
+            );
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        if let Some(fwupdmgr) = utils::which("fwupdmgr") {
-            terminal.print_separator("Firmware upgrades");
-            linux::run_fwupdmgr(&fwupdmgr).report("Firmware upgrade", &mut reports);
-        }
-
-        if let Some(sudo) = &sudo {
-            if let Some(needrestart) = utils::which("needrestart") {
-                terminal.print_separator("Check for needed restarts");
-                linux::run_needrestart(&sudo, &needrestart).report("Restarts", &mut reports);
-            }
-        }
+        report(&mut reports, linux::run_fwupdmgr(&mut terminal));
+        report(&mut reports, linux::run_needrestart(&sudo, &mut terminal));
     }
 
     #[cfg(target_os = "macos")]
     {
         if !(matches.is_present("no_system")) {
-            terminal.print_separator("App Store");
-            macos::upgrade_macos().report("App Store", &mut reports);
+            macos::upgrade_macos(&mut terminal).report("App Store", &mut reports);
         }
     }
 

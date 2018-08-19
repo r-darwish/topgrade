@@ -1,3 +1,4 @@
+use super::terminal::Terminal;
 use super::utils::{which, Check};
 use failure::Error;
 use std::collections::HashSet;
@@ -56,9 +57,15 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P) -> Result<Option<()>, Error> {
-        if let Some(git) = &self.git {
-            Command::new(&git)
+    pub fn pull<P: AsRef<Path>>(&self, path: P, terminal: &mut Terminal) -> Option<(String, bool)> {
+        let path = path.as_ref();
+
+        terminal.print_separator(format!("Pulling {}", path.display()));
+
+        let git = self.git.as_ref().unwrap();
+
+        let success = || -> Result<(), Error> {
+            Command::new(git)
                 .arg("pull")
                 .arg("--rebase")
                 .arg("--autostash")
@@ -67,7 +74,7 @@ impl Git {
                 .wait()?
                 .check()?;
 
-            Command::new(&git)
+            Command::new(git)
                 .arg("submodule")
                 .arg("update")
                 .arg("--init")
@@ -77,10 +84,10 @@ impl Git {
                 .wait()?
                 .check()?;
 
-            return Ok(Some(()));
-        }
+            Ok(())
+        }().is_ok();
 
-        Ok(None)
+        Some((format!("git: {}", path.display()), success))
     }
 }
 
