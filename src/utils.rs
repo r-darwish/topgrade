@@ -28,7 +28,7 @@ where
     Self: Sized,
 {
     fn if_exists(self) -> Option<Self>;
-    fn is_descendant_of(&self, &Path) -> bool;
+    fn is_descendant_of(&self, ancestor: &Path) -> bool;
 }
 
 impl PathExt for PathBuf {

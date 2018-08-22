@@ -34,16 +34,16 @@ mod terminal;
 mod utils;
 mod vim;
 
+use self::config::Config;
+use self::git::{Git, Repositories};
+use self::report::{Report, Reporter};
+use self::steps::*;
+use self::terminal::Terminal;
+use self::utils::PathExt;
 use clap::{App, Arg};
-use config::Config;
 use failure::Error;
-use git::{Git, Repositories};
-use report::{Report, Reporter};
 use std::env;
 use std::process::exit;
-use steps::*;
-use terminal::Terminal;
-use utils::PathExt;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
