@@ -31,17 +31,49 @@ impl Powershell {
         }
     }
 
+    pub fn has_command(powershell: &PathBuf, command: &str) -> bool {
+        || -> Result<(), failure::Error> {
+            Command::new(&powershell)
+                .args(&["-Command", &format!("Get-Command {}", command)])
+                .output()?
+                .check()?;
+            Ok(())
+        }().is_ok()
+    }
+
     #[must_use]
     pub fn update_modules(&self, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
-            terminal.print_separator("Powershell Module Update");
+            terminal.print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), failure::Error> {
                 Command::new(&powershell).arg("Update-Module").spawn()?.wait()?.check()?;
                 Ok(())
             }().is_ok();
 
-            return Some(("Powershell Module Update", success));
+            return Some(("Powershell Modules Update", success));
+        }
+
+        None
+    }
+
+    #[must_use]
+    pub fn windows_update(&self, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+        if let Some(powershell) = &self.path {
+            if Self::has_command(&powershell, "Install-WindowsUpdate") {
+                terminal.print_separator("Windows Update");
+
+                let success = || -> Result<(), failure::Error> {
+                    Command::new(&powershell)
+                        .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
+                        .spawn()?
+                        .wait()?
+                        .check()?;
+                    Ok(())
+                }().is_ok();
+
+                return Some(("Windows Update", success));
+            }
         }
 
         None

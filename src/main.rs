@@ -98,13 +98,15 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     report(&mut reports, powershell.update_modules(&mut terminal));
 
-    if !(matches.is_present("no_system")) {
-        #[cfg(target_os = "linux")]
-        report(&mut reports, linux::upgrade(&sudo, &mut terminal));
-
-        #[cfg(windows)]
-        report(&mut reports, windows::run_chocolatey(&mut terminal));
+    #[cfg(target_os = "linux")]
+    {
+        if !(matches.is_present("no_system")) {
+            report(&mut reports, linux::upgrade(&sudo, &mut terminal));
+        }
     }
+
+    #[cfg(windows)]
+    report(&mut reports, windows::run_chocolatey(&mut terminal));
 
     #[cfg(unix)]
     report(&mut reports, unix::run_homebrew(&mut terminal));
@@ -175,6 +177,13 @@ fn run() -> Result<(), Error> {
     {
         if !(matches.is_present("no_system")) {
             report(&mut reports, macos::upgrade_macos(&mut terminal));
+        }
+    }
+
+    #[cfg(windows)]
+    {
+        if !(matches.is_present("no_system")) {
+            report(&mut reports, powershell.windows_update(&mut terminal));
         }
     }
 

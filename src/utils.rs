@@ -2,7 +2,7 @@ use failure::Error;
 use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
-use std::process::ExitStatus;
+use std::process::{ExitStatus, Output};
 use which as which_mod;
 
 #[derive(Fail, Debug)]
@@ -20,6 +20,12 @@ impl Check for ExitStatus {
         } else {
             Err(Error::from(ProcessFailed {}))
         }
+    }
+}
+
+impl Check for Output {
+    fn check(self) -> Result<(), Error> {
+        self.status.check()
     }
 }
 
