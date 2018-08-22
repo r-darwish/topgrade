@@ -92,6 +92,12 @@ fn run() -> Result<(), Error> {
         }
     }
 
+    #[cfg(windows)]
+    let powershell = windows::Powershell::new();
+
+    #[cfg(windows)]
+    report(&mut reports, powershell.update_modules(&mut terminal));
+
     if !(matches.is_present("no_system")) {
         #[cfg(target_os = "linux")]
         report(&mut reports, linux::upgrade(&sudo, &mut terminal));
