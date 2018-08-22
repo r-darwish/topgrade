@@ -140,7 +140,7 @@ pub fn run_fwupdmgr(fwupdmgr: &PathBuf) -> Result<(), failure::Error> {
 }
 
 pub fn run_flatpak(flatpak: &PathBuf) -> Result<(), failure::Error> {
-    Command::new(&flatpak).arg("update").spawn()?.wait()?.check()?;
+    Command::new(&flatpak).args(&["update", "-y"]).spawn()?.wait()?.check()?;
 
     Ok(())
 }
