@@ -168,7 +168,7 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "macos")]
     {
         if !(matches.is_present("no_system")) {
-            macos::upgrade_macos(&mut terminal).report("App Store", &mut reports);
+            report(&mut reports, macos::upgrade_macos(&mut terminal));
         }
     }
 
