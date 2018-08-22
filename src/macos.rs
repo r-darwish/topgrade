@@ -4,14 +4,17 @@ use failure;
 use std::process::Command;
 
 #[must_use]
-pub fn upgrade_macos(terminal: &mut Terminal) -> Result<(), failure::Error> {
+pub fn upgrade_macos(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
     terminal.print_separator("App Store");
 
-    Command::new("softwareupdate")
-        .args(&["--install", "--all"])
-        .spawn()?
-        .wait()?
-        .check()?;
+    let success = || -> Result<(), failure::Error> {
+        Command::new("softwareupdate")
+            .args(&["--install", "--all"])
+            .spawn()?
+            .wait()?
+            .check()?;
+        Ok(())
+    }().is_ok();
 
-    Ok(())
+    Some(("App Store", success))
 }
