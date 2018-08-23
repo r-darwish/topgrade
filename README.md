@@ -24,6 +24,7 @@ Just run `topgrade`. It will run the following steps:
   * *Fedora* - Run `dnf upgrade`
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
+* *Windows*: Upgrade Powershell modules
 * *Windows*: Upgrade all [Chocolatey](https://chocolatey.org/) packages
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
@@ -54,6 +55,7 @@ Just run `topgrade`. It will run the following steps:
 * Run custom defined commands
 * Final stage
   * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
+  * *Windows*: Run Windows Update (You'll have to install [PSWindowsUpdate](https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/))
   * *macOS*: Upgrade App Store applications
 
 ## Flags
