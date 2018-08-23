@@ -123,6 +123,13 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.home_dir().join(".config/fish"));
     }
 
+    #[cfg(windows)]
+    {
+        if let Some(profile) = powershell.profile() {
+            git_repos.insert(profile);
+        }
+    }
+
     if let Some(custom_git_repos) = config.git_repos() {
         for git_repo in custom_git_repos {
             git_repos.insert(git_repo);

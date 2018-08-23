@@ -41,6 +41,24 @@ impl Powershell {
         }().is_ok()
     }
 
+    pub fn profile(&self) -> Option<PathBuf> {
+        if let Some(powershell) = &self.path {
+            let result = || -> Result<PathBuf, failure::Error> {
+                let output = Command::new(powershell).args(&["-Command", "echo $profile"]).output()?;
+                output.status.check()?;
+                Ok(PathBuf::from(
+                    String::from_utf8_lossy(&output.stdout).trim().to_string(),
+                ))
+            }();
+
+            match result {
+                Err(e) => error!("Error getting Powershell profile: {}", e),
+                Ok(path) => return Some(path),
+            }
+        }
+        None
+    }
+
     #[must_use]
     pub fn update_modules(&self, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {

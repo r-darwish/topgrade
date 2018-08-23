@@ -33,6 +33,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/fish
   * ~/.config/nvim
   * ~/.vim
+  * Powershell Profile
   * Custom defined paths
 * *Unix*: Run [zplug](https://github.com/zplug/zplug) update
 * *Unix*: Run [fisherman](https://github.com/fisherman/fisherman) update
