@@ -40,6 +40,7 @@ use self::report::Report;
 use self::terminal::Terminal;
 use clap::{App, Arg};
 use failure::Error;
+use std::borrow::Cow;
 use std::env;
 use std::process::exit;
 
@@ -50,6 +51,23 @@ struct StepFailed;
 #[derive(Fail, Debug)]
 #[fail(display = "Cannot find the user base directories")]
 struct NoBaseDirectories;
+
+fn execute<'a, F, M>(func: F, terminal: &mut Terminal) -> Option<(M, bool)>
+where
+    M: Into<Cow<'a, str>>,
+    F: Fn(&mut Terminal) -> Option<(M, bool)>,
+{
+    while let Some((key, success)) = func(terminal) {
+        if success {
+            return Some((key, success));
+        }
+
+        if !terminal.should_retry() {
+            return Some((key, success));
+        }
+    }
+    None
+}
 
 fn run() -> Result<(), Error> {
     let matches = App::new("Topgrade")
@@ -96,20 +114,20 @@ fn run() -> Result<(), Error> {
     let powershell = windows::Powershell::new();
 
     #[cfg(windows)]
-    report.push_result(powershell.update_modules(&mut terminal));
+    report.push_result(execute(|terminal| powershell.update_modules(terminal), &mut terminal));
 
     #[cfg(target_os = "linux")]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(linux::upgrade(&sudo, &mut terminal));
+            report.push_result(execute(|terminal| linux::upgrade(&sudo, terminal), &mut terminal));
         }
     }
 
     #[cfg(windows)]
-    report.push_result(windows::run_chocolatey(&mut terminal));
+    report.push_result(execute(|terminal| windows::run_chocolatey(terminal), &mut terminal));
 
     #[cfg(unix)]
-    report.push_result(unix::run_homebrew(&mut terminal));
+    report.push_result(execute(|terminal| unix::run_homebrew(terminal), &mut terminal));
 
     git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     git_repos.insert(base_dirs.home_dir().join(".vim"));
@@ -137,57 +155,81 @@ fn run() -> Result<(), Error> {
     }
 
     for repo in git_repos.repositories() {
-        report.push_result(git.pull(&repo, &mut terminal));
+        report.push_result(execute(|terminal| git.pull(&repo, terminal), &mut terminal));
     }
 
     #[cfg(unix)]
     {
-        report.push_result(unix::run_zplug(&base_dirs, &mut terminal));
-        report.push_result(unix::run_fisherman(&base_dirs, &mut terminal));
-        report.push_result(unix::run_tpm(&base_dirs, &mut terminal));
+        report.push_result(execute(|terminal| unix::run_zplug(&base_dirs, terminal), &mut terminal));
+        report.push_result(execute(
+            |terminal| unix::run_fisherman(&base_dirs, terminal),
+            &mut terminal,
+        ));
+        report.push_result(execute(|terminal| unix::run_tpm(&base_dirs, terminal), &mut terminal));
     }
 
-    report.push_result(generic::run_rustup(&base_dirs, &mut terminal));
-    report.push_result(generic::run_cargo_update(&base_dirs, &mut terminal));
-    report.push_result(generic::run_emacs(&base_dirs, &mut terminal));
-    report.push_result(vim::upgrade_vim(&base_dirs, &mut terminal));
-    report.push_result(vim::upgrade_neovim(&base_dirs, &mut terminal));
-    report.push_result(node::run_npm_upgrade(&base_dirs, &mut terminal));
-    report.push_result(node::yarn_global_update(&mut terminal));
-    report.push_result(generic::run_apm(&mut terminal));
+    report.push_result(execute(
+        |terminal| generic::run_rustup(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| generic::run_cargo_update(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| generic::run_emacs(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| vim::upgrade_vim(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| vim::upgrade_neovim(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| node::run_npm_upgrade(&base_dirs, terminal),
+        &mut terminal,
+    ));
+    report.push_result(execute(|terminal| node::yarn_global_update(terminal), &mut terminal));
+    report.push_result(execute(|terminal| generic::run_apm(terminal), &mut terminal));
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(linux::run_flatpak(&mut terminal));
-        report.push_result(linux::run_snap(&sudo, &mut terminal));
+        report.push_result(execute(|terminal| linux::run_flatpak(terminal), &mut terminal));
+        report.push_result(execute(|terminal| linux::run_snap(&sudo, terminal), &mut terminal));
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            report.push_result(Some((
-                name,
-                generic::run_custom_command(&name, &command, &mut terminal).is_ok(),
-            )));
+            report.push_result(execute(
+                |terminal| Some((name, generic::run_custom_command(&name, &command, terminal).is_ok())),
+                &mut terminal,
+            ));
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(linux::run_fwupdmgr(&mut terminal));
-        report.push_result(linux::run_needrestart(&sudo, &mut terminal));
+        report.push_result(execute(|terminal| linux::run_fwupdmgr(terminal), &mut terminal));
+        report.push_result(execute(
+            |terminal| linux::run_needrestart(&sudo, terminal),
+            &mut terminal,
+        ));
     }
 
     #[cfg(target_os = "macos")]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(macos::upgrade_macos(&mut terminal));
+            report.push_result(execute(|terminal| macos::upgrade_macos(terminal), &mut terminal));
         }
     }
 
     #[cfg(windows)]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(powershell.windows_update(&mut terminal));
+            report.push_result(execute(|terminal| powershell.windows_update(terminal), &mut terminal));
         }
     }
 

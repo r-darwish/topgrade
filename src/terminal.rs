@@ -1,5 +1,5 @@
 use std::cmp::{max, min};
-use std::io::Write;
+use std::io::{stdin, Write};
 use term_size;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -65,5 +65,32 @@ impl Terminal {
 
         let _ = self.stdout.reset();
         let _ = self.stdout.flush();
+    }
+
+    pub fn should_retry(&mut self) -> bool {
+        if self.width.is_none() {
+            return false;
+        }
+        println!("");
+        loop {
+            let mut result = String::new();
+
+            let _ = self
+                .stdout
+                .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
+            let _ = write!(&mut self.stdout, "Retry? [y/N] ");
+            let _ = self.stdout.reset();
+            let _ = self.stdout.flush();
+
+            if let Ok(_) = stdin().read_line(&mut result) {
+                match result.as_str() {
+                    "y\n" => return true,
+                    "n\n" | "\n" => return false,
+                    _ => (),
+                }
+            } else {
+                return false;
+            }
+        }
     }
 }
