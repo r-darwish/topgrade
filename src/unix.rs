@@ -1,3 +1,4 @@
+use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
@@ -6,13 +7,13 @@ use std::env;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 
-pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {
         if base_dirs.home_dir().join(".zplug").exists() {
             terminal.print_separator("zplug");
 
             let success = || -> Result<(), Error> {
-                Command::new(zsh)
+                Executor::new(zsh, dry_run)
                     .args(&["-c", "source ~/.zshrc && zplug update"])
                     .spawn()?
                     .wait()?
@@ -27,13 +28,13 @@ pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'sta
     None
 }
 
-pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(fish) = which("fish") {
         if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
             terminal.print_separator("fisherman");
 
             let success = || -> Result<(), Error> {
-                Command::new(fish)
+                Executor::new(fish, dry_run)
                     .args(&["-c", "fisher update"])
                     .spawn()?
                     .wait()?
@@ -48,7 +49,7 @@ pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&
     None
 }
 
-pub fn run_tpm(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_tpm(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(tpm) = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
@@ -57,7 +58,7 @@ pub fn run_tpm(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'stati
         terminal.print_separator("tmux plugins");
 
         let success = || -> Result<(), Error> {
-            Command::new(&tpm).arg("all").spawn()?.wait()?.check()?;
+            Executor::new(&tpm, dry_run).arg("all").spawn()?.wait()?.check()?;
             Ok(())
         }().is_ok();
 
@@ -87,13 +88,13 @@ pub fn run_in_tmux() -> ! {
 }
 
 #[must_use]
-pub fn run_homebrew(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_homebrew(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(brew) = which("brew") {
         terminal.print_separator("Brew");
 
         let inner = || -> Result<(), Error> {
-            Command::new(&brew).arg("update").spawn()?.wait()?.check()?;
-            Command::new(&brew).arg("upgrade").spawn()?.wait()?.check()?;
+            Executor::new(&brew, dry_run).arg("update").spawn()?.wait()?.check()?;
+            Executor::new(&brew, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
             Ok(())
         };
 

@@ -1,3 +1,4 @@
+use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check};
 use failure::Error;
@@ -34,8 +35,7 @@ impl Git {
 
                 if let Some(git) = &self.git {
                     let output = Command::new(&git)
-                        .arg("rev-parse")
-                        .arg("--show-toplevel")
+                        .args(&["rev-parse", "--show-toplevel"])
                         .current_dir(path)
                         .output();
 
@@ -57,7 +57,7 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P, terminal: &mut Terminal) -> Option<(String, bool)> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P, terminal: &mut Terminal, dry_run: bool) -> Option<(String, bool)> {
         let path = path.as_ref();
 
         terminal.print_separator(format!("Pulling {}", path.display()));
@@ -65,20 +65,15 @@ impl Git {
         let git = self.git.as_ref().unwrap();
 
         let success = || -> Result<(), Error> {
-            Command::new(git)
-                .arg("pull")
-                .arg("--rebase")
-                .arg("--autostash")
+            Executor::new(git, dry_run)
+                .args(&["pull", "--rebase", "--autostash"])
                 .current_dir(&path)
                 .spawn()?
                 .wait()?
                 .check()?;
 
-            Command::new(git)
-                .arg("submodule")
-                .arg("update")
-                .arg("--init")
-                .arg("--recursive")
+            Executor::new(git, dry_run)
+                .args(&["submodule", "update", "--init", "--recursive"])
                 .current_dir(&path)
                 .spawn()?
                 .wait()?

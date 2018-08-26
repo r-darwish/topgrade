@@ -1,10 +1,10 @@
+use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
 use failure;
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 
 #[derive(Debug, Clone, Copy)]
 pub enum PluginFramework {
@@ -54,8 +54,13 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 }
 
 #[must_use]
-fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework) -> Result<(), failure::Error> {
-    Command::new(&vim)
+fn upgrade(
+    vim: &PathBuf,
+    vimrc: &PathBuf,
+    plugin_framework: PluginFramework,
+    dry_run: bool,
+) -> Result<(), failure::Error> {
+    Executor::new(&vim, dry_run)
         .args(&[
             "-N",
             "-u",
@@ -78,12 +83,12 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework) ->
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(vim) = which("vim") {
         if let Some(vimrc) = vimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&vimrc) {
                 terminal.print_separator(&format!("Vim ({:?})", plugin_framework));
-                let success = upgrade(&vim, &vimrc, plugin_framework).is_ok();
+                let success = upgrade(&vim, &vimrc, plugin_framework, dry_run).is_ok();
                 return Some(("vim", success));
             }
         }
@@ -93,12 +98,12 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'s
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(nvim) = which("nvim") {
         if let Some(nvimrc) = nvimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&nvimrc) {
                 terminal.print_separator(&format!("Neovim ({:?})", plugin_framework));
-                let success = upgrade(&nvim, &nvimrc, plugin_framework).is_ok();
+                let success = upgrade(&nvim, &nvimrc, plugin_framework, dry_run).is_ok();
                 return Some(("Neovim", success));
             }
         }

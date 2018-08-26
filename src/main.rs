@@ -26,6 +26,7 @@ mod unix;
 mod windows;
 
 mod config;
+mod executor;
 mod generic;
 mod git;
 mod node;
@@ -84,6 +85,12 @@ fn run() -> Result<(), Error> {
                 .help("Don't perform system upgrade")
                 .long("no-system"),
         )
+        .arg(
+            Arg::with_name("dry_run")
+                .help("Print what would be done")
+                .short("n")
+                .long("dry-run"),
+        )
         .get_matches();
 
     if matches.is_present("tmux") && env::var("TMUX").is_err() {
@@ -100,13 +107,14 @@ fn run() -> Result<(), Error> {
     let mut terminal = Terminal::new();
     let config = Config::read(&base_dirs)?;
     let mut report = Report::new();
+    let dry_run = matches.is_present("dry_run");
 
     #[cfg(target_os = "linux")]
     let sudo = utils::which("sudo");
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &mut terminal)?;
+            generic::run_custom_command(&name, &command, &mut terminal, dry_run)?;
         }
     }
 
@@ -114,20 +122,29 @@ fn run() -> Result<(), Error> {
     let powershell = windows::Powershell::new();
 
     #[cfg(windows)]
-    report.push_result(execute(|terminal| powershell.update_modules(terminal), &mut terminal));
+    report.push_result(execute(
+        |terminal| powershell.update_modules(terminal, dry_run),
+        &mut terminal,
+    ));
 
     #[cfg(target_os = "linux")]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(execute(|terminal| linux::upgrade(&sudo, terminal), &mut terminal));
+            report.push_result(execute(
+                |terminal| linux::upgrade(&sudo, terminal, dry_run),
+                &mut terminal,
+            ));
         }
     }
 
     #[cfg(windows)]
-    report.push_result(execute(|terminal| windows::run_chocolatey(terminal), &mut terminal));
+    report.push_result(execute(
+        |terminal| windows::run_chocolatey(terminal, dry_run),
+        &mut terminal,
+    ));
 
     #[cfg(unix)]
-    report.push_result(execute(|terminal| unix::run_homebrew(terminal), &mut terminal));
+    report.push_result(execute(|terminal| unix::run_homebrew(terminal, dry_run), &mut terminal));
 
     git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     git_repos.insert(base_dirs.home_dir().join(".vim"));
@@ -155,56 +172,73 @@ fn run() -> Result<(), Error> {
     }
 
     for repo in git_repos.repositories() {
-        report.push_result(execute(|terminal| git.pull(&repo, terminal), &mut terminal));
+        report.push_result(execute(|terminal| git.pull(&repo, terminal, dry_run), &mut terminal));
     }
 
     #[cfg(unix)]
     {
-        report.push_result(execute(|terminal| unix::run_zplug(&base_dirs, terminal), &mut terminal));
         report.push_result(execute(
-            |terminal| unix::run_fisherman(&base_dirs, terminal),
+            |terminal| unix::run_zplug(&base_dirs, terminal, dry_run),
             &mut terminal,
         ));
-        report.push_result(execute(|terminal| unix::run_tpm(&base_dirs, terminal), &mut terminal));
+        report.push_result(execute(
+            |terminal| unix::run_fisherman(&base_dirs, terminal, dry_run),
+            &mut terminal,
+        ));
+        report.push_result(execute(
+            |terminal| unix::run_tpm(&base_dirs, terminal, dry_run),
+            &mut terminal,
+        ));
     }
 
     report.push_result(execute(
-        |terminal| generic::run_rustup(&base_dirs, terminal),
+        |terminal| generic::run_rustup(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(
-        |terminal| generic::run_cargo_update(&base_dirs, terminal),
+        |terminal| generic::run_cargo_update(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(
-        |terminal| generic::run_emacs(&base_dirs, terminal),
+        |terminal| generic::run_emacs(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(
-        |terminal| vim::upgrade_vim(&base_dirs, terminal),
+        |terminal| vim::upgrade_vim(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(
-        |terminal| vim::upgrade_neovim(&base_dirs, terminal),
+        |terminal| vim::upgrade_neovim(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(
-        |terminal| node::run_npm_upgrade(&base_dirs, terminal),
+        |terminal| node::run_npm_upgrade(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
-    report.push_result(execute(|terminal| node::yarn_global_update(terminal), &mut terminal));
-    report.push_result(execute(|terminal| generic::run_apm(terminal), &mut terminal));
+    report.push_result(execute(
+        |terminal| node::yarn_global_update(terminal, dry_run),
+        &mut terminal,
+    ));
+    report.push_result(execute(|terminal| generic::run_apm(terminal, dry_run), &mut terminal));
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|terminal| linux::run_flatpak(terminal), &mut terminal));
-        report.push_result(execute(|terminal| linux::run_snap(&sudo, terminal), &mut terminal));
+        report.push_result(execute(|terminal| linux::run_flatpak(terminal, dry_run), &mut terminal));
+        report.push_result(execute(
+            |terminal| linux::run_snap(&sudo, terminal, dry_run),
+            &mut terminal,
+        ));
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             report.push_result(execute(
-                |terminal| Some((name, generic::run_custom_command(&name, &command, terminal).is_ok())),
+                |terminal| {
+                    Some((
+                        name,
+                        generic::run_custom_command(&name, &command, terminal, dry_run).is_ok(),
+                    ))
+                },
                 &mut terminal,
             ));
         }
@@ -212,9 +246,12 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|terminal| linux::run_fwupdmgr(terminal), &mut terminal));
         report.push_result(execute(
-            |terminal| linux::run_needrestart(&sudo, terminal),
+            |terminal| linux::run_fwupdmgr(terminal, dry_run),
+            &mut terminal,
+        ));
+        report.push_result(execute(
+            |terminal| linux::run_needrestart(&sudo, terminal, dry_run),
             &mut terminal,
         ));
     }
@@ -222,14 +259,20 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "macos")]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(execute(|terminal| macos::upgrade_macos(terminal), &mut terminal));
+            report.push_result(execute(
+                |terminal| macos::upgrade_macos(terminal, dry_run),
+                &mut terminal,
+            ));
         }
     }
 
     #[cfg(windows)]
     {
         if !(matches.is_present("no_system")) {
-            report.push_result(execute(|terminal| powershell.windows_update(terminal), &mut terminal));
+            report.push_result(execute(
+                |terminal| powershell.windows_update(terminal, dry_run),
+                &mut terminal,
+            ));
         }
     }
 

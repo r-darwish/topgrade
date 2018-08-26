@@ -1,9 +1,9 @@
+use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check};
 use failure;
 use std::fs;
 use std::path::PathBuf;
-use std::process::Command;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Distribution {
@@ -50,7 +50,7 @@ impl Distribution {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(), failure::Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
@@ -63,9 +63,9 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
             }
         }
 
-        Command::new(yay).spawn()?.wait()?.check()?;
+        Executor::new(yay, dry_run).spawn()?.wait()?.check()?;
     } else if let Some(sudo) = &sudo {
-        Command::new(&sudo)
+        Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/pacman", "-Syu"])
             .spawn()?
             .wait()?
@@ -77,9 +77,9 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(), failure::Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
-        Command::new(&sudo)
+        Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/yum", "upgrade"])
             .spawn()?
             .wait()?
@@ -91,9 +91,9 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(),
     Ok(())
 }
 
-fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(), failure::Error> {
+fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
-        Command::new(&sudo)
+        Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/dnf", "upgrade"])
             .spawn()?
             .wait()?
@@ -105,15 +105,15 @@ fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(),
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(), failure::Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
-        Command::new(&sudo)
+        Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/apt", "update"])
             .spawn()?
             .wait()?
             .check()?;
 
-        Command::new(&sudo)
+        Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/apt", "dist-upgrade"])
             .spawn()?
             .wait()?
@@ -126,15 +126,15 @@ fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Result<(),
 }
 
 #[must_use]
-pub fn upgrade(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn upgrade(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     terminal.print_separator("System update");
 
     let success = match Distribution::detect() {
         Ok(distribution) => match distribution {
-            Distribution::Arch => upgrade_arch_linux(&sudo, terminal),
-            Distribution::CentOS => upgrade_redhat(&sudo, terminal),
-            Distribution::Fedora => upgrade_fedora(&sudo, terminal),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal),
+            Distribution::Arch => upgrade_arch_linux(&sudo, terminal, dry_run),
+            Distribution::CentOS => upgrade_redhat(&sudo, terminal, dry_run),
+            Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
+            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
         }.is_ok(),
         Err(e) => {
             println!("Error detecting current distribution: {}", e);
@@ -146,13 +146,13 @@ pub fn upgrade(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Option<(&'sta
 }
 
 #[must_use]
-pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(needrestart) = which("needrestart") {
             terminal.print_separator("Check for needed restarts");
 
             let success = || -> Result<(), failure::Error> {
-                Command::new(&sudo).arg(needrestart).spawn()?.wait()?.check()?;
+                Executor::new(&sudo, dry_run).arg(needrestart).spawn()?.wait()?.check()?;
 
                 Ok(())
             }().is_ok();
@@ -165,13 +165,21 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Optio
 }
 
 #[must_use]
-pub fn run_fwupdmgr(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_fwupdmgr(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(fwupdmgr) = which("fwupdmgr") {
         terminal.print_separator("Firmware upgrades");
 
         let success = || -> Result<(), failure::Error> {
-            Command::new(&fwupdmgr).arg("refresh").spawn()?.wait()?.check()?;
-            Command::new(&fwupdmgr).arg("get-updates").spawn()?.wait()?.check()?;
+            Executor::new(&fwupdmgr, dry_run)
+                .arg("refresh")
+                .spawn()?
+                .wait()?
+                .check()?;
+            Executor::new(&fwupdmgr, dry_run)
+                .arg("get-updates")
+                .spawn()?
+                .wait()?
+                .check()?;
             Ok(())
         }().is_ok();
 
@@ -182,12 +190,16 @@ pub fn run_fwupdmgr(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_flatpak(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_flatpak(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(flatpak) = which("flatpak") {
         terminal.print_separator("Flatpak");
 
         let success = || -> Result<(), failure::Error> {
-            Command::new(&flatpak).args(&["update", "-y"]).spawn()?.wait()?.check()?;
+            Executor::new(&flatpak, dry_run)
+                .args(&["update", "-y"])
+                .spawn()?
+                .wait()?
+                .check()?;
             Ok(())
         }().is_ok();
 
@@ -198,14 +210,14 @@ pub fn run_flatpak(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(snap) = which("snap") {
             if PathBuf::from("/var/snapd.socket").exists() {
                 terminal.print_separator("snap");
 
                 let success = || -> Result<(), failure::Error> {
-                    Command::new(&sudo)
+                    Executor::new(&sudo, dry_run)
                         .args(&[snap.to_str().unwrap(), "refresh"])
                         .spawn()?
                         .wait()?

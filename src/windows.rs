@@ -1,3 +1,4 @@
+use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{self, which, Check};
 use failure;
@@ -5,12 +6,16 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[must_use]
-pub fn run_chocolatey(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+pub fn run_chocolatey(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(choco) = utils::which("choco") {
         terminal.print_separator("Chocolatey");
 
         let success = || -> Result<(), failure::Error> {
-            Command::new(&choco).args(&["upgrade", "all"]).spawn()?.wait()?.check()?;
+            Executor::new(&choco, dry_run)
+                .args(&["upgrade", "all"])
+                .spawn()?
+                .wait()?
+                .check()?;
             Ok(())
         }().is_ok();
 
@@ -60,12 +65,16 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn update_modules(&self, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+    pub fn update_modules(&self, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
             terminal.print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), failure::Error> {
-                Command::new(&powershell).arg("Update-Module").spawn()?.wait()?.check()?;
+                Executor::new(&powershell, dry_run)
+                    .arg("Update-Module")
+                    .spawn()?
+                    .wait()?
+                    .check()?;
                 Ok(())
             }().is_ok();
 
@@ -76,13 +85,13 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn windows_update(&self, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
+    pub fn windows_update(&self, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
             if Self::has_command(&powershell, "Install-WindowsUpdate") {
                 terminal.print_separator("Windows Update");
 
                 let success = || -> Result<(), failure::Error> {
-                    Command::new(&powershell)
+                    Executor::new(&powershell, dry_run)
                         .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
                         .spawn()?
                         .wait()?
