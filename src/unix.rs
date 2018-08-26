@@ -28,7 +28,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'sta
 }
 
 pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
-    if let Some(fish) = which("fisherman") {
+    if let Some(fish) = which("fish") {
         if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
             terminal.print_separator("fisherman");
 
