@@ -5,8 +5,8 @@ set -ex
 # TODO This is the "test phase", tweak it as you see fit
 main() {
     cargo fmt --all -- --check
-    cross build --target $TARGET
-    cross build --target $TARGET --release
+    cross check --target $TARGET
+    cross check --target $TARGET --release
 
     if [ ! -z $DISABLE_TESTS ]; then
         return

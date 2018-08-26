@@ -24,8 +24,8 @@ install:
 
 test_script:
   - if [%APPVEYOR_REPO_TAG%]==[false] (
-      cargo build --target %TARGET% &&
-      cargo build --target %TARGET% --release
+      cargo check --target %TARGET% &&
+      cargo check --target %TARGET% --release
     )
 
 before_deploy:
