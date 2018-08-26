@@ -201,19 +201,21 @@ pub fn run_flatpak(terminal: &mut Terminal) -> Option<(&'static str, bool)> {
 pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(snap) = which("snap") {
-            terminal.print_separator("snap");
+            if PathBuf::from("/var/snapd.socket").exists() {
+                terminal.print_separator("snap");
 
-            let success = || -> Result<(), failure::Error> {
-                Command::new(&sudo)
-                    .args(&[snap.to_str().unwrap(), "refresh"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                let success = || -> Result<(), failure::Error> {
+                    Command::new(&sudo)
+                        .args(&[snap.to_str().unwrap(), "refresh"])
+                        .spawn()?
+                        .wait()?
+                        .check()?;
 
-                Ok(())
-            }().is_ok();
+                    Ok(())
+                }().is_ok();
 
-            return Some(("snap", success));
+                return Some(("snap", success));
+            }
         }
     }
 
