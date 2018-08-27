@@ -61,6 +61,8 @@ Just run `topgrade`. It will run the following steps:
 ## Flags
 * `-t/--tmux` - Topgrade will launch itself in a new tmux session. This flag has no effect if
   Topgrade already runs inside tmux. This is useful when using topgrade on remote systems.
+* `-n/--dry-run` - Print what should be run.
+* `--no-system` - Skip the system upgrade phase.
 
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml`. Here's an example:
