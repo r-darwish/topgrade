@@ -34,6 +34,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/fish
   * ~/.config/nvim
   * ~/.vim
+  * ~/.config/openbox
   * Powershell Profile
   * Custom defined paths
 * *Unix*: Run [zplug](https://github.com/zplug/zplug) update

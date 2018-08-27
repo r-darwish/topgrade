@@ -156,6 +156,7 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.home_dir().join(".oh-my-zsh"));
         git_repos.insert(base_dirs.home_dir().join(".tmux"));
         git_repos.insert(base_dirs.home_dir().join(".config/fish"));
+        git_repos.insert(base_dirs.config_dir().join("openbox"));
     }
 
     #[cfg(windows)]
