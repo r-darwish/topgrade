@@ -11,16 +11,16 @@ exclude = ["doc/screenshot.gif"]
 directories = "1.0.1"
 failure = "0.1.2"
 failure_derive = "0.1.2"
-serde = "1.0.73"
-serde_derive = "1.0.73"
+serde = "1.0.75"
+serde_derive = "1.0.75"
 toml = "0.4.6"
 which = "2.0.0"
 shellexpand = "1.0.0"
 clap = "2.32.0"
 log = "0.4.4"
-env_logger = "0.5.12"
+env_logger = "0.5.13"
 term_size = "0.3.1"
-termcolor = "1.0.1"
+termcolor = "1.0.2"
 
 [profile.release]
 lto = true
