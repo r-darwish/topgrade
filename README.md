@@ -66,7 +66,7 @@ Just run `topgrade`. It will run the following steps:
 * `--no-system` - Skip the system upgrade phase.
 
 ## Customization
-You can place a configuration file at `~/.config/topgrade.toml`. Here's an example:
+You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
 
 
 ``` toml
