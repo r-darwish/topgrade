@@ -1,8 +1,10 @@
 # Topgrade
 [![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/r-darwish/topgrade?svg=true)](https://ci.appveyor.com/project/r-darwish/topgrade)
+![GitHub release](https://img.shields.io/github/release/r-darwish/topgrade.svg)
 [![Crates.io](https://img.shields.io/crates/v/topgrade.svg)](https://crates.io/crates/topgrade)
 [![AUR](https://img.shields.io/aur/version/topgrade.svg)](https://aur.archlinux.org/packages/topgrade/)
+![homebrew](https://img.shields.io/homebrew/v/topgrade.svg)
 
 ![Alt Text](doc/screenshot.gif)
 
