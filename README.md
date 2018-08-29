@@ -13,6 +13,8 @@ problem by detecting which tools you use and run their appropriate package manag
 ## Installation
 Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
 
+macOS users can install topgrade via Homebrew.
+
 Other systems users can either use `cargo install` or use the compiled binaries from the release page.
 
 ## Usage
