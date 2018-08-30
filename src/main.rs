@@ -88,7 +88,7 @@ fn run() -> Result<(), Error> {
         .arg(
             Arg::with_name("skip_git_repos")
                 .help("Skip configured git repos")
-                .long("skip-git-repos")
+                .long("skip-git-repos"),
         )
         .arg(
             Arg::with_name("dry_run")
