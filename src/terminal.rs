@@ -84,8 +84,8 @@ impl Terminal {
 
             if let Ok(_) = stdin().read_line(&mut result) {
                 match result.as_str() {
-                    "y\n" => return true,
-                    "n\n" | "\n" => return false,
+                    "y\n" | "Y\n" => return true,
+                    "n\n" | "N\n" | "\n" => return false,
                     _ => (),
                 }
             } else {
