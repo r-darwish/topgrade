@@ -86,6 +86,11 @@ fn run() -> Result<(), Error> {
                 .long("no-system"),
         )
         .arg(
+            Arg::with_name("no_git_repos")
+                .help("Don't perform updates on configured git repos")
+                .long("no-git-repos"),
+        )
+        .arg(
             Arg::with_name("dry_run")
                 .help("Print what would be done")
                 .short("n")
@@ -166,12 +171,13 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if let Some(custom_git_repos) = config.git_repos() {
-        for git_repo in custom_git_repos {
-            git_repos.insert(git_repo);
+    if !(matches.is_present("no_git_repos")) {
+        if let Some(custom_git_repos) = config.git_repos() {
+            for git_repo in custom_git_repos {
+                git_repos.insert(git_repo);
+            }
         }
     }
-
     for repo in git_repos.repositories() {
         report.push_result(execute(|terminal| git.pull(&repo, terminal, dry_run), &mut terminal));
     }
@@ -202,6 +208,10 @@ fn run() -> Result<(), Error> {
     ));
     report.push_result(execute(
         |terminal| generic::run_emacs(&base_dirs, terminal, dry_run),
+        &mut terminal,
+    ));
+    report.push_result(execute(
+        |terminal| generic::run_opam_update(terminal, dry_run),
         &mut terminal,
     ));
     report.push_result(execute(

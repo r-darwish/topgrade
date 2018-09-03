@@ -1,8 +1,10 @@
 # Topgrade
 [![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/r-darwish/topgrade?svg=true)](https://ci.appveyor.com/project/r-darwish/topgrade)
+![GitHub release](https://img.shields.io/github/release/r-darwish/topgrade.svg)
 [![Crates.io](https://img.shields.io/crates/v/topgrade.svg)](https://crates.io/crates/topgrade)
 [![AUR](https://img.shields.io/aur/version/topgrade.svg)](https://aur.archlinux.org/packages/topgrade/)
+![homebrew](https://img.shields.io/homebrew/v/topgrade.svg)
 
 ![Alt Text](doc/screenshot.gif)
 
@@ -12,6 +14,8 @@ problem by detecting which tools you use and run their appropriate package manag
 
 ## Installation
 Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
+
+macOS users can install topgrade via Homebrew.
 
 Other systems users can either use `cargo install` or use the compiled binaries from the release page.
 
@@ -42,7 +46,8 @@ Just run `topgrade`. It will run the following steps:
 * *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm)
 * Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
-* Upgrade Emacs packages
+* Upgrade Emacs packages (You'll get a better output if you have [Paradox](https://github.com/Malabarba/paradox) installed)
+* Upgrade [OCaml packages](https://opam.ocaml.org/)
 * Upgrade Vim/Neovim packages. Works with the following plugin frameworks:
   * [NeoBundle](https://github.com/Shougo/neobundle.vim)
   * [Vundle](https://github.com/VundleVim/Vundle.vim)
@@ -66,7 +71,7 @@ Just run `topgrade`. It will run the following steps:
 * `--no-system` - Skip the system upgrade phase.
 
 ## Customization
-You can place a configuration file at `~/.config/topgrade.toml`. Here's an example:
+You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
 
 
 ``` toml
