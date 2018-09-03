@@ -95,6 +95,23 @@ pub fn run_rustup(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
+pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(opam) = utils::which("opam") {
+        terminal.print_separator("OCaml Package Manager");
+
+        let success = || -> Result<(), Error> {
+            Executor::new(&opam, dry_run).arg("update").spawn()?.wait()?.check()?;
+            Executor::new(&opam, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
+            Ok(())
+        }().is_ok();
+
+        return Some(("OPAM", success));
+    }
+
+    None
+}
+
+#[must_use]
 pub fn run_custom_command(name: &str, command: &str, terminal: &mut Terminal, dry_run: bool) -> Result<(), Error> {
     terminal.print_separator(name);
     Executor::new("sh", dry_run)

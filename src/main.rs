@@ -205,6 +205,10 @@ fn run() -> Result<(), Error> {
         &mut terminal,
     ));
     report.push_result(execute(
+        |terminal| generic::run_opam_update(terminal, dry_run),
+        &mut terminal,
+    ));
+    report.push_result(execute(
         |terminal| vim::upgrade_vim(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
