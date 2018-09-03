@@ -86,9 +86,9 @@ fn run() -> Result<(), Error> {
                 .long("no-system"),
         )
         .arg(
-            Arg::with_name("skip_git_repos")
-                .help("Skip configured git repos")
-                .long("skip-git-repos"),
+            Arg::with_name("no_git_repos")
+                .help("Don't perform updates on configured git repos")
+                .long("no-git-repos"),
         )
         .arg(
             Arg::with_name("dry_run")
@@ -171,7 +171,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !(matches.is_present("skip_git_repos")) {
+    if !(matches.is_present("no_git_repos")) {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
                 git_repos.insert(git_repo);
