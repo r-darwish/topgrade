@@ -47,6 +47,7 @@ Just run `topgrade`. It will run the following steps:
 * Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages (You'll get a better output if you have [Paradox](https://github.com/Malabarba/paradox) installed)
+* Upgrade [OCaml packages](https://opam.ocaml.org/)
 * Upgrade Vim/Neovim packages. Works with the following plugin frameworks:
   * [NeoBundle](https://github.com/Shougo/neobundle.vim)
   * [Vundle](https://github.com/VundleVim/Vundle.vim)
