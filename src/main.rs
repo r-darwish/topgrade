@@ -21,6 +21,8 @@ mod linux;
 #[cfg(target_os = "macos")]
 mod macos;
 #[cfg(unix)]
+mod tmux;
+#[cfg(unix)]
 mod unix;
 #[cfg(target_os = "windows")]
 mod windows;
@@ -101,7 +103,7 @@ fn run() -> Result<(), Error> {
     if matches.is_present("tmux") && env::var("TMUX").is_err() {
         #[cfg(unix)]
         {
-            unix::run_in_tmux();
+            tmux::run_in_tmux();
         }
     }
 
@@ -193,7 +195,7 @@ fn run() -> Result<(), Error> {
             &mut terminal,
         ));
         report.push_result(execute(
-            |terminal| unix::run_tpm(&base_dirs, terminal, dry_run),
+            |terminal| tmux::run_tpm(&base_dirs, terminal, dry_run),
             &mut terminal,
         ));
     }
