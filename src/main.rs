@@ -93,6 +93,11 @@ fn run() -> Result<(), Error> {
                 .long("no-git-repos"),
         )
         .arg(
+            Arg::with_name("no_emacs")
+                .help("Don't upgrade Emacs packages or configuration files")
+                .long("no-emacs"),
+        )
+        .arg(
             Arg::with_name("dry_run")
                 .help("Print what would be done")
                 .short("n")
@@ -153,7 +158,10 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     report.push_result(execute(|terminal| unix::run_homebrew(terminal, dry_run), &mut terminal));
 
-    git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
+    if !(matches.is_present("no_emacs")) {
+        git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
+    }
+
     git_repos.insert(base_dirs.home_dir().join(".vim"));
     git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
 
@@ -208,10 +216,14 @@ fn run() -> Result<(), Error> {
         |terminal| generic::run_cargo_update(&base_dirs, terminal, dry_run),
         &mut terminal,
     ));
-    report.push_result(execute(
-        |terminal| generic::run_emacs(&base_dirs, terminal, dry_run),
-        &mut terminal,
-    ));
+
+    if !(matches.is_present("no_git_repos")) {
+        report.push_result(execute(
+            |terminal| generic::run_emacs(&base_dirs, terminal, dry_run),
+            &mut terminal,
+        ));
+    }
+
     report.push_result(execute(
         |terminal| generic::run_opam_update(terminal, dry_run),
         &mut terminal,
