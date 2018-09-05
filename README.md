@@ -17,7 +17,12 @@ Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/)
 
 macOS users can install topgrade via Homebrew.
 
-Other systems users can either use `cargo install` or use the compiled binaries from the release page.
+Other systems users can either use `cargo install` or use the compiled binaries from the release
+page.
+
+Topgrade isn't guaranteed to work on Rust versions older than the latest stable release. If you
+intend to install Topgrade using Cargo then you should either install Rust using rustup or use a
+distribution which ships the latest version of Rust, such as Arch Linux.
 
 ## Usage
 Just run `topgrade`. It will run the following steps:
@@ -69,6 +74,8 @@ Just run `topgrade`. It will run the following steps:
   Topgrade already runs inside tmux. This is useful when using topgrade on remote systems.
 * `-n/--dry-run` - Print what should be run.
 * `--no-system` - Skip the system upgrade phase.
+* `--no-git-repos` - Don't pull custom git repositories.
+* `--no-emacs` - Don't upgrade Emacs packages or configuration files.
 
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
