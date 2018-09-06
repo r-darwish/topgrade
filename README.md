@@ -61,7 +61,7 @@ Just run `topgrade`. It will run the following steps:
   * Run `yarn global update` if yarn is installed.
   * Run `npm update -g` if NPM is installed and `npm root -g` is a path inside your home directory.
 * Upgrade Atom packages
-* Run `gem upgrade --user-install` if `/.gem` exists
+* Run `gem upgrade --user-install` if `~/.gem` exists
 * *Linux*: Update Flatpak packages
 * *Linux*: Update snap packages
 * *Linux*: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
