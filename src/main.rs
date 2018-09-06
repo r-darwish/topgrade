@@ -223,6 +223,10 @@ fn run() -> Result<(), Error> {
         |terminal| generic::run_apm(terminal, opt.dry_run),
         &mut terminal,
     ));
+    report.push_result(execute(
+        |terminal| generic::run_gem(&base_dirs, terminal, opt.dry_run),
+        &mut terminal,
+    ));
 
     #[cfg(target_os = "linux")]
     {

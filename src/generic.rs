@@ -28,6 +28,28 @@ pub fn run_cargo_update(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: 
 }
 
 #[must_use]
+pub fn run_gem(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(gem) = utils::which("gem") {
+        if base_dirs.home_dir().join(".gem").exists() {
+            terminal.print_separator("RubyGems");
+
+            let success = || -> Result<(), Error> {
+                Executor::new(&gem, dry_run)
+                    .args(&["update", "--user-install"])
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+
+                Ok(())
+            }().is_ok();
+
+            return Some(("RubyGems", success));
+        }
+    }
+    None
+}
+
+#[must_use]
 pub fn run_emacs(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(emacs) = utils::which("emacs") {
         if let Some(init_file) = base_dirs.home_dir().join(".emacs.d/init.el").if_exists() {
