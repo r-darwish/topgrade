@@ -71,7 +71,7 @@ impl Terminal {
         if self.width.is_none() {
             return false;
         }
-        println!("");
+        println!();
         loop {
             let mut result = String::new();
 
@@ -82,7 +82,7 @@ impl Terminal {
             let _ = self.stdout.reset();
             let _ = self.stdout.flush();
 
-            if let Ok(_) = stdin().read_line(&mut result) {
+            if stdin().read_line(&mut result).is_ok() {
                 match result.as_str() {
                     "y\n" | "Y\n" => return true,
                     "n\n" | "N\n" | "\n" => return false,

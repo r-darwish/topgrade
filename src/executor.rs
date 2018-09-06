@@ -12,12 +12,13 @@ pub enum Executor {
 
 impl Executor {
     pub fn new<S: AsRef<OsStr>>(program: S, dry: bool) -> Self {
-        match dry {
-            false => Executor::Wet(Command::new(program)),
-            true => Executor::Dry(DryCommand {
+        if dry {
+            Executor::Dry(DryCommand {
                 program: program.as_ref().into(),
                 ..Default::default()
-            }),
+            })
+        } else {
+            Executor::Wet(Command::new(program))
         }
     }
 
@@ -64,7 +65,7 @@ impl Executor {
 
     pub fn spawn(&mut self) -> Result<ExecutorChild, io::Error> {
         match self {
-            Executor::Wet(c) => c.spawn().map(|c| ExecutorChild::Wet(c)),
+            Executor::Wet(c) => c.spawn().map(ExecutorChild::Wet),
             Executor::Dry(c) => {
                 print!(
                     "Dry running: {} {}",
@@ -100,7 +101,7 @@ pub enum ExecutorChild {
 impl ExecutorChild {
     pub fn wait(&mut self) -> Result<ExecutorExitStatus, io::Error> {
         match self {
-            ExecutorChild::Wet(c) => c.wait().map(|s| ExecutorExitStatus::Wet(s)),
+            ExecutorChild::Wet(c) => c.wait().map(ExecutorExitStatus::Wet),
             ExecutorChild::Dry => Ok(ExecutorExitStatus::Dry),
         }
     }
