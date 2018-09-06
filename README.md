@@ -57,7 +57,9 @@ Just run `topgrade`. It will run the following steps:
   * [NeoBundle](https://github.com/Shougo/neobundle.vim)
   * [Vundle](https://github.com/VundleVim/Vundle.vim)
   * [Plug](https://github.com/junegunn/vim-plug)
-* Upgrade NPM globally installed packages
+* Node
+  * Run `yarn global update` if yarn is installed.
+  * Run `npm update -g` if NPM is installed and `npm root -g` is a path inside your home directory.
 * Upgrade Atom packages
 * *Linux*: Update Flatpak packages
 * *Linux*: Update snap packages
