@@ -44,3 +44,22 @@ impl Config {
         &self.git_repos
     }
 }
+
+#[derive(StructOpt, Debug)]
+#[structopt(name = "Topgrade")]
+pub struct Opt {
+    #[structopt(short = "t", long = "tmux", help = "Run inside tmux")]
+    pub run_in_tmux: bool,
+
+    #[structopt(long = "no-system", help = "Don't perform system upgrade")]
+    pub no_system: bool,
+
+    #[structopt(long = "no-git-repos", help = "Don't perform updates on configured git repos")]
+    pub no_git_repos: bool,
+
+    #[structopt(long = "no-emacs", help = "Don't upgrade Emacs packages or configuration files")]
+    pub no_emacs: bool,
+
+    #[structopt(short = "n", long = "dry-run", help = "Print what would be done")]
+    pub dry_run: bool,
+}
