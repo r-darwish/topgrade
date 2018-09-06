@@ -110,7 +110,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        if !(opt.no_system) {
+        if !opt.no_system {
             report.push_result(execute(
                 |terminal| linux::upgrade(&sudo, terminal, opt.dry_run),
                 &mut terminal,
@@ -130,7 +130,7 @@ fn run() -> Result<(), Error> {
         &mut terminal,
     ));
 
-    if !(opt.no_emacs) {
+    if !opt.no_emacs {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     }
 
@@ -153,7 +153,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !(opt.no_git_repos) {
+    if !opt.no_git_repos {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
                 git_repos.insert(git_repo);
@@ -192,7 +192,7 @@ fn run() -> Result<(), Error> {
         &mut terminal,
     ));
 
-    if !(opt.no_emacs) {
+    if !opt.no_emacs {
         report.push_result(execute(
             |terminal| generic::run_emacs(&base_dirs, terminal, opt.dry_run),
             &mut terminal,
@@ -264,7 +264,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "macos")]
     {
-        if !(matches.is_present("no_system")) {
+        if !opt.no_system {
             report.push_result(execute(
                 |terminal| macos::upgrade_macos(terminal, opt.dry_run),
                 &mut terminal,
@@ -274,7 +274,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(windows)]
     {
-        if !(matches.is_present("no_system")) {
+        if !opt.no_system {
             report.push_result(execute(
                 |terminal| powershell.windows_update(terminal, opt.dry_run),
                 &mut terminal,
