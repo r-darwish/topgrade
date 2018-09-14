@@ -54,10 +54,16 @@ pub struct Opt {
     #[structopt(long = "no-system", help = "Don't perform system upgrade")]
     pub no_system: bool,
 
-    #[structopt(long = "no-git-repos", help = "Don't perform updates on configured git repos")]
+    #[structopt(
+        long = "no-git-repos",
+        help = "Don't perform updates on configured git repos"
+    )]
     pub no_git_repos: bool,
 
-    #[structopt(long = "no-emacs", help = "Don't upgrade Emacs packages or configuration files")]
+    #[structopt(
+        long = "no-emacs",
+        help = "Don't upgrade Emacs packages or configuration files"
+    )]
     pub no_emacs: bool,
 
     #[structopt(short = "n", long = "dry-run", help = "Print what would be done")]

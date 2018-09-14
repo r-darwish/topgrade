@@ -70,8 +70,7 @@ pub fn run_in_tmux() -> ! {
                 "set",
                 "remain-on-exit",
                 "on",
-            ])
-            .exec();
+            ]).exec();
 
         panic!("{:?}", err);
     }

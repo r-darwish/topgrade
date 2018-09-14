@@ -72,8 +72,7 @@ fn upgrade(
             "-e",
             "-s",
             "-V1",
-        ])
-        .spawn()?
+        ]).spawn()?
         .wait()?
         .check()?;
 

@@ -152,7 +152,11 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run:
             terminal.print_separator("Check for needed restarts");
 
             let success = || -> Result<(), failure::Error> {
-                Executor::new(&sudo, dry_run).arg(needrestart).spawn()?.wait()?.check()?;
+                Executor::new(&sudo, dry_run)
+                    .arg(needrestart)
+                    .spawn()?
+                    .wait()?
+                    .check()?;
 
                 Ok(())
             }().is_ok();
