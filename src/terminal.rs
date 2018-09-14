@@ -83,9 +83,9 @@ impl Terminal {
             let _ = self.stdout.flush();
 
             if stdin().read_line(&mut result).is_ok() {
-                match result.as_str() {
-                    "y\n" | "Y\n" => return true,
-                    "n\n" | "N\n" | "\n" => return false,
+                match result.as_str().trim() {
+                    "y" | "Y" => return true,
+                    "n" | "N" | "" => return false,
                     _ => (),
                 }
             } else {
