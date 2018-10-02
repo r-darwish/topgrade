@@ -8,19 +8,19 @@ authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 
 [dependencies]
-directories = "1.0.1"
+directories = "1.0.2"
 failure = "0.1.2"
 failure_derive = "0.1.2"
-serde = "1.0.75"
-serde_derive = "1.0.75"
-toml = "0.4.6"
+serde = "1.0.79"
+serde_derive = "1.0.79"
+toml = "0.4.8"
 which = "2.0.0"
 shellexpand = "1.0.0"
-structopt = "0.2"
-log = "0.4.4"
+structopt = "0.2.10"
+log = "0.4.5"
 env_logger = "0.5.13"
 term_size = "0.3.1"
-termcolor = "1.0.2"
+termcolor = "1.0.4"
 
 [profile.release]
 lto = true
