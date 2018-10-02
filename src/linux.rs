@@ -4,6 +4,7 @@ use super::utils::{which, Check};
 use failure;
 use std::fs;
 use std::path::PathBuf;
+use walkdir::WalkDir;
 
 #[derive(Copy, Clone, Debug)]
 pub enum Distribution {
@@ -66,6 +67,32 @@ impl Distribution {
         };
 
         Some(("System update", success.is_ok()))
+    }
+
+    pub fn show_summary(self) {
+        if let Distribution::Arch = self {
+            show_pacnew();
+        }
+    }
+}
+
+pub fn show_pacnew() {
+    let mut iter = WalkDir::new("/etc")
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|f| {
+            f.path()
+                .extension()
+                .filter(|ext| ext == &"pacnew" || ext == &"pacsave")
+                .is_some()
+        }).peekable();
+
+    if iter.peek().is_some() {
+        println!("\nPacman backup configuration files found:");
+
+        for entry in iter {
+            println!("{}", entry.path().display());
+        }
     }
 }
 

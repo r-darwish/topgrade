@@ -21,6 +21,7 @@ log = "0.4.5"
 env_logger = "0.5.13"
 term_size = "0.3.1"
 termcolor = "1.0.4"
+walkdir = "2.2.5"
 
 [profile.release]
 lto = true

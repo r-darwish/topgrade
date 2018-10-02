@@ -15,6 +15,7 @@ extern crate log;
 extern crate env_logger;
 extern crate term_size;
 extern crate termcolor;
+extern crate walkdir;
 
 #[cfg(target_os = "linux")]
 mod linux;
@@ -114,7 +115,7 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "linux")]
     {
         if !opt.no_system {
-            match distribution {
+            match &distribution {
                 Ok(distribution) => {
                     report.push_result(execute(
                         |terminal| distribution.upgrade(&sudo, terminal, opt.dry_run),
@@ -301,6 +302,13 @@ fn run() -> Result<(), Error> {
 
         for (key, succeeded) in report.data() {
             terminal.print_result(key, *succeeded);
+        }
+
+        #[cfg(target_os = "linux")]
+        {
+            if let Ok(distribution) = &distribution {
+                distribution.show_summary();
+            }
         }
     }
 
