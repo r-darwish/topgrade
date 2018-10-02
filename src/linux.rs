@@ -48,6 +48,25 @@ impl Distribution {
 
         Err(UnknownLinuxDistribution.into())
     }
+
+    #[must_use]
+    pub fn upgrade(
+        self,
+        sudo: &Option<PathBuf>,
+        terminal: &mut Terminal,
+        dry_run: bool,
+    ) -> Option<(&'static str, bool)> {
+        terminal.print_separator("System update");
+
+        let success = match self {
+            Distribution::Arch => upgrade_arch_linux(&sudo, terminal, dry_run),
+            Distribution::CentOS => upgrade_redhat(&sudo, terminal, dry_run),
+            Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
+            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
+        };
+
+        Some(("System update", success.is_ok()))
+    }
 }
 
 fn upgrade_arch_linux(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
@@ -123,26 +142,6 @@ fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
     }
 
     Ok(())
-}
-
-#[must_use]
-pub fn upgrade(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
-    terminal.print_separator("System update");
-
-    let success = match Distribution::detect() {
-        Ok(distribution) => match distribution {
-            Distribution::Arch => upgrade_arch_linux(&sudo, terminal, dry_run),
-            Distribution::CentOS => upgrade_redhat(&sudo, terminal, dry_run),
-            Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
-        }.is_ok(),
-        Err(e) => {
-            println!("Error detecting current distribution: {}", e);
-            false
-        }
-    };
-
-    Some(("System update", success))
 }
 
 #[must_use]

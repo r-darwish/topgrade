@@ -109,12 +109,22 @@ fn run() -> Result<(), Error> {
     ));
 
     #[cfg(target_os = "linux")]
+    let distribution = linux::Distribution::detect();
+
+    #[cfg(target_os = "linux")]
     {
         if !opt.no_system {
-            report.push_result(execute(
-                |terminal| linux::upgrade(&sudo, terminal, opt.dry_run),
-                &mut terminal,
-            ));
+            match distribution {
+                Ok(distribution) => {
+                    report.push_result(execute(
+                        |terminal| distribution.upgrade(&sudo, terminal, opt.dry_run),
+                        &mut terminal,
+                    ));
+                }
+                Err(e) => {
+                    println!("Error detecting current distribution: {}", e);
+                }
+            }
         }
     }
 
