@@ -250,7 +250,11 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "linux")]
     {
         report.push_result(execute(
-            |terminal| linux::run_flatpak(terminal, opt.dry_run),
+            |terminal| linux::flatpak_user_update(terminal, opt.dry_run),
+            &mut terminal,
+        ));
+        report.push_result(execute(
+            |terminal| linux::flatpak_global_update(&sudo, terminal, opt.dry_run),
             &mut terminal,
         ));
         report.push_result(execute(

@@ -220,20 +220,46 @@ pub fn run_fwupdmgr(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static 
 }
 
 #[must_use]
-pub fn run_flatpak(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn flatpak_user_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(flatpak) = which("flatpak") {
-        terminal.print_separator("Flatpak");
+        terminal.print_separator("Flatpak User Packages");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&flatpak, dry_run)
-                .args(&["update", "-y"])
+                .args(&["update", "--user", "-y"])
                 .spawn()?
                 .wait()?
                 .check()?;
             Ok(())
         }().is_ok();
 
-        return Some(("Flatpak", success));
+        return Some(("Flatpak User Packages", success));
+    }
+
+    None
+}
+
+#[must_use]
+pub fn flatpak_global_update(
+    sudo: &Option<PathBuf>,
+    terminal: &mut Terminal,
+    dry_run: bool,
+) -> Option<(&'static str, bool)> {
+    if let Some(sudo) = sudo {
+        if let Some(flatpak) = which("flatpak") {
+            terminal.print_separator("Flatpak Global Packages");
+
+            let success = || -> Result<(), failure::Error> {
+                Executor::new(&sudo, dry_run)
+                    .args(&[flatpak.to_str().unwrap(), "update", "-y"])
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+                Ok(())
+            }().is_ok();
+
+            return Some(("Flatpak Global Packages", success));
+        }
     }
 
     None
