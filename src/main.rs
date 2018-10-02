@@ -126,6 +126,10 @@ fn run() -> Result<(), Error> {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
+            report.push_result(execute(
+                |terminal| linux::run_etc_update(&sudo, terminal, opt.dry_run),
+                &mut terminal,
+            ));
         }
     }
 

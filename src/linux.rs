@@ -263,3 +263,26 @@ pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) 
 
     None
 }
+
+#[must_use]
+pub fn run_etc_update(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(sudo) = sudo {
+        if let Some(etc_update) = which("etc-update") {
+            terminal.print_separator("etc-update");
+
+            let success = || -> Result<(), failure::Error> {
+                Executor::new(&sudo, dry_run)
+                    .arg(&etc_update.to_str().unwrap())
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+
+                Ok(())
+            }().is_ok();
+
+            return Some(("snap", success));
+        }
+    }
+
+    None
+}

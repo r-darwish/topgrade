@@ -27,11 +27,12 @@ distribution which ships the latest version of Rust, such as Arch Linux.
 ## Usage
 Just run `topgrade`. It will run the following steps:
 
-* Run the system package manager:
+* *Linux*: Run the system package manager:
   * *Arch*: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
   * *CentOS/RHEL*: Run `yum upgrade`
   * *Fedora* - Run `dnf upgrade`
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
+* *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * *Windows*: Upgrade Powershell modules
 * *Windows*: Upgrade all [Chocolatey](https://chocolatey.org/) packages
