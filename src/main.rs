@@ -231,6 +231,10 @@ fn run() -> Result<(), Error> {
         &mut terminal,
     ));
     report.push_result(execute(
+        |terminal| generic::run_composer_update(&base_dirs, terminal, opt.dry_run),
+        &mut terminal,
+    ));
+    report.push_result(execute(
         |terminal| node::yarn_global_update(terminal, opt.dry_run),
         &mut terminal,
     ));

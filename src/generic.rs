@@ -3,6 +3,8 @@ use super::terminal::Terminal;
 use super::utils::{self, Check, PathExt};
 use directories::BaseDirs;
 use failure::Error;
+use std::path::PathBuf;
+use std::process::Command;
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
@@ -144,4 +146,40 @@ pub fn run_custom_command(name: &str, command: &str, terminal: &mut Terminal, dr
         .check()?;
 
     Ok(())
+}
+
+#[must_use]
+pub fn run_composer_update(
+    base_dirs: &BaseDirs,
+    terminal: &mut Terminal,
+    dry_run: bool,
+) -> Option<(&'static str, bool)> {
+    if let Some(composer) = utils::which("composer") {
+        let composer_home = || -> Result<PathBuf, Error> {
+            let output = Command::new(&composer)
+                .args(&["global", "config", "--absolute", "home"])
+                .output()?;
+            output.status.check()?;
+            Ok(PathBuf::from(&String::from_utf8(output.stdout)?))
+        }();
+
+        if let Ok(composer_home) = composer_home {
+            if composer_home.is_descendant_of(base_dirs.home_dir()) {
+                terminal.print_separator("Composer");
+
+                let success = || -> Result<(), Error> {
+                    Executor::new(&composer, dry_run)
+                        .args(&["global", "update"])
+                        .spawn()?
+                        .wait()?
+                        .check()?;
+                    Ok(())
+                }().is_ok();
+
+                return Some(("Composer", success));
+            }
+        }
+    }
+
+    None
 }
