@@ -238,6 +238,17 @@ fn run() -> Result<(), Error> {
         |terminal| node::yarn_global_update(terminal, opt.dry_run),
         &mut terminal,
     ));
+
+    #[cfg(
+        not(
+            any(
+                target_os = "freebsd",
+                target_os = "openbsd",
+                target_os = "netbsd",
+                target_os = "dragonfly"
+            )
+        )
+    )]
     report.push_result(execute(
         |terminal| generic::run_apm(terminal, opt.dry_run),
         &mut terminal,
