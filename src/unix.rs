@@ -32,7 +32,7 @@ pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: boo
 
             let success = || -> Result<(), Error> {
                 Executor::new(fish, dry_run)
-                    .args(&["-c", "fisher update"])
+                    .args(&["-c", "fisher"])
                     .spawn()?
                     .wait()?
                     .check()?;
