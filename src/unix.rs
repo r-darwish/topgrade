@@ -25,13 +25,18 @@ pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -
     None
 }
 
-pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_fisher(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(fish) = which("fish") {
         if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
-            terminal.print_separator("fisherman");
+            terminal.print_separator("fisher");
 
             let success = || -> Result<(), Error> {
-                Executor::new(fish, dry_run)
+                Executor::new(&fish, dry_run)
+                    .args(&["-c", "fisher self-update"])
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+                Executor::new(&fish, dry_run)
                     .args(&["-c", "fisher"])
                     .spawn()?
                     .wait()?
@@ -39,7 +44,7 @@ pub fn run_fisherman(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: boo
                 Ok(())
             }().is_ok();
 
-            return Some(("fisherman", success));
+            return Some(("fisher", success));
         }
     }
 

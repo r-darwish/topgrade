@@ -189,7 +189,7 @@ fn run() -> Result<(), Error> {
             &mut terminal,
         ));
         report.push_result(execute(
-            |terminal| unix::run_fisherman(&base_dirs, terminal, opt.dry_run),
+            |terminal| unix::run_fisher(&base_dirs, terminal, opt.dry_run),
             &mut terminal,
         ));
         report.push_result(execute(
