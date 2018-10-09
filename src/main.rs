@@ -12,11 +12,19 @@ extern crate serde;
 extern crate shellexpand;
 #[macro_use]
 extern crate log;
+extern crate console;
 extern crate env_logger;
+#[cfg(unix)]
+extern crate nix;
+#[cfg(unix)]
+#[macro_use]
+extern crate lazy_static;
 extern crate term_size;
 extern crate termcolor;
 extern crate walkdir;
 
+#[cfg(unix)]
+mod ctrlc;
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "macos")]
@@ -56,28 +64,47 @@ struct StepFailed;
 #[fail(display = "Cannot find the user base directories")]
 struct NoBaseDirectories;
 
+#[derive(Fail, Debug)]
+#[fail(display = "Process Interrupted")]
+struct Interrupted;
+
 struct ExecutionContext {
     terminal: Terminal,
 }
 
-fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Option<(M, bool)>
+fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Result<Option<(M, bool)>, Interrupted>
 where
     M: Into<Cow<'a, str>>,
     F: Fn(&mut Terminal) -> Option<(M, bool)>,
 {
     while let Some((key, success)) = func(&mut execution_context.terminal) {
         if success {
-            return Some((key, success));
+            return Ok(Some((key, success)));
         }
 
-        if !execution_context.terminal.should_retry() {
-            return Some((key, success));
+        let running = ctrlc::running();
+        if !running {
+            ctrlc::set_running(true);
+        }
+
+        let should_retry = execution_context.terminal.should_retry(running);
+
+        if !ctrlc::running() {
+            return Err(Interrupted);
+        }
+
+        if !should_retry {
+            return Ok(Some((key, success)));
         }
     }
-    None
+
+    Ok(None)
 }
 
 fn run() -> Result<(), Error> {
+    #[cfg(unix)]
+    ctrlc::set_handler();
+
     let opt = config::Opt::from_args();
 
     if opt.run_in_tmux && env::var("TMUX").is_err() {
@@ -91,9 +118,11 @@ fn run() -> Result<(), Error> {
     let base_dirs = directories::BaseDirs::new().ok_or(NoBaseDirectories)?;
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
+
     let mut execution_context = ExecutionContext {
         terminal: Terminal::new(),
     };
+
     let config = Config::read(&base_dirs)?;
     let mut report = Report::new();
 
@@ -126,7 +155,7 @@ fn run() -> Result<(), Error> {
                     report.push_result(execute(
                         |terminal| distribution.upgrade(&sudo, terminal, opt.dry_run),
                         &mut execution_context,
-                    ));
+                    )?);
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
@@ -135,7 +164,7 @@ fn run() -> Result<(), Error> {
             report.push_result(execute(
                 |terminal| linux::run_etc_update(&sudo, terminal, opt.dry_run),
                 &mut execution_context,
-            ));
+            )?);
         }
     }
 
@@ -143,13 +172,13 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(
         |terminal| windows::run_chocolatey(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     #[cfg(unix)]
     report.push_result(execute(
         |terminal| unix::run_homebrew(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     if !opt.no_emacs {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
@@ -185,7 +214,7 @@ fn run() -> Result<(), Error> {
         report.push_result(execute(
             |terminal| git.pull(&repo, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
     }
 
     #[cfg(unix)]
@@ -193,57 +222,57 @@ fn run() -> Result<(), Error> {
         report.push_result(execute(
             |terminal| unix::run_zplug(&base_dirs, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
         report.push_result(execute(
             |terminal| unix::run_fisher(&base_dirs, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
         report.push_result(execute(
             |terminal| tmux::run_tpm(&base_dirs, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
     }
 
     report.push_result(execute(
         |terminal| generic::run_rustup(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| generic::run_cargo_update(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     if !opt.no_emacs {
         report.push_result(execute(
             |terminal| generic::run_emacs(&base_dirs, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
     }
 
     report.push_result(execute(
         |terminal| generic::run_opam_update(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| vim::upgrade_vim(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| vim::upgrade_neovim(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| node::run_npm_upgrade(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| generic::run_composer_update(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| node::yarn_global_update(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     #[cfg(
         not(
@@ -258,26 +287,26 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(
         |terminal| generic::run_apm(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
     report.push_result(execute(
         |terminal| generic::run_gem(&base_dirs, terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     #[cfg(target_os = "linux")]
     {
         report.push_result(execute(
             |terminal| linux::flatpak_user_update(terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
         report.push_result(execute(
             |terminal| linux::flatpak_global_update(&sudo, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
         report.push_result(execute(
             |terminal| linux::run_snap(&sudo, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
     }
 
     if let Some(commands) = config.commands() {
@@ -290,7 +319,7 @@ fn run() -> Result<(), Error> {
                     ))
                 },
                 &mut execution_context,
-            ));
+            )?);
         }
     }
 
@@ -299,11 +328,11 @@ fn run() -> Result<(), Error> {
         report.push_result(execute(
             |terminal| linux::run_fwupdmgr(terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
         report.push_result(execute(
             |terminal| linux::run_needrestart(&sudo, terminal, opt.dry_run),
             &mut execution_context,
-        ));
+        )?);
     }
 
     #[cfg(target_os = "macos")]
@@ -312,7 +341,7 @@ fn run() -> Result<(), Error> {
             report.push_result(execute(
                 |terminal| macos::upgrade_macos(terminal, opt.dry_run),
                 &mut execution_context,
-            ));
+            )?);
         }
     }
 
@@ -322,7 +351,7 @@ fn run() -> Result<(), Error> {
             report.push_result(execute(
                 |terminal| powershell.windows_update(terminal, opt.dry_run),
                 &mut execution_context,
-            ));
+            )?);
         }
     }
 
@@ -354,10 +383,14 @@ fn main() {
             exit(0);
         }
         Err(error) => {
-            match error.downcast::<StepFailed>() {
+            match error
+                .downcast::<StepFailed>()
+                .map(|_| ())
+                .or_else(|error| error.downcast::<Interrupted>().map(|_| ()))
+            {
                 Ok(_) => (),
                 Err(error) => println!("ERROR: {}", error),
-            };
+            }
             exit(1);
         }
     }
