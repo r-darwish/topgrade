@@ -56,17 +56,21 @@ struct StepFailed;
 #[fail(display = "Cannot find the user base directories")]
 struct NoBaseDirectories;
 
-fn execute<'a, F, M>(func: F, terminal: &mut Terminal) -> Option<(M, bool)>
+struct ExecutionContext {
+    terminal: Terminal,
+}
+
+fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Option<(M, bool)>
 where
     M: Into<Cow<'a, str>>,
     F: Fn(&mut Terminal) -> Option<(M, bool)>,
 {
-    while let Some((key, success)) = func(terminal) {
+    while let Some((key, success)) = func(&mut execution_context.terminal) {
         if success {
             return Some((key, success));
         }
 
-        if !terminal.should_retry() {
+        if !execution_context.terminal.should_retry() {
             return Some((key, success));
         }
     }
@@ -87,7 +91,9 @@ fn run() -> Result<(), Error> {
     let base_dirs = directories::BaseDirs::new().ok_or(NoBaseDirectories)?;
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
-    let mut terminal = Terminal::new();
+    let mut execution_context = ExecutionContext {
+        terminal: Terminal::new(),
+    };
     let config = Config::read(&base_dirs)?;
     let mut report = Report::new();
 
@@ -96,7 +102,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &mut terminal, opt.dry_run)?;
+            generic::run_custom_command(&name, &command, &mut execution_context.terminal, opt.dry_run)?;
         }
     }
 
@@ -106,7 +112,7 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     report.push_result(execute(
         |terminal| powershell.update_modules(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     #[cfg(target_os = "linux")]
@@ -119,7 +125,7 @@ fn run() -> Result<(), Error> {
                 Ok(distribution) => {
                     report.push_result(execute(
                         |terminal| distribution.upgrade(&sudo, terminal, opt.dry_run),
-                        &mut terminal,
+                        &mut execution_context,
                     ));
                 }
                 Err(e) => {
@@ -128,7 +134,7 @@ fn run() -> Result<(), Error> {
             }
             report.push_result(execute(
                 |terminal| linux::run_etc_update(&sudo, terminal, opt.dry_run),
-                &mut terminal,
+                &mut execution_context,
             ));
         }
     }
@@ -136,13 +142,13 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     report.push_result(execute(
         |terminal| windows::run_chocolatey(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     #[cfg(unix)]
     report.push_result(execute(
         |terminal| unix::run_homebrew(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     if !opt.no_emacs {
@@ -178,7 +184,7 @@ fn run() -> Result<(), Error> {
     for repo in git_repos.repositories() {
         report.push_result(execute(
             |terminal| git.pull(&repo, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
     }
 
@@ -186,57 +192,57 @@ fn run() -> Result<(), Error> {
     {
         report.push_result(execute(
             |terminal| unix::run_zplug(&base_dirs, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
         report.push_result(execute(
             |terminal| unix::run_fisher(&base_dirs, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
         report.push_result(execute(
             |terminal| tmux::run_tpm(&base_dirs, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
     }
 
     report.push_result(execute(
         |terminal| generic::run_rustup(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| generic::run_cargo_update(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     if !opt.no_emacs {
         report.push_result(execute(
             |terminal| generic::run_emacs(&base_dirs, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
     }
 
     report.push_result(execute(
         |terminal| generic::run_opam_update(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| vim::upgrade_vim(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| vim::upgrade_neovim(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| node::run_npm_upgrade(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| generic::run_composer_update(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| node::yarn_global_update(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     #[cfg(
@@ -251,26 +257,26 @@ fn run() -> Result<(), Error> {
     )]
     report.push_result(execute(
         |terminal| generic::run_apm(terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
     report.push_result(execute(
         |terminal| generic::run_gem(&base_dirs, terminal, opt.dry_run),
-        &mut terminal,
+        &mut execution_context,
     ));
 
     #[cfg(target_os = "linux")]
     {
         report.push_result(execute(
             |terminal| linux::flatpak_user_update(terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
         report.push_result(execute(
             |terminal| linux::flatpak_global_update(&sudo, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
         report.push_result(execute(
             |terminal| linux::run_snap(&sudo, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
     }
 
@@ -283,7 +289,7 @@ fn run() -> Result<(), Error> {
                         generic::run_custom_command(&name, &command, terminal, opt.dry_run).is_ok(),
                     ))
                 },
-                &mut terminal,
+                &mut execution_context,
             ));
         }
     }
@@ -292,11 +298,11 @@ fn run() -> Result<(), Error> {
     {
         report.push_result(execute(
             |terminal| linux::run_fwupdmgr(terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
         report.push_result(execute(
             |terminal| linux::run_needrestart(&sudo, terminal, opt.dry_run),
-            &mut terminal,
+            &mut execution_context,
         ));
     }
 
@@ -305,7 +311,7 @@ fn run() -> Result<(), Error> {
         if !opt.no_system {
             report.push_result(execute(
                 |terminal| macos::upgrade_macos(terminal, opt.dry_run),
-                &mut terminal,
+                &mut execution_context,
             ));
         }
     }
@@ -315,16 +321,16 @@ fn run() -> Result<(), Error> {
         if !opt.no_system {
             report.push_result(execute(
                 |terminal| powershell.windows_update(terminal, opt.dry_run),
-                &mut terminal,
+                &mut execution_context,
             ));
         }
     }
 
     if !report.data().is_empty() {
-        terminal.print_separator("Summary");
+        execution_context.terminal.print_separator("Summary");
 
         for (key, succeeded) in report.data() {
-            terminal.print_result(key, *succeeded);
+            execution_context.terminal.print_result(key, *succeeded);
         }
 
         #[cfg(target_os = "linux")]
