@@ -23,8 +23,6 @@ extern crate term_size;
 extern crate termcolor;
 extern crate walkdir;
 
-#[cfg(unix)]
-mod ctrlc;
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "macos")]
@@ -37,6 +35,7 @@ mod unix;
 mod windows;
 
 mod config;
+mod ctrlc;
 mod executor;
 mod generic;
 mod git;
