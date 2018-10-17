@@ -175,6 +175,12 @@ fn run() -> Result<(), Error> {
         &mut execution_context,
     )?);
 
+    #[cfg(windows)]
+    report.push_result(execute(
+        |terminal| windows::run_scoop(terminal, opt.dry_run),
+        &mut execution_context,
+    )?);
+
     #[cfg(unix)]
     report.push_result(execute(
         |terminal| unix::run_homebrew(terminal, opt.dry_run),

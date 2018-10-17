@@ -25,6 +25,31 @@ pub fn run_chocolatey(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stati
     None
 }
 
+#[must_use]
+pub fn run_scoop(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(scoop) = utils::which("scoop") {
+        terminal.print_separator("Scoop");
+
+        let success = || -> Result<(), failure::Error> {
+            Executor::new(&scoop, dry_run)
+                .args(&["update"])
+                .spawn()?
+                .wait()?
+                .check()?;
+            Executor::new(&scoop, dry_run)
+                .args(&["update", "*"])
+                .spawn()?
+                .wait()?
+                .check()?;
+            Ok(())
+        }().is_ok();
+
+        return Some(("Scoop", success));
+    }
+
+    None
+}
+
 pub struct Powershell {
     path: Option<PathBuf>,
 }
