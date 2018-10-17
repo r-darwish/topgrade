@@ -1,3 +1,4 @@
+use super::{ctrlc, Interrupted};
 use console::Term;
 use std::cmp::{max, min};
 use std::io::Write;
@@ -68,10 +69,11 @@ impl Terminal {
         let _ = self.stdout.flush();
     }
 
-    pub fn should_retry(&mut self, running: bool) -> bool {
+    pub fn should_retry(&mut self, running: bool) -> Result<bool, Interrupted> {
         if self.width.is_none() {
-            return false;
+            return Ok(false);
         }
+
         println!();
         loop {
             let _ = self
@@ -84,14 +86,20 @@ impl Terminal {
             let _ = self.stdout.reset();
             let _ = self.stdout.flush();
 
-            if let Ok(c) = Term::stdout().read_char() {
+            let answer = Term::stdout().read_char();
+
+            if !ctrlc::running() {
+                return Err(Interrupted);
+            }
+
+            if let Ok(c) = answer {
                 match c {
-                    'y' | 'Y' => return true,
-                    'n' | 'N' | '\r' | '\n' => return false,
+                    'y' | 'Y' => return Ok(true),
+                    'n' | 'N' | '\r' | '\n' => return Ok(false),
                     _ => (),
                 }
             } else {
-                return false;
+                return Ok(false);
             }
         }
     }

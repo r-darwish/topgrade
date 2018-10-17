@@ -65,7 +65,7 @@ struct NoBaseDirectories;
 
 #[derive(Fail, Debug)]
 #[fail(display = "Process Interrupted")]
-struct Interrupted;
+pub struct Interrupted;
 
 struct ExecutionContext {
     terminal: Terminal,
@@ -86,11 +86,7 @@ where
             ctrlc::set_running(true);
         }
 
-        let should_retry = execution_context.terminal.should_retry(running);
-
-        if !ctrlc::running() {
-            return Err(Interrupted);
-        }
+        let should_retry = execution_context.terminal.should_retry(running)?;
 
         if !should_retry {
             return Ok(Some((key, success)));
