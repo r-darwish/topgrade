@@ -104,7 +104,6 @@ where
 }
 
 fn run() -> Result<(), Error> {
-    #[cfg(unix)]
     ctrlc::set_handler();
 
     let opt = config::Opt::from_args();
@@ -144,7 +143,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(
         |terminal| powershell.update_modules(terminal, opt.dry_run),
         &mut execution_context,
-    ));
+    )?);
 
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();
