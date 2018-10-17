@@ -87,7 +87,7 @@ impl Terminal {
 
             match Term::stdout().read_char()? {
                 'y' | 'Y' => return Ok(true),
-                'n' | 'N' | '\r' | '\n' => return Ok(false),
+                'n' | 'N' | '\n' => return Ok(false),
                 _ => (),
             }
         }
