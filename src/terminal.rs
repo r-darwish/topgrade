@@ -1,7 +1,6 @@
-use super::{ctrlc, Interrupted};
 use console::Term;
 use std::cmp::{max, min};
-use std::io::Write;
+use std::io::{self, Write};
 use term_size;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -69,7 +68,7 @@ impl Terminal {
         let _ = self.stdout.flush();
     }
 
-    pub fn should_retry(&mut self, running: bool) -> Result<bool, Interrupted> {
+    pub fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
         if self.width.is_none() {
             return Ok(false);
         }
@@ -86,20 +85,10 @@ impl Terminal {
             let _ = self.stdout.reset();
             let _ = self.stdout.flush();
 
-            let answer = Term::stdout().read_char();
-
-            if !ctrlc::running() {
-                return Err(Interrupted);
-            }
-
-            if let Ok(c) = answer {
-                match c {
-                    'y' | 'Y' => return Ok(true),
-                    'n' | 'N' | '\r' | '\n' => return Ok(false),
-                    _ => (),
-                }
-            } else {
-                return Ok(false);
+            match Term::stdout().read_char()? {
+                'y' | 'Y' => return Ok(true),
+                'n' | 'N' | '\r' | '\n' => return Ok(false),
+                _ => (),
             }
         }
     }

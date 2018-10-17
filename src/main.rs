@@ -52,6 +52,7 @@ use self::terminal::Terminal;
 use failure::Error;
 use std::borrow::Cow;
 use std::env;
+use std::io::ErrorKind;
 use std::process::exit;
 use structopt::StructOpt;
 
@@ -71,7 +72,7 @@ struct ExecutionContext {
     terminal: Terminal,
 }
 
-fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Result<Option<(M, bool)>, Interrupted>
+fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Result<Option<(M, bool)>, Error>
 where
     M: Into<Cow<'a, str>>,
     F: Fn(&mut Terminal) -> Option<(M, bool)>,
@@ -86,7 +87,13 @@ where
             ctrlc::set_running(true);
         }
 
-        let should_retry = execution_context.terminal.should_retry(running)?;
+        let should_retry = execution_context.terminal.should_retry(running).map_err(|e| {
+            if e.kind() == ErrorKind::Interrupted {
+                Error::from(Interrupted)
+            } else {
+                Error::from(e)
+            }
+        })?;
 
         if !should_retry {
             return Ok(Some((key, success)));
