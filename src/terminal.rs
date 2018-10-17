@@ -1,5 +1,6 @@
+use console::Term;
 use std::cmp::{max, min};
-use std::io::{stdin, Write};
+use std::io::{self, Write};
 use term_size;
 use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
@@ -67,29 +68,27 @@ impl Terminal {
         let _ = self.stdout.flush();
     }
 
-    pub fn should_retry(&mut self) -> bool {
+    pub fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
         if self.width.is_none() {
-            return false;
+            return Ok(false);
         }
+
         println!();
         loop {
-            let mut result = String::new();
-
             let _ = self
                 .stdout
                 .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
             let _ = write!(&mut self.stdout, "Retry? [y/N] ");
+            if !running {
+                write!(&mut self.stdout, "(Press Ctrl+C again to stop Topgrade) ");
+            }
             let _ = self.stdout.reset();
             let _ = self.stdout.flush();
 
-            if stdin().read_line(&mut result).is_ok() {
-                match result.as_str().trim() {
-                    "y" | "Y" => return true,
-                    "n" | "N" | "" => return false,
-                    _ => (),
-                }
-            } else {
-                return false;
+            match Term::stdout().read_char()? {
+                'y' | 'Y' => return Ok(true),
+                'n' | 'N' | '\n' => return Ok(false),
+                _ => (),
             }
         }
     }
