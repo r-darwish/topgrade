@@ -36,6 +36,7 @@ Just run `topgrade`. It will run the following steps:
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * *Windows*: Upgrade Powershell modules
 * *Windows*: Upgrade all [Chocolatey](https://chocolatey.org/) packages
+* *Windows*: Upgrade all [Scoop](https://scoop.sh) packages
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
   * ~/.zshrc
