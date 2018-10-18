@@ -57,6 +57,7 @@ Just run `topgrade`. It will run the following steps:
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages (You'll get a better output if you have [Paradox](https://github.com/Malabarba/paradox) installed)
 * Upgrade [OCaml packages](https://opam.ocaml.org/)
+* Upgrade [R globally installed packages](https://github.com/ankane/jetpack)
 * Upgrade Vim/Neovim packages. Works with the following plugin frameworks:
   * [NeoBundle](https://github.com/Shougo/neobundle.vim)
   * [Vundle](https://github.com/VundleVim/Vundle.vim)

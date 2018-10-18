@@ -125,6 +125,26 @@ pub fn run_rustup(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
+pub fn run_jetpack(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(jetpack) = utils::which("jetpack") {
+        terminal.print_separator("Jetpack");
+
+        let success = || -> Result<(), Error> {
+            Executor::new(&jetpack, dry_run)
+                .args(&["global", "update"])
+                .spawn()?
+                .wait()?
+                .check()?;
+            Ok(())
+        }().is_ok();
+
+        return Some(("Jetpack", success));
+    }
+
+    None
+}
+
+#[must_use]
 pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(opam) = utils::which("opam") {
         terminal.print_separator("OCaml Package Manager");
