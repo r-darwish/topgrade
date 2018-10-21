@@ -348,7 +348,7 @@ pub fn run_etc_update(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: 
                 Ok(())
             }().is_ok();
 
-            return Some(("snap", success));
+            return Some(("etc-update", success));
         }
     }
 
