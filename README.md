@@ -32,6 +32,7 @@ Just run `topgrade`. It will run the following steps:
   * *CentOS/RHEL*: Run `yum upgrade`
   * *Fedora* - Run `dnf upgrade`
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
+  * *Gentoo*: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
 * *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * *Unix*: Run `nix upgrade-nix && nix --upgrade`.

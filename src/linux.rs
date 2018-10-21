@@ -13,6 +13,7 @@ pub enum Distribution {
     Fedora,
     Debian,
     Ubuntu,
+    Gentoo,
 }
 
 #[derive(Debug, Fail)]
@@ -47,6 +48,10 @@ impl Distribution {
             return Ok(Distribution::Debian);
         }
 
+        if PathBuf::from("/etc/gentoo-release").exists() {
+            return Ok(Distribution::Gentoo);
+        }
+
         Err(UnknownLinuxDistribution.into())
     }
 
@@ -64,6 +69,7 @@ impl Distribution {
             Distribution::CentOS => upgrade_redhat(&sudo, terminal, dry_run),
             Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
             Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
+            Distribution::Gentoo => upgrade_gentoo(&sudo, terminal, dry_run),
         };
 
         Some(("System update", success.is_ok()))
@@ -141,6 +147,42 @@ fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/dnf", "upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_gentoo(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        if let Some(layman) = which("layman") {
+            Executor::new(&sudo, dry_run)
+                .arg(layman)
+                .args(&["-s", "ALL"])
+                .spawn()?
+                .wait()?
+                .check()?;
+        }
+
+        println!("Syncing portage");
+        Executor::new(&sudo, dry_run)
+            .arg("/usr/bin/emerge")
+            .args(&["-q", "--sync"])
+            .spawn()?
+            .wait()?
+            .check()?;
+
+        if let Some(eix_update) = which("eix-update") {
+            Executor::new(&sudo, dry_run).arg(eix_update).spawn()?.wait()?.check()?;
+        }
+
+        Executor::new(&sudo, dry_run)
+            .arg("/usr/bin/emerge")
+            .args(&["-uDNa", "world"])
             .spawn()?
             .wait()?
             .check()?;
