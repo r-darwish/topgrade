@@ -34,6 +34,7 @@ Just run `topgrade`. It will run the following steps:
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
 * *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
+* *Unix*: Run `nix upgrade-nix && nix --upgrade`.
 * *Windows*: Upgrade Powershell modules
 * *Windows*: Upgrade all [Chocolatey](https://chocolatey.org/) packages
 * *Windows*: Upgrade all [Scoop](https://scoop.sh) packages

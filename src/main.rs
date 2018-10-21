@@ -186,6 +186,11 @@ fn run() -> Result<(), Error> {
         |terminal| unix::run_homebrew(terminal, opt.dry_run),
         &mut execution_context,
     )?);
+    #[cfg(unix)]
+    report.push_result(execute(
+        |terminal| unix::run_nix(terminal, opt.dry_run),
+        &mut execution_context,
+    )?);
 
     if !opt.no_emacs {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));

@@ -67,3 +67,30 @@ pub fn run_homebrew(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static 
 
     None
 }
+
+#[must_use]
+pub fn run_nix(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(nix) = which("nix") {
+        if let Some(nix_env) = which("nix-env") {
+            terminal.print_separator("Nix");
+
+            let inner = || -> Result<(), Error> {
+                Executor::new(&nix, dry_run)
+                    .arg("upgrade-nix")
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+                Executor::new(&nix_env, dry_run)
+                    .arg("--upgrade")
+                    .spawn()?
+                    .wait()?
+                    .check()?;
+                Ok(())
+            };
+
+            return Some(("Nix", inner().is_ok()));
+        }
+    }
+
+    None
+}
