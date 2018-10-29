@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", deny(clippy::all))]
+
 extern crate directories;
 extern crate failure;
 extern crate which;
