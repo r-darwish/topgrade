@@ -288,16 +288,12 @@ fn run() -> Result<(), Error> {
         &mut execution_context,
     )?);
 
-    #[cfg(
-        not(
-            any(
-                target_os = "freebsd",
-                target_os = "openbsd",
-                target_os = "netbsd",
-                target_os = "dragonfly"
-            )
-        )
-    )]
+    #[cfg(not(any(
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly"
+    )))]
     report.push_result(execute(
         |terminal| generic::run_apm(terminal, opt.dry_run),
         &mut execution_context,

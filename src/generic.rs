@@ -74,16 +74,12 @@ pub fn run_emacs(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -
 }
 
 #[must_use]
-#[cfg(
-    not(
-        any(
-            target_os = "freebsd",
-            target_os = "openbsd",
-            target_os = "netbsd",
-            target_os = "dragonfly"
-        )
-    )
-)]
+#[cfg(not(any(
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly"
+)))]
 pub fn run_apm(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(apm) = utils::which("apm") {
         terminal.print_separator("Atom Package Manager");
