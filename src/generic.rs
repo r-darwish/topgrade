@@ -162,6 +162,26 @@ pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stat
 }
 
 #[must_use]
+pub fn run_pipx_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(pipx) = utils::which("pipx") {
+        terminal.print_separator("pipx");
+
+        let success = || -> Result<(), Error> {
+            Executor::new(&pipx, dry_run)
+                .arg("upgrade-all")
+                .spawn()?
+                .wait()?
+                .check()?;
+            Ok(())
+        }().is_ok();
+
+        return Some(("pipx", success));
+    }
+
+    None
+}
+
+#[must_use]
 pub fn run_custom_command(name: &str, command: &str, terminal: &mut Terminal, dry_run: bool) -> Result<(), Error> {
     terminal.print_separator(name);
     Executor::new("sh", dry_run)

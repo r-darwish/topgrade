@@ -266,6 +266,10 @@ fn run() -> Result<(), Error> {
         &mut execution_context,
     )?);
     report.push_result(execute(
+        |terminal| generic::run_pipx_update(terminal, opt.dry_run),
+        &mut execution_context,
+    )?);
+    report.push_result(execute(
         |terminal| generic::run_jetpack(terminal, opt.dry_run),
         &mut execution_context,
     )?);
