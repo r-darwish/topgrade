@@ -1,19 +1,18 @@
-use console::Term;
+use console::{style, Term};
 use std::cmp::{max, min};
 use std::io::{self, Write};
-use term_size;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
 
 pub struct Terminal {
-    width: Option<usize>,
-    stdout: StandardStream,
+    width: Option<u16>,
+    term: Term,
 }
 
 impl Terminal {
     pub fn new() -> Self {
+        let term = Term::stdout();
         Self {
-            width: term_size::dimensions().map(|(w, _)| w),
-            stdout: StandardStream::stdout(ColorChoice::Auto),
+            width: term.size_checked().map(|(_, w)| w),
+            term,
         }
     }
 
@@ -21,21 +20,19 @@ impl Terminal {
         let message = message.as_ref();
         match self.width {
             Some(width) => {
-                let _ = self
-                    .stdout
-                    .set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true));
-                let _ = writeln!(
-                    &mut self.stdout,
-                    "\n―― {} {:―^border$}",
-                    message,
-                    "",
-                    border = max(2, min(80, width as usize) - 3 - message.len())
+                println!(
+                    "{}",
+                    style(format!(
+                        "\n―― {} {:―^border$}",
+                        message,
+                        "",
+                        border = max(2, min(80, width as usize) - 3 - message.len())
+                    )).bold()
+                    .white()
                 );
-                let _ = self.stdout.reset();
-                let _ = self.stdout.flush();
             }
             None => {
-                let _ = writeln!(&mut self.stdout, "―― {} ――", message);
+                println!("―― {} ――", message);
             }
         }
     }
@@ -43,29 +40,21 @@ impl Terminal {
     #[allow(dead_code)]
     pub fn print_warning<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
-
-        let _ = self
-            .stdout
-            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
-        let _ = writeln!(&mut self.stdout, "{}", message);
-        let _ = self.stdout.reset();
-        let _ = self.stdout.flush();
+        println!("{}", style(message).yellow().bold());
     }
 
     pub fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
         let key = key.as_ref();
-        let _ = write!(&mut self.stdout, "{}: ", key);
 
-        let _ = self.stdout.set_color(
-            ColorSpec::new()
-                .set_fg(Some(if succeeded { Color::Green } else { Color::Red }))
-                .set_bold(true),
+        println!(
+            "{}: {}",
+            key,
+            if succeeded {
+                style("OK").bold().green()
+            } else {
+                style("FAILED").bold().red()
+            }
         );
-
-        let _ = writeln!(&mut self.stdout, "{}", if succeeded { "OK" } else { "FAILED" });
-
-        let _ = self.stdout.reset();
-        let _ = self.stdout.flush();
     }
 
     pub fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
@@ -75,17 +64,21 @@ impl Terminal {
 
         println!();
         loop {
-            let _ = self
-                .stdout
-                .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
-            let _ = write!(&mut self.stdout, "Retry? [y/N] ");
-            if !running {
-                write!(&mut self.stdout, "(Press Ctrl+C again to stop Topgrade) ");
-            }
-            let _ = self.stdout.reset();
-            let _ = self.stdout.flush();
+            self.term
+                .write_fmt(format_args!(
+                    "{}",
+                    style(format!(
+                        "Retry? [y/N] {}",
+                        if !running {
+                            "(Press Ctrl+C again to stop Topgrade) "
+                        } else {
+                            ""
+                        }
+                    )).yellow()
+                    .bold()
+                )).ok();
 
-            match Term::stdout().read_char()? {
+            match self.term.read_char()? {
                 'y' | 'Y' => return Ok(true),
                 'n' | 'N' | '\r' | '\n' => return Ok(false),
                 _ => (),

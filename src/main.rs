@@ -19,8 +19,6 @@ extern crate nix;
 #[cfg(unix)]
 #[macro_use]
 extern crate lazy_static;
-extern crate term_size;
-extern crate termcolor;
 extern crate walkdir;
 
 #[cfg(target_os = "linux")]

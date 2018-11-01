@@ -19,8 +19,6 @@ shellexpand = "1.0.0"
 structopt = "0.2.12"
 log = "0.4.6"
 env_logger = "0.5.13"
-term_size = "0.3.1"
-termcolor = "1.0.4"
 walkdir = "2.2.6"
 console = "0.6.2"
 
