@@ -9,8 +9,8 @@ use std::process::Command;
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
 #[must_use]
-pub fn run_cargo_update(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
-    if let Some(cargo_update) = base_dirs.home_dir().join(".cargo/bin/cargo-install-update").if_exists() {
+pub fn run_cargo_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(cargo_update) = utils::which("cargo-install-update") {
         terminal.print_separator("Cargo");
 
         let success = || -> Result<(), Error> {

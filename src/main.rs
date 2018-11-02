@@ -248,7 +248,7 @@ fn run() -> Result<(), Error> {
         &mut execution_context,
     )?);
     report.push_result(execute(
-        |terminal| generic::run_cargo_update(&base_dirs, terminal, opt.dry_run),
+        |terminal| generic::run_cargo_update(terminal, opt.dry_run),
         &mut execution_context,
     )?);
 
