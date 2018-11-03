@@ -14,6 +14,7 @@ pub enum Distribution {
     Debian,
     Ubuntu,
     Gentoo,
+    OpenSuse,
 }
 
 #[derive(Debug, Fail)]
@@ -48,6 +49,10 @@ impl Distribution {
             return Ok(Distribution::Debian);
         }
 
+        if content.contains("openSUSE") {
+            return Ok(Distribution::OpenSuse);
+        }
+
         if PathBuf::from("/etc/gentoo-release").exists() {
             return Ok(Distribution::Gentoo);
         }
@@ -70,6 +75,7 @@ impl Distribution {
             Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
             Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
             Distribution::Gentoo => upgrade_gentoo(&sudo, terminal, dry_run),
+            Distribution::OpenSuse => upgrade_opensuse(&sudo, terminal, dry_run),
         };
 
         Some(("System update", success.is_ok()))
@@ -133,6 +139,26 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/yum", "upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_opensuse(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        Executor::new(&sudo, dry_run)
+            .args(&["/usr/bin/zypper", "refresh"])
+            .spawn()?
+            .wait()?
+            .check()?;
+
+        Executor::new(&sudo, dry_run)
+            .args(&["/usr/bin/zypper", "dist-upgrade"])
             .spawn()?
             .wait()?
             .check()?;
