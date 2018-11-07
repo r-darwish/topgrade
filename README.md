@@ -18,7 +18,7 @@ Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/)
 macOS users can install topgrade via Homebrew.
 
 Other systems users can either use `cargo install` or use the compiled binaries from the release
-page.
+page. The compiled binaries contain a self-upgrading feature.
 
 Topgrade isn't guaranteed to work on Rust versions older than the latest stable release. If you
 intend to install Topgrade using Cargo then you should either install Rust using rustup or use a

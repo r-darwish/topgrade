@@ -8,6 +8,8 @@ main() {
     cargo clippy --all-targets --all-features -- -D warnings
     cross check --target $TARGET
     cross check --target $TARGET --release
+    cross check --target $TARGET --all-features
+    cross check --target $TARGET --release --all-features
 
     if [ ! -z $DISABLE_TESTS ]; then
         return

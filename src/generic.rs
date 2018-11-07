@@ -229,3 +229,40 @@ pub fn run_composer_update(
 
     None
 }
+
+#[must_use]
+#[cfg(all(
+    feature = "self-update",
+    any(windows, target_os = "linux", target_os = "macos")
+))]
+pub fn self_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    terminal.print_separator("Self update");
+    let success = if !dry_run {
+        let result = || -> Result<(), Error> {
+            let target = self_update::get_target()?;
+            self_update::backends::github::Update::configure()?
+                .repo_owner("r-darwish")
+                .repo_name("topgrade")
+                .target(&target)
+                .bin_name("topgrade")
+                .show_download_progress(true)
+                .current_version(cargo_crate_version!())
+                .no_confirm(true)
+                .build()?
+                .update()?;
+            Ok(())
+        }();
+
+        match result {
+            Err(e) => {
+                println!("{}", e);
+                false
+            }
+            Ok(_) => (true),
+        }
+    } else {
+        true
+    };
+
+    Some(("Self update", success))
+}

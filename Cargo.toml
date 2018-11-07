@@ -21,6 +21,7 @@ log = "0.4.6"
 env_logger = "0.5.13"
 walkdir = "2.2.6"
 console = "0.6.2"
+self_update = { git = "https://github.com/r-darwish/self_update", branch = "bump-reqwest", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.11.0"
@@ -28,3 +29,8 @@ lazy_static = "1.1.0"
 
 [profile.release]
 lto = true
+
+[features]
+default = []
+
+self-update = ["self_update"]
