@@ -78,7 +78,9 @@ impl Terminal {
                     .bold()
                 )).ok();
 
-            match self.term.read_char()? {
+            let answer = self.term.read_char()?;
+            println!();
+            match answer {
                 'y' | 'Y' => return Ok(true),
                 'n' | 'N' | '\r' | '\n' => return Ok(false),
                 _ => (),

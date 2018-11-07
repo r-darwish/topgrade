@@ -29,10 +29,12 @@ test_script:
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo check --target %TARGET% &&
       cargo check --target %TARGET% --release
+      cargo check --target %TARGET% --all-features &&
+      cargo check --target %TARGET% --all-features --release
     )
 
 before_deploy:
-  - cargo rustc --target %TARGET% --release --bin topgrade -- -C lto
+  - cargo rustc --target %TARGET% --release --bin topgrade --all-features -- -C lto
   - ps: ci\before_deploy.ps1
 
 deploy:
