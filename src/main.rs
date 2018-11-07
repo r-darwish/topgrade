@@ -397,13 +397,9 @@ fn main() {
             exit(0);
         }
         Err(error) => {
-            match error
-                .downcast::<StepFailed>()
-                .map(|_| ())
-                .or_else(|error| error.downcast::<Interrupted>().map(|_| ()))
-            {
-                Ok(_) => (),
-                Err(error) => println!("ERROR: {}", error),
+            if (error.downcast_ref::<StepFailed>().is_some()) || (error.downcast_ref::<Interrupted>().is_some()) {
+            } else {
+                println!("ERROR: {}", error)
             }
             exit(1);
         }
