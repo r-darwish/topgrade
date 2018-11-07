@@ -33,7 +33,7 @@ impl Distribution {
             return Ok(Distribution::Arch);
         }
 
-        if content.contains("CentOS") {
+        if content.contains("CentOS") || content.contains("Oracle Linux") {
             return Ok(Distribution::CentOS);
         }
 
