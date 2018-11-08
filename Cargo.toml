@@ -3,7 +3,7 @@ name = "topgrade"
 description = "Upgrade all the things"
 license-file = "LICENCE"
 repository = "https://github.com/r-darwish/topgrade"
-version = "0.18.0"
+version = "0.19.0"
 authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 
