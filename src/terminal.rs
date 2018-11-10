@@ -63,28 +63,29 @@ impl Terminal {
         }
 
         println!();
-        loop {
-            self.term
-                .write_fmt(format_args!(
-                    "{}",
-                    style(format!(
-                        "Retry? [y/N] {}",
-                        if !running {
-                            "(Press Ctrl+C again to stop Topgrade) "
-                        } else {
-                            ""
-                        }
-                    )).yellow()
-                    .bold()
-                )).ok();
+        self.term
+            .write_fmt(format_args!(
+                "{}",
+                style(format!(
+                    "Retry? [y/N] {}",
+                    if !running {
+                        "(Press Ctrl+C again to stop Topgrade) "
+                    } else {
+                        ""
+                    }
+                )).yellow()
+                .bold()
+            )).ok();
 
-            let answer = self.term.read_char()?;
-            println!();
-            match answer {
-                'y' | 'Y' => return Ok(true),
-                'n' | 'N' | '\r' | '\n' => return Ok(false),
+        let answer = loop {
+            match self.term.read_char()? {
+                'y' | 'Y' => break Ok(true),
+                'n' | 'N' | '\r' | '\n' => break Ok(false),
                 _ => (),
             }
-        }
+        };
+
+        println!();
+        answer
     }
 }
