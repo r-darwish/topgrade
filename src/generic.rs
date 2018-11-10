@@ -162,6 +162,22 @@ pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stat
 }
 
 #[must_use]
+pub fn run_vcpkg_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(vcpkg) = utils::which("vcpkg") {
+        terminal.print_separator("vcpkg");
+
+        let success = || -> Result<(), Error> {
+            Executor::new(&vcpkg, dry_run).args(&["upgrade", "--no-dry-run"]).spawn()?.wait()?.check()?;
+            Ok(())
+        }().is_ok();
+
+        return Some(("vcpkg", success));
+    }
+
+    None
+}
+
+#[must_use]
 pub fn run_pipx_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(pipx) = utils::which("pipx") {
         terminal.print_separator("pipx");
