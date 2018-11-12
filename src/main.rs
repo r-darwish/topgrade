@@ -19,10 +19,7 @@ extern crate nix;
 #[cfg(unix)]
 #[macro_use]
 extern crate lazy_static;
-#[cfg(all(
-    feature = "self-update",
-    any(windows, target_os = "linux", target_os = "macos")
-))]
+#[cfg(feature = "self-update")]
 #[macro_use]
 extern crate self_update;
 extern crate walkdir;
@@ -59,7 +56,11 @@ use failure::Error;
 use std::borrow::Cow;
 use std::env;
 use std::io::ErrorKind;
+#[cfg(all(unix, feature = "self-update"))]
+use std::os::unix::process::CommandExt;
 use std::process::exit;
+#[cfg(all(unix, feature = "self-update"))]
+use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Fail, Debug)]
@@ -109,6 +110,44 @@ where
     Ok(None)
 }
 
+#[must_use]
+#[cfg(feature = "self-update")]
+pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
+    terminal.print_separator("Self update");
+    #[cfg(unix)]
+    let current_exe = env::current_exe();
+
+    let target = self_update::get_target()?;
+    let result = self_update::backends::github::Update::configure()?
+        .repo_owner("r-darwish")
+        .repo_name("topgrade")
+        .target(&target)
+        .bin_name("topgrade")
+        .show_output(false)
+        .show_download_progress(true)
+        .current_version(cargo_crate_version!())
+        .no_confirm(true)
+        .build()?
+        .update()?;
+
+    if let self_update::Status::Updated(version) = &result {
+        println!("\nTopgrade upgraded to {}", version);
+    } else {
+        println!("Topgrade is up-to-date");
+    }
+
+    #[cfg(unix)]
+    {
+        if result.updated() {
+            terminal.print_warning("Respawning...");
+            let err = Command::new(current_exe?).args(env::args().skip(1)).exec();
+            Err(err)?
+        }
+    }
+
+    Ok(())
+}
+
 fn run() -> Result<(), Error> {
     ctrlc::set_handler();
 
@@ -137,14 +176,16 @@ fn run() -> Result<(), Error> {
     #[cfg(any(target_os = "freebsd", target_os = "linux"))]
     let sudo = utils::which("sudo");
 
-    #[cfg(all(
-        feature = "self-update",
-        any(windows, target_os = "linux", target_os = "macos")
-    ))]
-    report.push_result(execute(
-        |terminal| generic::self_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    #[cfg(feature = "self-update")]
+    {
+        if !opt.dry_run {
+            if let Err(e) = self_update(&mut execution_context.terminal) {
+                execution_context
+                    .terminal
+                    .print_warning(format!("Self update error: {}", e));
+            }
+        }
+    }
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {

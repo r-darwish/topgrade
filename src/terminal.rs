@@ -89,3 +89,9 @@ impl Terminal {
         answer
     }
 }
+
+impl Default for Terminal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
