@@ -27,6 +27,8 @@ extern crate lazy_static;
 extern crate self_update;
 extern crate walkdir;
 
+#[cfg(target_os = "freebsd")]
+mod freebsd;
 #[cfg(target_os = "linux")]
 mod linux;
 #[cfg(target_os = "macos")]
@@ -132,7 +134,7 @@ fn run() -> Result<(), Error> {
     let config = Config::read(&base_dirs)?;
     let mut report = Report::new();
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "freebsd", target_os = "linux"))]
     let sudo = utils::which("sudo");
 
     #[cfg(all(
@@ -198,6 +200,11 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     report.push_result(execute(
         |terminal| unix::run_homebrew(terminal, opt.dry_run),
+        &mut execution_context,
+    )?);
+    #[cfg(target_os = "freebsd")]
+    report.push_result(execute(
+        |terminal| freebsd::upgrade_packages(&sudo, terminal, opt.dry_run),
         &mut execution_context,
     )?);
     #[cfg(unix)]
@@ -370,6 +377,16 @@ fn run() -> Result<(), Error> {
         if !opt.no_system {
             report.push_result(execute(
                 |terminal| macos::upgrade_macos(terminal, opt.dry_run),
+                &mut execution_context,
+            )?);
+        }
+    }
+
+    #[cfg(target_os = "freebsd")]
+    {
+        if !opt.no_system {
+            report.push_result(execute(
+                |terminal| freebsd::upgrade_freebsd(&sudo, terminal, opt.dry_run),
                 &mut execution_context,
             )?);
         }

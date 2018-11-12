@@ -35,6 +35,7 @@ Just run `topgrade`. It will run the following steps:
   * *Gentoo*: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
   * *openSUSE*: Run `zypper refresh && zypper dist-upgrade`
 * *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
+* *FreeBSD*: Upgrade and audit packages
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * *Unix*: Run `nix upgrade-nix && nix --upgrade`.
 * *Windows*: Upgrade Powershell modules
@@ -79,6 +80,7 @@ Just run `topgrade`. It will run the following steps:
   * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
   * *Windows*: Run Windows Update (You'll have to install [PSWindowsUpdate](https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/))
   * *macOS*: Upgrade App Store applications
+  * *FreeBSD*: Run `freebsd-upgrade`
 
 ## Flags
 * `-t/--tmux` - Topgrade will launch itself in a new tmux session. This flag has no effect if

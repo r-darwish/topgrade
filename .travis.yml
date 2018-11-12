@@ -23,6 +23,7 @@ matrix:
     - env: TARGET=armv7-unknown-linux-gnueabihf
     - env: TARGET=x86_64-unknown-linux-gnu
     - env: TARGET=x86_64-unknown-linux-musl
+    - env: TARGET=x86_64-unknown-freebsd
 
     # OSX
     - env: TARGET=x86_64-apple-darwin
