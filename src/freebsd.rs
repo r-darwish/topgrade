@@ -51,8 +51,13 @@ pub fn upgrade_packages(
     }
 }
 
-pub fn audit_packages() -> Result<(), failure::Error> {
-    println!();
-    Command::new("/usr/sbin/pkg").args(&["audit", "-Fr"]).spawn()?.wait()?;
+pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<(), failure::Error> {
+    if let Some(sudo) = sudo {
+        println!();
+        Command::new(sudo)
+            .args(&["/usr/sbin/pkg", "audit", "-Fr"])
+            .spawn()?
+            .wait()?;
+    }
     Ok(())
 }

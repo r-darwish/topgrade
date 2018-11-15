@@ -458,7 +458,7 @@ fn run() -> Result<(), Error> {
         }
 
         #[cfg(target_os = "freebsd")]
-        freebsd::audit_packages().ok();
+        freebsd::audit_packages(&sudo).ok();
     }
 
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
