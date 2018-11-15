@@ -3,6 +3,7 @@ use super::terminal::Terminal;
 use super::utils::Check;
 use failure;
 use std::path::PathBuf;
+use std::process::Command;
 
 #[must_use]
 pub fn upgrade_freebsd(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
@@ -40,11 +41,6 @@ pub fn upgrade_packages(
                 .spawn()?
                 .wait()?
                 .check()?;
-            Executor::new("/usr/sbin/pkg", dry_run)
-                .arg("audit")
-                .spawn()?
-                .wait()?
-                .check()?;
             Ok(())
         }().is_ok();
 
@@ -53,4 +49,10 @@ pub fn upgrade_packages(
         terminal.print_warning("No sudo or yay detected. Skipping package upgrade");
         None
     }
+}
+
+pub fn audit_packages() -> Result<(), failure::Error> {
+    println!();
+    Command::new("/usr/sbin/pkg").args(&["audit", "-Fr"]).spawn()?.wait()?;
+    Ok(())
 }

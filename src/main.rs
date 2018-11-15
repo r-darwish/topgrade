@@ -456,6 +456,9 @@ fn run() -> Result<(), Error> {
                 distribution.show_summary();
             }
         }
+
+        #[cfg(target_os = "freebsd")]
+        freebsd::audit_packages().ok();
     }
 
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
