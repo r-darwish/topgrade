@@ -21,7 +21,7 @@ log = "0.4.6"
 env_logger = "0.5.13"
 walkdir = "2.2.6"
 console = "0.6.2"
-self_update = { version = "0.4.4", optional = true }
+self_update = { version = "0.4.5", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.11.0"
