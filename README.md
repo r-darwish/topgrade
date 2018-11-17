@@ -83,6 +83,7 @@ Just run `topgrade`. It will run the following steps:
 ## Flags
 * `-t/--tmux` - Topgrade will launch itself in a new tmux session. This flag has no effect if
   Topgrade already runs inside tmux. This is useful when using topgrade on remote systems.
+* `-c/--cleanup` - Topgrade will instruct package managers to remove old or unused files
 * `-n/--dry-run` - Print what should be run.
 * `--no-system` - Skip the system upgrade phase.
 * `--no-git-repos` - Don't pull custom git repositories.
