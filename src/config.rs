@@ -51,6 +51,9 @@ pub struct Opt {
     #[structopt(short = "t", long = "tmux", help = "Run inside tmux")]
     pub run_in_tmux: bool,
 
+    #[structopt(short = "c", long = "cleanup", help = "Cleanup temporary or old files")]
+    pub cleanup: bool,
+
     #[structopt(long = "no-system", help = "Don't perform system upgrade")]
     pub no_system: bool,
 
