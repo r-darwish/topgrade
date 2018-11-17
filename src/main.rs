@@ -197,7 +197,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(unix)]
     report.push_result(execute(
-        |terminal| unix::run_homebrew(terminal, opt.dry_run),
+        |terminal| unix::run_homebrew(terminal, opt.cleanup, opt.dry_run),
         &mut execution_context,
     )?);
     #[cfg(unix)]

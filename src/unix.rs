@@ -52,13 +52,16 @@ pub fn run_fisher(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
-pub fn run_homebrew(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_homebrew(terminal: &mut Terminal, cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(brew) = which("brew") {
         terminal.print_separator("Brew");
 
         let inner = || -> Result<(), Error> {
             Executor::new(&brew, dry_run).arg("update").spawn()?.wait()?.check()?;
             Executor::new(&brew, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
+            if cleanup {
+                Executor::new(&brew, dry_run).arg("cleanup").spawn()?.wait()?.check()?;
+            }
             Ok(())
         };
 
