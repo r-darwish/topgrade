@@ -1,4 +1,5 @@
 use failure::Error;
+use failure_derive::Fail;
 use log::{debug, error};
 use std::ffi::OsStr;
 use std::fmt::Debug;

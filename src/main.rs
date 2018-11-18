@@ -1,15 +1,8 @@
-extern crate directories;
-extern crate failure;
-extern crate which;
-#[macro_use]
-extern crate failure_derive;
-extern crate toml;
-#[macro_use]
-extern crate serde_derive;
-#[macro_use]
-extern crate structopt;
 extern crate console;
+extern crate directories;
 extern crate env_logger;
+extern crate failure;
+extern crate failure_derive;
 #[cfg(unix)]
 extern crate lazy_static;
 extern crate log;
@@ -18,8 +11,12 @@ extern crate nix;
 #[cfg(feature = "self-update")]
 extern crate self_update;
 extern crate serde;
+extern crate serde_derive;
 extern crate shellexpand;
+extern crate structopt;
+extern crate toml;
 extern crate walkdir;
+extern crate which;
 
 #[cfg(target_os = "freebsd")]
 mod freebsd;
@@ -50,6 +47,7 @@ use self::git::{Git, Repositories};
 use self::report::Report;
 use self::terminal::Terminal;
 use failure::Error;
+use failure_derive::Fail;
 use std::borrow::Cow;
 use std::env;
 use std::io::ErrorKind;

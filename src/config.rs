@@ -1,8 +1,10 @@
 use directories::BaseDirs;
 use failure;
+use serde_derive::Deserialize;
 use shellexpand;
 use std::collections::BTreeMap;
 use std::fs;
+use structopt::StructOpt;
 use toml;
 
 type Commands = BTreeMap<String, String>;

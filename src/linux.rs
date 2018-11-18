@@ -2,6 +2,7 @@ use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check};
 use failure;
+use failure_derive::Fail;
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
