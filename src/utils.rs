@@ -1,4 +1,5 @@
 use failure::Error;
+use log::{debug, error};
 use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};

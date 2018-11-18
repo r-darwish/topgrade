@@ -2,6 +2,7 @@ use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{self, which, Check};
 use failure;
+use log::error;
 use std::path::PathBuf;
 use std::process::Command;
 

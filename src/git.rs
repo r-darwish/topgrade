@@ -2,6 +2,7 @@ use super::executor::Executor;
 use super::terminal::Terminal;
 use super::utils::{which, Check};
 use failure::Error;
+use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
 use std::path::{Path, PathBuf};

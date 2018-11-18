@@ -8,20 +8,17 @@ extern crate toml;
 extern crate serde_derive;
 #[macro_use]
 extern crate structopt;
-extern crate serde;
-extern crate shellexpand;
-#[macro_use]
-extern crate log;
 extern crate console;
 extern crate env_logger;
 #[cfg(unix)]
-extern crate nix;
-#[cfg(unix)]
-#[macro_use]
 extern crate lazy_static;
+extern crate log;
+#[cfg(unix)]
+extern crate nix;
 #[cfg(feature = "self-update")]
-#[macro_use]
 extern crate self_update;
+extern crate serde;
+extern crate shellexpand;
 extern crate walkdir;
 
 #[cfg(target_os = "freebsd")]
@@ -125,7 +122,7 @@ pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
         .bin_name("topgrade")
         .show_output(false)
         .show_download_progress(true)
-        .current_version(cargo_crate_version!())
+        .current_version(self_update::cargo_crate_version!())
         .no_confirm(true)
         .build()?
         .update()?;

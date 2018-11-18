@@ -1,3 +1,4 @@
+use lazy_static::lazy_static;
 use nix::sys::signal;
 use std::sync::atomic::{AtomicBool, Ordering};
 
