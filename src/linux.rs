@@ -16,6 +16,7 @@ pub enum Distribution {
     Ubuntu,
     Gentoo,
     OpenSuse,
+    Void,
 }
 
 #[derive(Debug, Fail)]
@@ -54,6 +55,10 @@ impl Distribution {
             return Ok(Distribution::OpenSuse);
         }
 
+        if content.contains("void") {
+            return Ok(Distribution::Void);
+        }
+
         if PathBuf::from("/etc/gentoo-release").exists() {
             return Ok(Distribution::Gentoo);
         }
@@ -77,6 +82,7 @@ impl Distribution {
             Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
             Distribution::Gentoo => upgrade_gentoo(&sudo, terminal, dry_run),
             Distribution::OpenSuse => upgrade_opensuse(&sudo, terminal, dry_run),
+            Distribution::Void => upgrade_void(&sudo, terminal, dry_run),
         };
 
         Some(("System update", success.is_ok()))
@@ -160,6 +166,20 @@ fn upgrade_opensuse(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bo
 
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/zypper", "dist-upgrade"])
+            .spawn()?
+            .wait()?
+            .check()?;
+    } else {
+        terminal.print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_void(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+    if let Some(sudo) = &sudo {
+        Executor::new(&sudo, dry_run)
+            .args(&["/usr/bin/xbps-install", "-Su"])
             .spawn()?
             .wait()?
             .check()?;

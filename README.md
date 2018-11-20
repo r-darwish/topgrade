@@ -36,6 +36,7 @@ Just run `topgrade`. It will run the following steps:
   * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
   * *Gentoo*: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
   * *openSUSE*: Run `zypper refresh && zypper dist-upgrade`
+  * *Void*: Run `xbps-install -Su`
 * *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
 * *FreeBSD*: Upgrade and audit packages
 * *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
