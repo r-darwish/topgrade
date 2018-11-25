@@ -1,9 +1,9 @@
 [package]
 name = "topgrade"
 description = "Upgrade all the things"
-license-file = "LICENCE"
+license-file = "LICENSE"
 repository = "https://github.com/r-darwish/topgrade"
-version = "1.0.1"
+version = "1.1.0"
 authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 
