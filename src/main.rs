@@ -117,7 +117,7 @@ pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
         .repo_owner("r-darwish")
         .repo_name("topgrade")
         .target(&target)
-        .bin_name("topgrade")
+        .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
         .show_output(false)
         .show_download_progress(true)
         .current_version(self_update::cargo_crate_version!())

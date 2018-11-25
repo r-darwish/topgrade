@@ -30,6 +30,9 @@ lazy_static = "1.1.0"
 [profile.release]
 lto = true
 
+[patch.crates-io]
+self_update = { git = "https://github.com/r-darwish/self_update", branch = "zip" }
+
 [features]
 default = []
 
