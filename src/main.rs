@@ -9,7 +9,7 @@ extern crate log;
 #[cfg(unix)]
 extern crate nix;
 #[cfg(feature = "self-update")]
-extern crate self_update;
+extern crate self_update as self_update_crate;
 extern crate serde;
 extern crate serde_derive;
 extern crate shellexpand;
@@ -38,6 +38,8 @@ mod generic;
 mod git;
 mod node;
 mod report;
+#[cfg(feature = "self-update")]
+mod self_update;
 mod terminal;
 mod utils;
 mod vim;
@@ -51,11 +53,7 @@ use failure_derive::Fail;
 use std::borrow::Cow;
 use std::env;
 use std::io::ErrorKind;
-#[cfg(all(unix, feature = "self-update"))]
-use std::os::unix::process::CommandExt;
 use std::process::exit;
-#[cfg(all(unix, feature = "self-update"))]
-use std::process::Command;
 use structopt::StructOpt;
 
 #[derive(Fail, Debug)]
@@ -105,44 +103,6 @@ where
     Ok(None)
 }
 
-#[must_use]
-#[cfg(feature = "self-update")]
-pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
-    terminal.print_separator("Self update");
-    #[cfg(unix)]
-    let current_exe = env::current_exe();
-
-    let target = self_update::get_target()?;
-    let result = self_update::backends::github::Update::configure()?
-        .repo_owner("r-darwish")
-        .repo_name("topgrade")
-        .target(&target)
-        .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
-        .show_output(false)
-        .show_download_progress(true)
-        .current_version(self_update::cargo_crate_version!())
-        .no_confirm(true)
-        .build()?
-        .update()?;
-
-    if let self_update::Status::Updated(version) = &result {
-        println!("\nTopgrade upgraded to {}", version);
-    } else {
-        println!("Topgrade is up-to-date");
-    }
-
-    #[cfg(unix)]
-    {
-        if result.updated() {
-            terminal.print_warning("Respawning...");
-            let err = Command::new(current_exe?).args(env::args().skip(1)).exec();
-            Err(err)?
-        }
-    }
-
-    Ok(())
-}
-
 fn run() -> Result<(), Error> {
     ctrlc::set_handler();
 
@@ -174,7 +134,7 @@ fn run() -> Result<(), Error> {
     #[cfg(feature = "self-update")]
     {
         if !opt.dry_run {
-            if let Err(e) = self_update(&mut execution_context.terminal) {
+            if let Err(e) = self_update::self_update(&mut execution_context.terminal) {
                 execution_context
                     .terminal
                     .print_warning(format!("Self update error: {}", e));
