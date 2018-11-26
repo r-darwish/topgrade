@@ -1,6 +1,7 @@
 use super::terminal::Terminal;
 use failure::Error;
 use self_update_crate;
+#[cfg(unix)]
 use std::env;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
