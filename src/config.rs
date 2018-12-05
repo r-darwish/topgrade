@@ -50,27 +50,27 @@ impl Config {
 #[derive(StructOpt, Debug)]
 #[structopt(name = "Topgrade")]
 pub struct Opt {
-    #[structopt(short = "t", long = "tmux", help = "Run inside tmux")]
+    /// Run inside tmux
+    #[structopt(short = "t", long = "tmux")]
     pub run_in_tmux: bool,
 
-    #[structopt(short = "c", long = "cleanup", help = "Cleanup temporary or old files")]
+    /// Cleanup temporary or old files
+    #[structopt(short = "c", long = "cleanup")]
     pub cleanup: bool,
 
-    #[structopt(long = "no-system", help = "Don't perform system upgrade")]
+    /// Don't perform system upgrade
+    #[structopt(long = "no-system")]
     pub no_system: bool,
 
-    #[structopt(
-        long = "no-git-repos",
-        help = "Don't perform updates on configured git repos"
-    )]
+    /// Don't perform updates on configured git repos
+    #[structopt(long = "no-git-repos")]
     pub no_git_repos: bool,
 
-    #[structopt(
-        long = "no-emacs",
-        help = "Don't upgrade Emacs packages or configuration files"
-    )]
+    /// Don't upgrade Emacs packages or configuration files
+    #[structopt(long = "no-emacs")]
     pub no_emacs: bool,
 
-    #[structopt(short = "n", long = "dry-run", help = "Print what would be done")]
+    /// Print what would be done
+    #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
 }
