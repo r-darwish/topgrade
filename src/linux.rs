@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::{print_separator, print_warning};
 use super::utils::{which, Check};
 use failure;
 use failure_derive::Fail;
@@ -67,22 +67,17 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(
-        self,
-        sudo: &Option<PathBuf>,
-        terminal: &mut Terminal,
-        dry_run: bool,
-    ) -> Option<(&'static str, bool)> {
-        terminal.print_separator("System update");
+    pub fn upgrade(self, sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+        print_separator("System update");
 
         let success = match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, terminal, dry_run),
-            Distribution::CentOS => upgrade_redhat(&sudo, terminal, dry_run),
-            Distribution::Fedora => upgrade_fedora(&sudo, terminal, dry_run),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, terminal, dry_run),
-            Distribution::Gentoo => upgrade_gentoo(&sudo, terminal, dry_run),
-            Distribution::OpenSuse => upgrade_opensuse(&sudo, terminal, dry_run),
-            Distribution::Void => upgrade_void(&sudo, terminal, dry_run),
+            Distribution::Arch => upgrade_arch_linux(&sudo, dry_run),
+            Distribution::CentOS => upgrade_redhat(&sudo, dry_run),
+            Distribution::Fedora => upgrade_fedora(&sudo, dry_run),
+            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, dry_run),
+            Distribution::Gentoo => upgrade_gentoo(&sudo, dry_run),
+            Distribution::OpenSuse => upgrade_opensuse(&sudo, dry_run),
+            Distribution::Void => upgrade_void(&sudo, dry_run),
         };
 
         Some(("System update", success.is_ok()))
@@ -115,11 +110,11 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
-                terminal.print_warning(format!(
+                print_warning(format!(
                     "Python detected at {:?}, which is probably not the system Python.
 It's dangerous to run yay since Python based AUR packages will be installed in the wrong location",
                     python
@@ -136,13 +131,13 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
+        print_warning("No sudo or yay detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/yum", "upgrade"])
@@ -150,13 +145,13 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_opensuse(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_opensuse(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/zypper", "refresh"])
@@ -170,13 +165,13 @@ fn upgrade_opensuse(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bo
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_void(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_void(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/xbps-install", "-Su"])
@@ -184,13 +179,13 @@ fn upgrade_void(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) 
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_fedora(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/dnf", "upgrade"])
@@ -198,13 +193,13 @@ fn upgrade_fedora(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_gentoo(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         if let Some(layman) = which("layman") {
             Executor::new(&sudo, dry_run)
@@ -234,13 +229,13 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Result<(), failure::Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), failure::Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/apt", "update"])
@@ -254,17 +249,17 @@ fn upgrade_debian(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool
             .wait()?
             .check()?;
     } else {
-        terminal.print_warning("No sudo detected. Skipping system upgrade");
+        print_warning("No sudo detected. Skipping system upgrade");
     }
 
     Ok(())
 }
 
 #[must_use]
-pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_needrestart(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(needrestart) = which("needrestart") {
-            terminal.print_separator("Check for needed restarts");
+            print_separator("Check for needed restarts");
 
             let success = || -> Result<(), failure::Error> {
                 Executor::new(&sudo, dry_run)
@@ -284,9 +279,9 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run:
 }
 
 #[must_use]
-pub fn run_fwupdmgr(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_fwupdmgr(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(fwupdmgr) = which("fwupdmgr") {
-        terminal.print_separator("Firmware upgrades");
+        print_separator("Firmware upgrades");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&fwupdmgr, dry_run)
@@ -309,9 +304,9 @@ pub fn run_fwupdmgr(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static 
 }
 
 #[must_use]
-pub fn flatpak_user_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn flatpak_user_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(flatpak) = which("flatpak") {
-        terminal.print_separator("Flatpak User Packages");
+        print_separator("Flatpak User Packages");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&flatpak, dry_run)
@@ -329,14 +324,10 @@ pub fn flatpak_user_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'
 }
 
 #[must_use]
-pub fn flatpak_global_update(
-    sudo: &Option<PathBuf>,
-    terminal: &mut Terminal,
-    dry_run: bool,
-) -> Option<(&'static str, bool)> {
+pub fn flatpak_global_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(flatpak) = which("flatpak") {
-            terminal.print_separator("Flatpak Global Packages");
+            print_separator("Flatpak Global Packages");
 
             let success = || -> Result<(), failure::Error> {
                 Executor::new(&sudo, dry_run)
@@ -355,11 +346,11 @@ pub fn flatpak_global_update(
 }
 
 #[must_use]
-pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_snap(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(snap) = which("snap") {
             if PathBuf::from("/var/snapd.socket").exists() {
-                terminal.print_separator("snap");
+                print_separator("snap");
 
                 let success = || -> Result<(), failure::Error> {
                     Executor::new(&sudo, dry_run)
@@ -380,10 +371,10 @@ pub fn run_snap(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
-pub fn run_etc_update(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_etc_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(etc_update) = which("etc-update") {
-            terminal.print_separator("etc-update");
+            print_separator("etc-update");
 
             let success = || -> Result<(), failure::Error> {
                 Executor::new(&sudo, dry_run)

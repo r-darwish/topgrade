@@ -1,13 +1,13 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{which, Check};
 use directories::BaseDirs;
 use failure::Error;
 
-pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_zplug(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {
         if base_dirs.home_dir().join(".zplug").exists() {
-            terminal.print_separator("zplug");
+            print_separator("zplug");
 
             let success = || -> Result<(), Error> {
                 Executor::new(zsh, dry_run)
@@ -25,10 +25,10 @@ pub fn run_zplug(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -
     None
 }
 
-pub fn run_fisher(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_fisher(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(fish) = which("fish") {
         if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
-            terminal.print_separator("fisher");
+            print_separator("fisher");
 
             let success = || -> Result<(), Error> {
                 Executor::new(&fish, dry_run)
@@ -52,9 +52,9 @@ pub fn run_fisher(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
-pub fn run_homebrew(terminal: &mut Terminal, cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_homebrew(cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(brew) = which("brew") {
-        terminal.print_separator("Brew");
+        print_separator("Brew");
 
         let inner = || -> Result<(), Error> {
             Executor::new(&brew, dry_run).arg("update").spawn()?.wait()?.check()?;
@@ -72,10 +72,10 @@ pub fn run_homebrew(terminal: &mut Terminal, cleanup: bool, dry_run: bool) -> Op
 }
 
 #[must_use]
-pub fn run_nix(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_nix(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(nix) = which("nix") {
         if let Some(nix_env) = which("nix-env") {
-            terminal.print_separator("Nix");
+            print_separator("Nix");
 
             let inner = || -> Result<(), Error> {
                 Executor::new(&nix, dry_run)

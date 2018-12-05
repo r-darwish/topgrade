@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
 use failure;
@@ -35,11 +35,11 @@ impl NPM {
 }
 
 #[must_use]
-pub fn run_npm_upgrade(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_npm_upgrade(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(npm) = which("npm").map(NPM::new) {
         if let Ok(npm_root) = npm.root() {
             if npm_root.is_descendant_of(base_dirs.home_dir()) {
-                terminal.print_separator("Node Package Manager");
+                print_separator("Node Package Manager");
                 let success = npm.upgrade(dry_run).is_ok();
                 return Some(("NPM", success));
             }
@@ -49,9 +49,9 @@ pub fn run_npm_upgrade(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: b
 }
 
 #[must_use]
-pub fn yarn_global_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn yarn_global_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(yarn) = which("yarn") {
-        terminal.print_separator("Yarn");
+        print_separator("Yarn");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&yarn, dry_run)

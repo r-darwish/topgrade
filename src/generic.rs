@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{self, Check, PathExt};
 use directories::BaseDirs;
 use failure::Error;
@@ -9,9 +9,9 @@ use std::process::Command;
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
 #[must_use]
-pub fn run_cargo_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_cargo_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(cargo_update) = utils::which("cargo-install-update") {
-        terminal.print_separator("Cargo");
+        print_separator("Cargo");
 
         let success = || -> Result<(), Error> {
             Executor::new(cargo_update, dry_run)
@@ -30,10 +30,10 @@ pub fn run_cargo_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'sta
 }
 
 #[must_use]
-pub fn run_gem(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_gem(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(gem) = utils::which("gem") {
         if base_dirs.home_dir().join(".gem").exists() {
-            terminal.print_separator("RubyGems");
+            print_separator("RubyGems");
 
             let success = || -> Result<(), Error> {
                 Executor::new(&gem, dry_run)
@@ -52,10 +52,10 @@ pub fn run_gem(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> 
 }
 
 #[must_use]
-pub fn run_emacs(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_emacs(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(emacs) = utils::which("emacs") {
         if let Some(init_file) = base_dirs.home_dir().join(".emacs.d/init.el").if_exists() {
-            terminal.print_separator("Emacs");
+            print_separator("Emacs");
 
             let success = || -> Result<(), Error> {
                 Executor::new(&emacs, dry_run)
@@ -80,9 +80,9 @@ pub fn run_emacs(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -
     target_os = "netbsd",
     target_os = "dragonfly"
 )))]
-pub fn run_apm(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_apm(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(apm) = utils::which("apm") {
-        terminal.print_separator("Atom Package Manager");
+        print_separator("Atom Package Manager");
 
         let success = || -> Result<(), Error> {
             Executor::new(&apm, dry_run)
@@ -101,9 +101,9 @@ pub fn run_apm(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, 
 }
 
 #[must_use]
-pub fn run_rustup(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_rustup(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(rustup) = utils::which("rustup") {
-        terminal.print_separator("rustup");
+        print_separator("rustup");
 
         let success = || -> Result<(), Error> {
             if rustup.is_descendant_of(base_dirs.home_dir()) {
@@ -125,9 +125,9 @@ pub fn run_rustup(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) 
 }
 
 #[must_use]
-pub fn run_jetpack(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_jetpack(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(jetpack) = utils::which("jetpack") {
-        terminal.print_separator("Jetpack");
+        print_separator("Jetpack");
 
         let success = || -> Result<(), Error> {
             Executor::new(&jetpack, dry_run)
@@ -145,9 +145,9 @@ pub fn run_jetpack(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static s
 }
 
 #[must_use]
-pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_opam_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(opam) = utils::which("opam") {
-        terminal.print_separator("OCaml Package Manager");
+        print_separator("OCaml Package Manager");
 
         let success = || -> Result<(), Error> {
             Executor::new(&opam, dry_run).arg("update").spawn()?.wait()?.check()?;
@@ -162,12 +162,16 @@ pub fn run_opam_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stat
 }
 
 #[must_use]
-pub fn run_vcpkg_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_vcpkg_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(vcpkg) = utils::which("vcpkg") {
-        terminal.print_separator("vcpkg");
+        print_separator("vcpkg");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&vcpkg, dry_run).args(&["upgrade", "--no-dry-run"]).spawn()?.wait()?.check()?;
+            Executor::new(&vcpkg, dry_run)
+                .args(&["upgrade", "--no-dry-run"])
+                .spawn()?
+                .wait()?
+                .check()?;
             Ok(())
         }().is_ok();
 
@@ -178,9 +182,9 @@ pub fn run_vcpkg_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'sta
 }
 
 #[must_use]
-pub fn run_pipx_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_pipx_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(pipx) = utils::which("pipx") {
-        terminal.print_separator("pipx");
+        print_separator("pipx");
 
         let success = || -> Result<(), Error> {
             Executor::new(&pipx, dry_run)
@@ -198,8 +202,8 @@ pub fn run_pipx_update(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stat
 }
 
 #[must_use]
-pub fn run_custom_command(name: &str, command: &str, terminal: &mut Terminal, dry_run: bool) -> Result<(), Error> {
-    terminal.print_separator(name);
+pub fn run_custom_command(name: &str, command: &str, dry_run: bool) -> Result<(), Error> {
+    print_separator(name);
     Executor::new("sh", dry_run)
         .arg("-c")
         .arg(command)
@@ -211,11 +215,7 @@ pub fn run_custom_command(name: &str, command: &str, terminal: &mut Terminal, dr
 }
 
 #[must_use]
-pub fn run_composer_update(
-    base_dirs: &BaseDirs,
-    terminal: &mut Terminal,
-    dry_run: bool,
-) -> Option<(&'static str, bool)> {
+pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(composer) = utils::which("composer") {
         let composer_home = || -> Result<PathBuf, Error> {
             let output = Command::new(&composer)
@@ -227,7 +227,7 @@ pub fn run_composer_update(
 
         if let Ok(composer_home) = composer_home {
             if composer_home.is_descendant_of(base_dirs.home_dir()) {
-                terminal.print_separator("Composer");
+                print_separator("Composer");
 
                 let success = || -> Result<(), Error> {
                     Executor::new(&composer, dry_run)

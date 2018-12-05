@@ -3,7 +3,6 @@ extern crate directories;
 extern crate env_logger;
 extern crate failure;
 extern crate failure_derive;
-#[cfg(unix)]
 extern crate lazy_static;
 extern crate log;
 #[cfg(unix)]
@@ -47,7 +46,6 @@ mod vim;
 use self::config::Config;
 use self::git::{Git, Repositories};
 use self::report::Report;
-use self::terminal::Terminal;
 use failure::Error;
 use failure_derive::Fail;
 use std::borrow::Cow;
@@ -55,6 +53,7 @@ use std::env;
 use std::io::ErrorKind;
 use std::process::exit;
 use structopt::StructOpt;
+use terminal::*;
 
 #[derive(Fail, Debug)]
 #[fail(display = "A step failed")]
@@ -68,16 +67,12 @@ struct NoBaseDirectories;
 #[fail(display = "Process Interrupted")]
 pub struct Interrupted;
 
-struct ExecutionContext {
-    terminal: Terminal,
-}
-
-fn execute<'a, F, M>(func: F, execution_context: &mut ExecutionContext) -> Result<Option<(M, bool)>, Error>
+fn execute<'a, F, M>(func: F) -> Result<Option<(M, bool)>, Error>
 where
     M: Into<Cow<'a, str>>,
-    F: Fn(&mut Terminal) -> Option<(M, bool)>,
+    F: Fn() -> Option<(M, bool)>,
 {
-    while let Some((key, success)) = func(&mut execution_context.terminal) {
+    while let Some((key, success)) = func() {
         if success {
             return Ok(Some((key, success)));
         }
@@ -87,7 +82,7 @@ where
             ctrlc::set_running(true);
         }
 
-        let should_retry = execution_context.terminal.should_retry(running).map_err(|e| {
+        let should_retry = should_retry(running).map_err(|e| {
             if e.kind() == ErrorKind::Interrupted {
                 Error::from(Interrupted)
             } else {
@@ -117,10 +112,6 @@ fn run() -> Result<(), Error> {
 
     env_logger::init();
 
-    let mut execution_context = ExecutionContext {
-        terminal: Terminal::new(),
-    };
-
     let base_dirs = directories::BaseDirs::new().ok_or(NoBaseDirectories)?;
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
@@ -134,17 +125,15 @@ fn run() -> Result<(), Error> {
     #[cfg(feature = "self-update")]
     {
         if !opt.dry_run {
-            if let Err(e) = self_update::self_update(&mut execution_context.terminal) {
-                execution_context
-                    .terminal
-                    .print_warning(format!("Self update error: {}", e));
+            if let Err(e) = self_update::self_update() {
+                print_warning(format!("Self update error: {}", e));
             }
         }
     }
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &mut execution_context.terminal, opt.dry_run)?;
+            generic::run_custom_command(&name, &command, opt.dry_run)?;
         }
     }
 
@@ -152,10 +141,7 @@ fn run() -> Result<(), Error> {
     let powershell = windows::Powershell::new();
 
     #[cfg(windows)]
-    report.push_result(execute(
-        |terminal| powershell.update_modules(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| powershell.update_modules(opt.dry_run))?);
 
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();
@@ -165,49 +151,28 @@ fn run() -> Result<(), Error> {
         if !opt.no_system {
             match &distribution {
                 Ok(distribution) => {
-                    report.push_result(execute(
-                        |terminal| distribution.upgrade(&sudo, terminal, opt.dry_run),
-                        &mut execution_context,
-                    )?);
+                    report.push_result(execute(|| distribution.upgrade(&sudo, opt.dry_run))?);
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
-            report.push_result(execute(
-                |terminal| linux::run_etc_update(&sudo, terminal, opt.dry_run),
-                &mut execution_context,
-            )?);
+            report.push_result(execute(|| linux::run_etc_update(&sudo, opt.dry_run))?);
         }
     }
 
     #[cfg(windows)]
-    report.push_result(execute(
-        |terminal| windows::run_chocolatey(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| windows::run_chocolatey(opt.dry_run))?);
 
     #[cfg(windows)]
-    report.push_result(execute(
-        |terminal| windows::run_scoop(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| windows::run_scoop(opt.dry_run))?);
 
     #[cfg(unix)]
-    report.push_result(execute(
-        |terminal| unix::run_homebrew(terminal, opt.cleanup, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| unix::run_homebrew(opt.cleanup, opt.dry_run))?);
     #[cfg(target_os = "freebsd")]
-    report.push_result(execute(
-        |terminal| freebsd::upgrade_packages(&sudo, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| freebsd::upgrade_packages(&sudo, opt.dry_run))?);
     #[cfg(unix)]
-    report.push_result(execute(
-        |terminal| unix::run_nix(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| unix::run_nix(opt.dry_run))?);
 
     if !opt.no_emacs {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
@@ -240,80 +205,32 @@ fn run() -> Result<(), Error> {
         }
     }
     for repo in git_repos.repositories() {
-        report.push_result(execute(
-            |terminal| git.pull(&repo, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
+        report.push_result(execute(|| git.pull(&repo, opt.dry_run))?);
     }
 
     #[cfg(unix)]
     {
-        report.push_result(execute(
-            |terminal| unix::run_zplug(&base_dirs, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
-        report.push_result(execute(
-            |terminal| unix::run_fisher(&base_dirs, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
-        report.push_result(execute(
-            |terminal| tmux::run_tpm(&base_dirs, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
+        report.push_result(execute(|| unix::run_zplug(&base_dirs, opt.dry_run))?);
+        report.push_result(execute(|| unix::run_fisher(&base_dirs, opt.dry_run))?);
+        report.push_result(execute(|| tmux::run_tpm(&base_dirs, opt.dry_run))?);
     }
 
-    report.push_result(execute(
-        |terminal| generic::run_rustup(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_cargo_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| generic::run_rustup(&base_dirs, opt.dry_run))?);
+    report.push_result(execute(|| generic::run_cargo_update(opt.dry_run))?);
 
     if !opt.no_emacs {
-        report.push_result(execute(
-            |terminal| generic::run_emacs(&base_dirs, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
+        report.push_result(execute(|| generic::run_emacs(&base_dirs, opt.dry_run))?);
     }
 
-    report.push_result(execute(
-        |terminal| generic::run_opam_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_vcpkg_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_pipx_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_jetpack(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| vim::upgrade_vim(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| vim::upgrade_neovim(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| node::run_npm_upgrade(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_composer_update(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| node::yarn_global_update(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| generic::run_opam_update(opt.dry_run))?);
+    report.push_result(execute(|| generic::run_vcpkg_update(opt.dry_run))?);
+    report.push_result(execute(|| generic::run_pipx_update(opt.dry_run))?);
+    report.push_result(execute(|| generic::run_jetpack(opt.dry_run))?);
+    report.push_result(execute(|| vim::upgrade_vim(&base_dirs, opt.dry_run))?);
+    report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, opt.dry_run))?);
+    report.push_result(execute(|| node::run_npm_upgrade(&base_dirs, opt.dry_run))?);
+    report.push_result(execute(|| generic::run_composer_update(&base_dirs, opt.dry_run))?);
+    report.push_result(execute(|| node::yarn_global_update(opt.dry_run))?);
 
     #[cfg(not(any(
         target_os = "freebsd",
@@ -321,92 +238,56 @@ fn run() -> Result<(), Error> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    report.push_result(execute(
-        |terminal| generic::run_apm(terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
-    report.push_result(execute(
-        |terminal| generic::run_gem(&base_dirs, terminal, opt.dry_run),
-        &mut execution_context,
-    )?);
+    report.push_result(execute(|| generic::run_apm(opt.dry_run))?);
+    report.push_result(execute(|| generic::run_gem(&base_dirs, opt.dry_run))?);
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(
-            |terminal| linux::flatpak_user_update(terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
-        report.push_result(execute(
-            |terminal| linux::flatpak_global_update(&sudo, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
-        report.push_result(execute(
-            |terminal| linux::run_snap(&sudo, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
+        report.push_result(execute(|| linux::flatpak_user_update(opt.dry_run))?);
+        report.push_result(execute(|| linux::flatpak_global_update(&sudo, opt.dry_run))?);
+        report.push_result(execute(|| linux::run_snap(&sudo, opt.dry_run))?);
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            report.push_result(execute(
-                |terminal| {
-                    Some((
-                        name,
-                        generic::run_custom_command(&name, &command, terminal, opt.dry_run).is_ok(),
-                    ))
-                },
-                &mut execution_context,
-            )?);
+            report.push_result(execute(|| {
+                Some((name, generic::run_custom_command(&name, &command, opt.dry_run).is_ok()))
+            })?);
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(
-            |terminal| linux::run_fwupdmgr(terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
-        report.push_result(execute(
-            |terminal| linux::run_needrestart(&sudo, terminal, opt.dry_run),
-            &mut execution_context,
-        )?);
+        report.push_result(execute(|| linux::run_fwupdmgr(opt.dry_run))?);
+        report.push_result(execute(|| linux::run_needrestart(&sudo, opt.dry_run))?);
     }
 
     #[cfg(target_os = "macos")]
     {
         if !opt.no_system {
-            report.push_result(execute(
-                |terminal| macos::upgrade_macos(terminal, opt.dry_run),
-                &mut execution_context,
-            )?);
+            report.push_result(execute(|| macos::upgrade_macos(opt.dry_run))?);
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
         if !opt.no_system {
-            report.push_result(execute(
-                |terminal| freebsd::upgrade_freebsd(&sudo, terminal, opt.dry_run),
-                &mut execution_context,
-            )?);
+            report.push_result(execute(|| freebsd::upgrade_freebsd(&sudo, opt.dry_run))?);
         }
     }
 
     #[cfg(windows)]
     {
         if !opt.no_system {
-            report.push_result(execute(
-                |terminal| powershell.windows_update(terminal, opt.dry_run),
-                &mut execution_context,
-            )?);
+            report.push_result(execute(|| powershell.windows_update(opt.dry_run))?);
         }
     }
 
     if !report.data().is_empty() {
-        execution_context.terminal.print_separator("Summary");
+        print_separator("Summary");
 
         for (key, succeeded) in report.data() {
-            execution_context.terminal.print_result(key, *succeeded);
+            print_result(key, *succeeded);
         }
 
         #[cfg(target_os = "linux")]

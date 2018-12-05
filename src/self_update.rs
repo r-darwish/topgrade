@@ -1,4 +1,4 @@
-use super::terminal::Terminal;
+use super::terminal::*;
 use failure::Error;
 use self_update_crate;
 #[cfg(unix)]
@@ -8,8 +8,8 @@ use std::os::unix::process::CommandExt;
 #[cfg(unix)]
 use std::process::Command;
 
-pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
-    terminal.print_separator("Self update");
+pub fn self_update() -> Result<(), Error> {
+    print_separator("Self update");
     #[cfg(unix)]
     let current_exe = env::current_exe();
 
@@ -35,7 +35,7 @@ pub fn self_update(terminal: &mut Terminal) -> Result<(), Error> {
     #[cfg(unix)]
     {
         if result.updated() {
-            terminal.print_warning("Respawning...");
+            print_warning("Respawning...");
             let err = Command::new(current_exe?).args(env::args().skip(1)).exec();
             Err(err)?
         }

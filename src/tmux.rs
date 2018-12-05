@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::which;
 use super::utils::{Check, PathExt};
 use directories::BaseDirs;
@@ -10,13 +10,13 @@ use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 
-pub fn run_tpm(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_tpm(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(tpm) = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
         .if_exists()
     {
-        terminal.print_separator("tmux plugins");
+        print_separator("tmux plugins");
 
         let success = || -> Result<(), Error> {
             Executor::new(&tpm, dry_run).arg("all").spawn()?.wait()?.check()?;

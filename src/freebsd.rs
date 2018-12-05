@@ -1,13 +1,13 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::{print_separator, print_warning};
 use super::utils::Check;
 use failure;
 use std::path::PathBuf;
 use std::process::Command;
 
 #[must_use]
-pub fn upgrade_freebsd(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
-    terminal.print_separator("FreeBSD Update");
+pub fn upgrade_freebsd(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+    print_separator("FreeBSD Update");
 
     if let Some(sudo) = sudo {
         let success = || -> Result<(), failure::Error> {
@@ -21,18 +21,14 @@ pub fn upgrade_freebsd(sudo: &Option<PathBuf>, terminal: &mut Terminal, dry_run:
 
         Some(("FreeBSD Update", success))
     } else {
-        terminal.print_warning("No sudo or yay detected. Skipping system upgrade");
+        print_warning("No sudo or yay detected. Skipping system upgrade");
         None
     }
 }
 
 #[must_use]
-pub fn upgrade_packages(
-    sudo: &Option<PathBuf>,
-    terminal: &mut Terminal,
-    dry_run: bool,
-) -> Option<(&'static str, bool)> {
-    terminal.print_separator("FreeBSD Packages");
+pub fn upgrade_packages(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+    print_separator("FreeBSD Packages");
 
     if let Some(sudo) = sudo {
         let success = || -> Result<(), failure::Error> {
@@ -46,7 +42,7 @@ pub fn upgrade_packages(
 
         Some(("FreeBSD Packages", success))
     } else {
-        terminal.print_warning("No sudo or yay detected. Skipping package upgrade");
+        print_warning("No sudo or yay detected. Skipping package upgrade");
         None
     }
 }

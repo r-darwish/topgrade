@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
 use failure;
@@ -82,11 +82,11 @@ fn upgrade(
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(vim) = which("vim") {
         if let Some(vimrc) = vimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&vimrc) {
-                terminal.print_separator(&format!("Vim ({:?})", plugin_framework));
+                print_separator(&format!("Vim ({:?})", plugin_framework));
                 let success = upgrade(&vim, &vimrc, plugin_framework, dry_run).is_ok();
                 return Some(("vim", success));
             }
@@ -97,11 +97,11 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool)
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(nvim) = which("nvim") {
         if let Some(nvimrc) = nvimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&nvimrc) {
-                terminal.print_separator(&format!("Neovim ({:?})", plugin_framework));
+                print_separator(&format!("Neovim ({:?})", plugin_framework));
                 let success = upgrade(&nvim, &nvimrc, plugin_framework, dry_run).is_ok();
                 return Some(("Neovim", success));
             }

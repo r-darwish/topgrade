@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{which, Check};
 use failure::Error;
 use log::{debug, error};
@@ -58,10 +58,10 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P, terminal: &mut Terminal, dry_run: bool) -> Option<(String, bool)> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P, dry_run: bool) -> Option<(String, bool)> {
         let path = path.as_ref();
 
-        terminal.print_separator(format!("Pulling {}", path.display()));
+        print_separator(format!("Pulling {}", path.display()));
 
         let git = self.git.as_ref().unwrap();
 

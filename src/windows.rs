@@ -1,5 +1,5 @@
 use super::executor::Executor;
-use super::terminal::Terminal;
+use super::terminal::print_separator;
 use super::utils::{self, which, Check};
 use failure;
 use log::error;
@@ -7,9 +7,9 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[must_use]
-pub fn run_chocolatey(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_chocolatey(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(choco) = utils::which("choco") {
-        terminal.print_separator("Chocolatey");
+        print_separator("Chocolatey");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&choco, dry_run)
@@ -27,9 +27,9 @@ pub fn run_chocolatey(terminal: &mut Terminal, dry_run: bool) -> Option<(&'stati
 }
 
 #[must_use]
-pub fn run_scoop(terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_scoop(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(scoop) = utils::which("scoop") {
-        terminal.print_separator("Scoop");
+        print_separator("Scoop");
 
         let success = || -> Result<(), failure::Error> {
             Executor::new(&scoop, dry_run)
@@ -91,9 +91,9 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn update_modules(&self, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn update_modules(&self, dry_run: bool) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
-            terminal.print_separator("Powershell Modules Update");
+            print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), failure::Error> {
                 Executor::new(&powershell, dry_run)
@@ -111,10 +111,10 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn windows_update(&self, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn windows_update(&self, dry_run: bool) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
             if Self::has_command(&powershell, "Install-WindowsUpdate") {
-                terminal.print_separator("Windows Update");
+                print_separator("Windows Update");
 
                 let success = || -> Result<(), failure::Error> {
                     Executor::new(&powershell, dry_run)
