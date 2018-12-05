@@ -73,4 +73,8 @@ pub struct Opt {
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
+
+    /// Do not ask to retry failed steps
+    #[structopt(long = "no-retry")]
+    pub no_retry: bool,
 }

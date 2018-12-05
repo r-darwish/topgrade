@@ -95,6 +95,7 @@ Just run `topgrade`. It will run the following steps:
 * `--no-system` - Skip the system upgrade phase.
 * `--no-git-repos` - Don't pull custom git repositories.
 * `--no-emacs` - Don't upgrade Emacs packages or configuration files.
+* `--no-retry` - Don't ask to retry failed steps.
 
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
