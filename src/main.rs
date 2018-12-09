@@ -179,8 +179,10 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     }
 
-    git_repos.insert(base_dirs.home_dir().join(".vim"));
-    git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
+    if !opt.no_vim {
+        git_repos.insert(base_dirs.home_dir().join(".vim"));
+        git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
+    }
 
     #[cfg(unix)]
     {
@@ -227,8 +229,12 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_vcpkg_update(opt.dry_run), opt.no_retry)?);
     report.push_result(execute(|| generic::run_pipx_update(opt.dry_run), opt.no_retry)?);
     report.push_result(execute(|| generic::run_jetpack(opt.dry_run), opt.no_retry)?);
-    report.push_result(execute(|| vim::upgrade_vim(&base_dirs, opt.dry_run), opt.no_retry)?);
-    report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, opt.dry_run), opt.no_retry)?);
+
+    if !opt.no_vim {
+        report.push_result(execute(|| vim::upgrade_vim(&base_dirs, opt.dry_run), opt.no_retry)?);
+        report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, opt.dry_run), opt.no_retry)?);
+    }
+
     report.push_result(execute(
         || node::run_npm_upgrade(&base_dirs, opt.dry_run),
         opt.no_retry,

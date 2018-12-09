@@ -70,6 +70,10 @@ pub struct Opt {
     #[structopt(long = "no-emacs")]
     pub no_emacs: bool,
 
+    /// Don't upgrade Vim packages or configuration files
+    #[structopt(long = "no-vim")]
+    pub no_vim: bool,
+
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
