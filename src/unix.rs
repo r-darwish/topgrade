@@ -1,8 +1,8 @@
+use super::error::Error;
 use super::executor::Executor;
 use super::terminal::print_separator;
 use super::utils::{which, Check};
 use directories::BaseDirs;
-use Error;
 
 pub fn run_zplug(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {

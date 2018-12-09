@@ -4,7 +4,7 @@ use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Output};
-use which as which_mod;
+use which_crate;
 
 pub trait Check {
     fn check(self) -> Result<(), Error>;
@@ -49,14 +49,14 @@ impl PathExt for PathBuf {
 }
 
 pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
-    match which_mod::which(&binary_name) {
+    match which_crate::which(&binary_name) {
         Ok(path) => {
             debug!("Detected {:?} as {:?}", &path, &binary_name);
             Some(path)
         }
         Err(e) => {
             match e.kind() {
-                which_mod::ErrorKind::CannotFindBinaryPath => {
+                which_crate::ErrorKind::CannotFindBinaryPath => {
                     debug!("Cannot find {:?}", &binary_name);
                 }
                 _ => {
