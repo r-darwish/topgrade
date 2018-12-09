@@ -96,6 +96,7 @@ Just run `topgrade`. It will run the following steps:
 * `--no-git-repos` - Don't pull custom git repositories.
 * `--no-emacs` - Don't upgrade Emacs packages or configuration files.
 * `--no-retry` - Don't ask to retry failed steps.
+* `--no-vim` - Don't upgrade Vim/NeoVim packages or configuration files.
 
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
