@@ -18,7 +18,8 @@ pub fn run_chocolatey(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Chocolatey", success));
     }
@@ -43,7 +44,8 @@ pub fn run_scoop(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Scoop", success));
     }
@@ -69,7 +71,8 @@ impl Powershell {
                 .output()?
                 .check()?;
             Ok(())
-        }().is_ok()
+        }()
+        .is_ok()
     }
 
     pub fn profile(&self) -> Option<PathBuf> {
@@ -102,7 +105,8 @@ impl Powershell {
                     .wait()?
                     .check()?;
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("Powershell Modules Update", success));
         }
@@ -123,7 +127,8 @@ impl Powershell {
                         .wait()?
                         .check()?;
                     Ok(())
-                }().is_ok();
+                }()
+                .is_ok();
 
                 return Some(("Windows Update", success));
             }

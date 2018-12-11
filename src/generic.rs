@@ -21,7 +21,8 @@ pub fn run_cargo_update(dry_run: bool) -> Option<(&'static str, bool)> {
                 .check()?;
 
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Cargo", success));
     }
@@ -43,7 +44,8 @@ pub fn run_gem(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, boo
                     .check()?;
 
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("RubyGems", success));
         }
@@ -65,7 +67,8 @@ pub fn run_emacs(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, b
                     .check()?;
 
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("Emacs", success));
         }
@@ -92,7 +95,8 @@ pub fn run_apm(dry_run: bool) -> Option<(&'static str, bool)> {
                 .check()?;
 
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("apm", success));
     }
@@ -116,7 +120,8 @@ pub fn run_rustup(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, 
 
             Executor::new(&rustup, dry_run).arg("update").spawn()?.wait()?.check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("rustup", success));
     }
@@ -136,7 +141,8 @@ pub fn run_jetpack(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Jetpack", success));
     }
@@ -153,7 +159,8 @@ pub fn run_opam_update(dry_run: bool) -> Option<(&'static str, bool)> {
             Executor::new(&opam, dry_run).arg("update").spawn()?.wait()?.check()?;
             Executor::new(&opam, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("OPAM", success));
     }
@@ -173,7 +180,8 @@ pub fn run_vcpkg_update(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("vcpkg", success));
     }
@@ -193,7 +201,8 @@ pub fn run_pipx_update(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("pipx", success));
     }
@@ -236,7 +245,8 @@ pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'sta
                         .wait()?
                         .check()?;
                     Ok(())
-                }().is_ok();
+                }()
+                .is_ok();
 
                 return Some(("Composer", success));
             }

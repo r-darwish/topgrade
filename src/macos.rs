@@ -14,7 +14,8 @@ pub fn upgrade_macos(dry_run: bool) -> Option<(&'static str, bool)> {
             .wait()?
             .check()?;
         Ok(())
-    }().is_ok();
+    }()
+    .is_ok();
 
     Some(("App Store", success))
 }

@@ -34,9 +34,11 @@ impl Terminal {
                             message,
                             "",
                             border = max(2, min(80, width as usize) - 3 - message.len())
-                        )).bold()
+                        ))
+                        .bold()
                         .white()
-                    )).ok();
+                    ))
+                    .ok();
             }
             None => {
                 self.term.write_fmt(format_args!("―― {} ――\n", message)).ok();
@@ -64,7 +66,8 @@ impl Terminal {
                 } else {
                     style("FAILED").bold().red()
                 }
-            )).ok();
+            ))
+            .ok();
     }
 
     fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
@@ -82,9 +85,11 @@ impl Terminal {
                     } else {
                         ""
                     }
-                )).yellow()
+                ))
+                .yellow()
                 .bold()
-            )).ok();
+            ))
+            .ok();
 
         let answer = loop {
             match self.term.read_char()? {

@@ -83,13 +83,14 @@ where
         }
 
         let should_ask = !running || !no_retry;
-        let should_retry = should_ask && should_retry(running).map_err(|e| {
-            if e.kind() == ErrorKind::Interrupted {
-                Error::from(Interrupted)
-            } else {
-                Error::from(e)
-            }
-        })?;
+        let should_retry = should_ask
+            && should_retry(running).map_err(|e| {
+                if e.kind() == ErrorKind::Interrupted {
+                    Error::from(Interrupted)
+                } else {
+                    Error::from(e)
+                }
+            })?;
 
         if !should_retry {
             return Ok(Some((key, success)));

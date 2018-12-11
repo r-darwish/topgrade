@@ -21,7 +21,8 @@ pub fn run_tpm(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, boo
         let success = || -> Result<(), Error> {
             Executor::new(&tpm, dry_run).arg("all").spawn()?.wait()?.check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("tmux", success));
     }
@@ -70,7 +71,8 @@ pub fn run_in_tmux() -> ! {
                 "set",
                 "remain-on-exit",
                 "on",
-            ]).exec();
+            ])
+            .exec();
 
         panic!("{:?}", err);
     }

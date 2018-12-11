@@ -99,7 +99,8 @@ pub fn show_pacnew() {
                 .extension()
                 .filter(|ext| ext == &"pacnew" || ext == &"pacsave")
                 .is_some()
-        }).peekable();
+        })
+        .peekable();
 
     if iter.peek().is_some() {
         println!("\nPacman backup configuration files found:");
@@ -269,7 +270,8 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stati
                     .check()?;
 
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("Restarts", success));
         }
@@ -295,7 +297,8 @@ pub fn run_fwupdmgr(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Firmware upgrade", success));
     }
@@ -315,7 +318,8 @@ pub fn flatpak_user_update(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("Flatpak User Packages", success));
     }
@@ -336,7 +340,8 @@ pub fn flatpak_global_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&
                     .wait()?
                     .check()?;
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("Flatpak Global Packages", success));
         }
@@ -360,7 +365,8 @@ pub fn run_snap(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, 
                         .check()?;
 
                     Ok(())
-                }().is_ok();
+                }()
+                .is_ok();
 
                 return Some(("snap", success));
             }
@@ -384,7 +390,8 @@ pub fn run_etc_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static
                     .check()?;
 
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("etc-update", success));
         }

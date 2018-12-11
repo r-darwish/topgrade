@@ -16,7 +16,8 @@ pub fn run_zplug(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, b
                     .wait()?
                     .check()?;
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("zplug", success));
         }
@@ -42,7 +43,8 @@ pub fn run_fisher(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, 
                     .wait()?
                     .check()?;
                 Ok(())
-            }().is_ok();
+            }()
+            .is_ok();
 
             return Some(("fisher", success));
         }

@@ -81,7 +81,8 @@ impl Git {
                 .check()?;
 
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         Some((format!("git: {}", path.display()), success))
     }

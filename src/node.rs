@@ -60,7 +60,8 @@ pub fn yarn_global_update(dry_run: bool) -> Option<(&'static str, bool)> {
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         return Some(("yarn", success));
     }

@@ -17,7 +17,8 @@ pub fn upgrade_freebsd(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stati
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         Some(("FreeBSD Update", success))
     } else {
@@ -38,7 +39,8 @@ pub fn upgrade_packages(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stat
                 .wait()?
                 .check()?;
             Ok(())
-        }().is_ok();
+        }()
+        .is_ok();
 
         Some(("FreeBSD Packages", success))
     } else {
