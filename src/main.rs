@@ -32,6 +32,7 @@ mod windows;
 
 mod config;
 mod ctrlc;
+mod error;
 mod executor;
 mod generic;
 mod git;
@@ -44,28 +45,16 @@ mod utils;
 mod vim;
 
 use self::config::Config;
+use self::error::{Error, ErrorKind};
 use self::git::{Git, Repositories};
 use self::report::Report;
-use failure::Error;
-use failure_derive::Fail;
+use failure::{Fail, ResultExt};
 use std::borrow::Cow;
 use std::env;
-use std::io::ErrorKind;
+use std::io;
 use std::process::exit;
 use structopt::StructOpt;
 use terminal::*;
-
-#[derive(Fail, Debug)]
-#[fail(display = "A step failed")]
-struct StepFailed;
-
-#[derive(Fail, Debug)]
-#[fail(display = "Cannot find the user base directories")]
-struct NoBaseDirectories;
-
-#[derive(Fail, Debug)]
-#[fail(display = "Process Interrupted")]
-pub struct Interrupted;
 
 fn execute<'a, F, M>(func: F, no_retry: bool) -> Result<Option<(M, bool)>, Error>
 where
@@ -83,14 +72,7 @@ where
         }
 
         let should_ask = !running || !no_retry;
-        let should_retry = should_ask
-            && should_retry(running).map_err(|e| {
-                if e.kind() == ErrorKind::Interrupted {
-                    Error::from(Interrupted)
-                } else {
-                    Error::from(e)
-                }
-            })?;
+        let should_retry = should_ask && should_retry(running).context(ErrorKind::Retry)?;
 
         if !should_retry {
             return Ok(Some((key, success)));
@@ -114,7 +96,7 @@ fn run() -> Result<(), Error> {
 
     env_logger::init();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(NoBaseDirectories)?;
+    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
     let git = Git::new();
     let mut git_repos = Repositories::new(&git);
 
@@ -135,7 +117,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, opt.dry_run)?;
+            generic::run_custom_command(&name, &command, opt.dry_run).context(ErrorKind::PreCommand)?;
         }
     }
 
@@ -322,7 +304,7 @@ fn run() -> Result<(), Error> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(StepFailed.into())
+        Err(ErrorKind::StepFailed)?
     }
 }
 
@@ -332,9 +314,21 @@ fn main() {
             exit(0);
         }
         Err(error) => {
-            if (error.downcast_ref::<StepFailed>().is_some()) || (error.downcast_ref::<Interrupted>().is_some()) {
-            } else {
-                println!("ERROR: {}", error)
+            let should_print = match error.kind() {
+                ErrorKind::StepFailed => false,
+                ErrorKind::Retry => error
+                    .cause()
+                    .and_then(|cause| cause.downcast_ref::<io::Error>())
+                    .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
+                    .is_none(),
+                _ => true,
+            };
+
+            if should_print {
+                println!("Error: {}", error);
+                if let Some(cause) = error.cause() {
+                    println!("Caused by: {}", cause);
+                }
             }
             exit(1);
         }

@@ -1,5 +1,6 @@
+use super::error::{Error, ErrorKind};
 use directories::BaseDirs;
-use failure;
+use failure::ResultExt;
 use serde_derive::Deserialize;
 use shellexpand;
 use std::collections::BTreeMap;
@@ -17,13 +18,14 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn read(base_dirs: &BaseDirs) -> Result<Config, failure::Error> {
+    pub fn read(base_dirs: &BaseDirs) -> Result<Config, Error> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
             return Ok(Default::default());
         }
 
-        let mut result: Self = toml::from_str(&fs::read_to_string(config_path)?)?;
+        let mut result: Self = toml::from_str(&fs::read_to_string(config_path).context(ErrorKind::Configuration)?)
+            .context(ErrorKind::Configuration)?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
             for path in paths.iter_mut() {

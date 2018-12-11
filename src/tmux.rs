@@ -1,9 +1,10 @@
+use super::error::{Error, ErrorKind};
 use super::executor::Executor;
 use super::terminal::print_separator;
 use super::utils::which;
 use super::utils::{Check, PathExt};
 use directories::BaseDirs;
-use failure::Error;
+use failure::ResultExt;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -41,8 +42,10 @@ fn has_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
 fn run_in_session(tmux: &Path, command: &str) -> Result<(), Error> {
     Command::new(tmux)
         .args(&["new-window", "-a", "-t", "topgrade:1", command])
-        .spawn()?
-        .wait()?
+        .spawn()
+        .context(ErrorKind::ProcessExecution)?
+        .wait()
+        .context(ErrorKind::ProcessExecution)?
         .check()?;
 
     Ok(())

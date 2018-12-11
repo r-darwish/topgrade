@@ -1,5 +1,6 @@
+use super::error::{Error, ErrorKind};
 use super::terminal::*;
-use failure::Error;
+use failure::ResultExt;
 use self_update_crate;
 #[cfg(unix)]
 use std::env;
@@ -13,8 +14,9 @@ pub fn self_update() -> Result<(), Error> {
     #[cfg(unix)]
     let current_exe = env::current_exe();
 
-    let target = self_update_crate::get_target()?;
-    let result = self_update_crate::backends::github::Update::configure()?
+    let target = self_update_crate::get_target().context(ErrorKind::SelfUpdate)?;
+    let result = self_update_crate::backends::github::Update::configure()
+        .context(ErrorKind::SelfUpdate)?
         .repo_owner("r-darwish")
         .repo_name("topgrade")
         .target(&target)
@@ -23,8 +25,10 @@ pub fn self_update() -> Result<(), Error> {
         .show_download_progress(true)
         .current_version(self_update_crate::cargo_crate_version!())
         .no_confirm(true)
-        .build()?
-        .update()?;
+        .build()
+        .context(ErrorKind::SelfUpdate)?
+        .update()
+        .context(ErrorKind::SelfUpdate)?;
 
     if let self_update_crate::Status::Updated(version) = &result {
         println!("\nTopgrade upgraded to {}", version);
@@ -36,8 +40,10 @@ pub fn self_update() -> Result<(), Error> {
     {
         if result.updated() {
             print_warning("Respawning...");
-            let err = Command::new(current_exe?).args(env::args().skip(1)).exec();
-            Err(err)?
+            let err = Command::new(current_exe.context(ErrorKind::SelfUpdate)?)
+                .args(env::args().skip(1))
+                .exec();
+            Err(err).context(ErrorKind::SelfUpdate)?
         }
     }
 

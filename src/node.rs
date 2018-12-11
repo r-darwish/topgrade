@@ -1,8 +1,9 @@
+use super::error::{Error, ErrorKind};
 use super::executor::Executor;
 use super::terminal::print_separator;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
-use failure;
+use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -15,15 +16,20 @@ impl NPM {
         Self { command }
     }
 
-    fn root(&self) -> Result<PathBuf, failure::Error> {
-        let output = Command::new(&self.command).args(&["root", "-g"]).output()?;
+    fn root(&self) -> Result<PathBuf, Error> {
+        let output = Command::new(&self.command)
+            .args(&["root", "-g"])
+            .output()
+            .context(ErrorKind::ProcessExecution)?;
 
         output.status.check()?;
 
-        Ok(PathBuf::from(&String::from_utf8(output.stdout)?))
+        Ok(PathBuf::from(
+            &String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?,
+        ))
     }
 
-    fn upgrade(&self, dry_run: bool) -> Result<(), failure::Error> {
+    fn upgrade(&self, dry_run: bool) -> Result<(), Error> {
         Executor::new(&self.command, dry_run)
             .args(&["update", "-g"])
             .spawn()?
@@ -53,7 +59,7 @@ pub fn yarn_global_update(dry_run: bool) -> Option<(&'static str, bool)> {
     if let Some(yarn) = which("yarn") {
         print_separator("Yarn");
 
-        let success = || -> Result<(), failure::Error> {
+        let success = || -> Result<(), Error> {
             Executor::new(&yarn, dry_run)
                 .args(&["global", "upgrade", "-s"])
                 .spawn()?

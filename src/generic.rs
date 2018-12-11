@@ -1,8 +1,9 @@
+use super::error::{Error, ErrorKind};
 use super::executor::Executor;
 use super::terminal::print_separator;
 use super::utils::{self, Check, PathExt};
 use directories::BaseDirs;
-use failure::Error;
+use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -229,9 +230,12 @@ pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'sta
         let composer_home = || -> Result<PathBuf, Error> {
             let output = Command::new(&composer)
                 .args(&["global", "config", "--absolute", "home"])
-                .output()?;
+                .output()
+                .context(ErrorKind::ProcessExecution)?;
             output.status.check()?;
-            Ok(PathBuf::from(&String::from_utf8(output.stdout)?))
+            Ok(PathBuf::from(
+                &String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?,
+            ))
         }();
 
         if let Ok(composer_home) = composer_home {

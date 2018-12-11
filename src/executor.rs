@@ -1,7 +1,7 @@
+use super::error::{Error, ErrorKind};
 use super::utils::Check;
-use failure;
+use failure::ResultExt;
 use std::ffi::{OsStr, OsString};
-use std::io;
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
 
@@ -63,9 +63,9 @@ impl Executor {
         self
     }
 
-    pub fn spawn(&mut self) -> Result<ExecutorChild, io::Error> {
-        match self {
-            Executor::Wet(c) => c.spawn().map(ExecutorChild::Wet),
+    pub fn spawn(&mut self) -> Result<ExecutorChild, Error> {
+        let result = match self {
+            Executor::Wet(c) => c.spawn().context(ErrorKind::ProcessExecution).map(ExecutorChild::Wet)?,
             Executor::Dry(c) => {
                 print!(
                     "Dry running: {} {}",
@@ -80,9 +80,11 @@ impl Executor {
                     Some(dir) => println!(" in {}", dir.to_string_lossy()),
                     None => println!(),
                 };
-                Ok(ExecutorChild::Dry)
+                ExecutorChild::Dry
             }
-        }
+        };
+
+        Ok(result)
     }
 }
 
@@ -99,11 +101,16 @@ pub enum ExecutorChild {
 }
 
 impl ExecutorChild {
-    pub fn wait(&mut self) -> Result<ExecutorExitStatus, io::Error> {
-        match self {
-            ExecutorChild::Wet(c) => c.wait().map(ExecutorExitStatus::Wet),
-            ExecutorChild::Dry => Ok(ExecutorExitStatus::Dry),
-        }
+    pub fn wait(&mut self) -> Result<ExecutorExitStatus, Error> {
+        let result = match self {
+            ExecutorChild::Wet(c) => c
+                .wait()
+                .context(ErrorKind::ProcessExecution)
+                .map(ExecutorExitStatus::Wet)?,
+            ExecutorChild::Dry => ExecutorExitStatus::Dry,
+        };
+
+        Ok(result)
     }
 }
 
@@ -113,7 +120,7 @@ pub enum ExecutorExitStatus {
 }
 
 impl Check for ExecutorExitStatus {
-    fn check(self) -> Result<(), failure::Error> {
+    fn check(self) -> Result<(), Error> {
         match self {
             ExecutorExitStatus::Wet(e) => e.check(),
             ExecutorExitStatus::Dry => Ok(()),

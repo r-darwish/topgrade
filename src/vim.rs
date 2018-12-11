@@ -1,8 +1,8 @@
+use super::error::Error;
 use super::executor::Executor;
 use super::terminal::print_separator;
 use super::utils::{which, Check, PathExt};
 use directories::BaseDirs;
-use failure;
 use std::fs;
 use std::path::PathBuf;
 
@@ -54,12 +54,7 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 }
 
 #[must_use]
-fn upgrade(
-    vim: &PathBuf,
-    vimrc: &PathBuf,
-    plugin_framework: PluginFramework,
-    dry_run: bool,
-) -> Result<(), failure::Error> {
+fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, dry_run: bool) -> Result<(), Error> {
     Executor::new(&vim, dry_run)
         .args(&[
             "-N",

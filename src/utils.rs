@@ -1,15 +1,10 @@
-use failure::Error;
-use failure_derive::Fail;
+use super::error::{Error, ErrorKind};
 use log::{debug, error};
 use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Output};
 use which as which_mod;
-
-#[derive(Fail, Debug)]
-#[fail(display = "Process failed")]
-pub struct ProcessFailed;
 
 pub trait Check {
     fn check(self) -> Result<(), Error>;
@@ -20,7 +15,7 @@ impl Check for ExitStatus {
         if self.success() {
             Ok(())
         } else {
-            Err(Error::from(ProcessFailed {}))
+            Err(ErrorKind::ProcessFailed(self))?
         }
     }
 }

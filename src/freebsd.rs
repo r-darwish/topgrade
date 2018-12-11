@@ -1,7 +1,8 @@
+use super::error::{Error, ErrorKind};
 use super::executor::Executor;
 use super::terminal::{print_separator, print_warning};
 use super::utils::Check;
-use failure;
+use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -10,7 +11,7 @@ pub fn upgrade_freebsd(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stati
     print_separator("FreeBSD Update");
 
     if let Some(sudo) = sudo {
-        let success = || -> Result<(), failure::Error> {
+        let success = || -> Result<(), Error> {
             Executor::new(sudo, dry_run)
                 .args(&["/usr/sbin/freebsd-update", "fetch", "install"])
                 .spawn()?
@@ -32,7 +33,7 @@ pub fn upgrade_packages(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stat
     print_separator("FreeBSD Packages");
 
     if let Some(sudo) = sudo {
-        let success = || -> Result<(), failure::Error> {
+        let success = || -> Result<(), Error> {
             Executor::new(sudo, dry_run)
                 .args(&["/usr/sbin/pkg", "upgrade"])
                 .spawn()?
@@ -49,13 +50,15 @@ pub fn upgrade_packages(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stat
     }
 }
 
-pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<(), failure::Error> {
+pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<(), Error> {
     if let Some(sudo) = sudo {
         println!();
         Command::new(sudo)
             .args(&["/usr/sbin/pkg", "audit", "-Fr"])
-            .spawn()?
-            .wait()?;
+            .spawn()
+            .context(ErrorKind::ProcessExecution)?
+            .wait()
+            .context(ErrorKind::ProcessExecution)?;
     }
     Ok(())
 }
