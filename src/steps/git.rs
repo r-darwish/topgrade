@@ -1,7 +1,7 @@
-use super::error::Error;
-use super::executor::Executor;
-use super::terminal::print_separator;
-use super::utils::{which, Check};
+use crate::error::Error;
+use crate::executor::Executor;
+use crate::terminal::print_separator;
+use crate::utils::{which, Check};
 use log::{debug, error};
 use std::collections::HashSet;
 use std::io;

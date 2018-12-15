@@ -1,7 +1,7 @@
-use super::error::Error;
-use super::executor::Executor;
-use super::terminal::print_separator;
-use super::utils::Check;
+use crate::error::Error;
+use crate::executor::Executor;
+use crate::terminal::print_separator;
+use crate::utils::Check;
 
 #[must_use]
 pub fn upgrade_macos(dry_run: bool) -> Option<(&'static str, bool)> {

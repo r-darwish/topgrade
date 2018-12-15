@@ -1,8 +1,7 @@
-use super::error::{Error, ErrorKind};
-use super::executor::Executor;
-use super::terminal::print_separator;
-use super::utils::which;
-use super::utils::{Check, PathExt};
+use crate::error::{Error, ErrorKind};
+use crate::executor::Executor;
+use crate::terminal::print_separator;
+use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
 use failure::ResultExt;
 use std::env;

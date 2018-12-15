@@ -1,34 +1,18 @@
-#[cfg(target_os = "freebsd")]
-mod freebsd;
-#[cfg(target_os = "linux")]
-mod linux;
-#[cfg(target_os = "macos")]
-mod macos;
-#[cfg(unix)]
-mod tmux;
-#[cfg(unix)]
-mod unix;
-#[cfg(target_os = "windows")]
-mod windows;
-
 mod config;
 mod ctrlc;
 mod error;
 mod executor;
-mod generic;
-mod git;
-mod node;
 mod report;
 #[cfg(feature = "self-update")]
 mod self_update;
+mod steps;
 mod terminal;
 mod utils;
-mod vim;
 
 use self::config::Config;
 use self::error::{Error, ErrorKind};
-use self::git::{Git, Repositories};
 use self::report::Report;
+use self::steps::*;
 use self::terminal::*;
 use failure::{Fail, ResultExt};
 use std::borrow::Cow;
@@ -78,8 +62,8 @@ fn run() -> Result<(), Error> {
     env_logger::init();
 
     let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
-    let git = Git::new();
-    let mut git_repos = Repositories::new(&git);
+    let git = git::Git::new();
+    let mut git_repos = git::Repositories::new(&git);
 
     let config = Config::read(&base_dirs)?;
     let mut report = Report::new();

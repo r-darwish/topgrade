@@ -1,7 +1,7 @@
-use super::error::{Error, ErrorKind};
-use super::executor::Executor;
-use super::terminal::{print_separator, print_warning};
-use super::utils::Check;
+use crate::error::{Error, ErrorKind};
+use crate::executor::Executor;
+use crate::terminal::{print_separator, print_warning};
+use crate::utils::Check;
 use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
