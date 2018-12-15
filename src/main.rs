@@ -193,6 +193,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_vcpkg_update(opt.dry_run), opt.no_retry)?);
     report.push_result(execute(|| generic::run_pipx_update(opt.dry_run), opt.no_retry)?);
     report.push_result(execute(|| generic::run_jetpack(opt.dry_run), opt.no_retry)?);
+    report.push_result(execute(|| generic::run_gpg(opt.dry_run), opt.no_retry)?);
 
     if !opt.no_vim {
         report.push_result(execute(|| vim::upgrade_vim(&base_dirs, opt.dry_run), opt.no_retry)?);

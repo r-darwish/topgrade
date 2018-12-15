@@ -259,3 +259,25 @@ pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'sta
 
     None
 }
+
+#[must_use]
+pub fn run_gpg(dry_run: bool) -> Option<(&'static str, bool)> {
+    if let Some(gpg) = utils::which("gpg") {
+        print_separator("gpg keys");
+
+        let success = || -> Result<(), Error> {
+            Executor::new(&gpg, dry_run)
+                .arg("--refresh-keys")
+                .spawn()?
+                .wait()?
+                .check()?;
+
+            Ok(())
+        }()
+        .is_ok();
+
+        return Some(("gpg", success));
+    }
+
+    None
+}
