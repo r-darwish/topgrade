@@ -29,21 +29,21 @@ Just run `topgrade`. It will run the following steps:
 
 * Try to self-upgrade if compiled with this feature. On Unix systems Topgrade will also respawn
   itself if it was upgraded
-* *Linux*: Run the system package manager:
-  * *Arch*: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
-  * *CentOS/RHEL*: Run `yum upgrade`
-  * *Fedora* - Run `dnf upgrade`
-  * *Debian/Ubuntu*: Run `apt update && apt dist-upgrade`
-  * *Gentoo*: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
-  * *openSUSE*: Run `zypper refresh && zypper dist-upgrade`
-  * *Void*: Run `xbps-install -Su`
-* *Linux*: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
-* *FreeBSD*: Upgrade and audit packages
-* *Unix*: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
-* *Unix*: Run `nix upgrade-nix && nix --upgrade`.
-* *Windows*: Upgrade Powershell modules
-* *Windows*: Upgrade all [Chocolatey](https://chocolatey.org/) packages
-* *Windows*: Upgrade all [Scoop](https://scoop.sh) packages
+* **Linux**: Run the system package manager:
+  * **Arch**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
+  * **CentOS/RHEL**: Run `yum upgrade`
+  * **Fedora**: Run `dnf upgrade`
+  * **Debian/Ubuntu**: Run `apt update && apt dist-upgrade`
+  * **Gentoo**: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
+  * **openSUSE**: Run `zypper refresh && zypper dist-upgrade`
+  * **Void**: Run `xbps-install -Su`
+* **Linux**: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
+* **FreeBSD**: Upgrade and audit packages
+* **Unix**: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
+* **Unix**: Run `nix upgrade-nix && nix --upgrade`.
+* **Windows**: Upgrade Powershell modules
+* **Windows**: Upgrade all [Chocolatey](https://chocolatey.org/) packages
+* **Windows**: Upgrade all [Scoop](https://scoop.sh) packages
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
   * ~/.zshrc
@@ -55,9 +55,9 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/openbox
   * Powershell Profile
   * Custom defined paths
-* *Unix*: Run [zplug](https://github.com/zplug/zplug) update
-* *Unix*: Run [fisher](https://github.com/jorgebucaran/fisher)
-* *Unix*: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm). *Note*: Do not use
+* **Unix**: Run [zplug](https://github.com/zplug/zplug) update
+* **Unix**: Run [fisher](https://github.com/jorgebucaran/fisher)
+* **Unix**: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm). *Note*: Do not use
   the `-b` flag in your configuration as suggested by the TPM readme.
 * Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
@@ -76,16 +76,16 @@ Just run `topgrade`. It will run the following steps:
 * Run `composer global update` if Composer's home directory is inside the home directory of the user.
 * Upgrade Atom packages
 * Run `gem upgrade --user-install` if `~/.gem` exists
-* *Linux*: Update Flatpak packages
-* *Linux*: Update snap packages
-* *Linux*: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
+* **Linux**: Update Flatpak packages
+* **Linux**: Update snap packages
+* **Linux**: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
   only. No upgrades will actually be performed)
 * Run custom defined commands
 * Final stage
-  * *Linux*: Run [needrestart](https://github.com/liske/needrestart)
-  * *Windows*: Run Windows Update (You'll have to install [PSWindowsUpdate](https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/))
-  * *macOS*: Upgrade App Store applications
-  * *FreeBSD*: Run `freebsd-upgrade`
+  * **Linux**: Run [needrestart](https://github.com/liske/needrestart)
+  * **Windows**: Run Windows Update (You'll have to install [PSWindowsUpdate](https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/))
+  * **macOS**: Upgrade App Store applications
+  * **FreeBSD**: Run `freebsd-upgrade`
 
 ## Flags
 * `-t/--tmux` - Topgrade will launch itself in a new tmux session. This flag has no effect if
