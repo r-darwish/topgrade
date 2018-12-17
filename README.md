@@ -90,7 +90,8 @@ Just run `topgrade`. It will run the following steps:
 * Node
   * Run `yarn global update` if yarn is installed.
   * Run `npm update -g` if NPM is installed and `npm root -g` is a path inside your home directory.
-* Run `composer global update` if Composer's home directory is inside the home directory of the user.
+* Run `composer global update` if Composer's home directory is inside the home directory of the
+  user. Run `valet install` after.
 * Upgrade Atom packages
 * Run `gem upgrade --user-install` if `~/.gem` exists
 * **Linux**: Update Flatpak packages

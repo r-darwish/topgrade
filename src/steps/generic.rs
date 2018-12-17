@@ -248,6 +248,11 @@ pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'sta
                         .spawn()?
                         .wait()?
                         .check()?;
+
+                    if let Some(valet) = utils::which("valet") {
+                        Executor::new(&valet, dry_run).arg("install").spawn()?.wait()?.check()?;
+                    }
+
                     Ok(())
                 }()
                 .is_ok();
