@@ -59,14 +59,14 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
         print_separator("System update");
 
         let success = match self {
             Distribution::Arch => upgrade_arch_linux(&sudo, dry_run),
             Distribution::CentOS => upgrade_redhat(&sudo, dry_run),
             Distribution::Fedora => upgrade_fedora(&sudo, dry_run),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, dry_run),
+            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, cleanup, dry_run),
             Distribution::Gentoo => upgrade_gentoo(&sudo, dry_run),
             Distribution::OpenSuse => upgrade_opensuse(&sudo, dry_run),
             Distribution::Void => upgrade_void(&sudo, dry_run),
@@ -228,7 +228,7 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         Executor::new(&sudo, dry_run)
             .args(&["/usr/bin/apt", "update"])
@@ -241,6 +241,20 @@ fn upgrade_debian(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
             .spawn()?
             .wait()?
             .check()?;
+
+        if cleanup {
+            Executor::new(&sudo, dry_run)
+                .args(&["/usr/bin/apt", "clean"])
+                .spawn()?
+                .wait()?
+                .check()?;
+
+            Executor::new(&sudo, dry_run)
+                .args(&["/usr/bin/apt", "autoremove"])
+                .spawn()?
+                .wait()?
+                .check()?;
+        }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
