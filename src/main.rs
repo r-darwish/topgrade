@@ -116,7 +116,9 @@ fn run() -> Result<(), Error> {
         if !opt.no_system {
             match &distribution {
                 Ok(distribution) => {
-                    report.push_result(execute(|| distribution.upgrade(&sudo, opt.dry_run), opt.no_retry)?);
+                    report.push_result(
+                        execute(|| distribution.upgrade(&sudo, opt.cleanup, opt.dry_run), opt.no_retry)?
+                    );
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
