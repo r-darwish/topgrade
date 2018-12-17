@@ -12,6 +12,23 @@ Keeping your system up to date mostly involves invoking more than a single packa
 usually results in big shell one-liners saved in your shell history. Topgrade tries to solve this
 problem by detecting which tools you use and run their appropriate package managers.
 
+## Supported Platforms
+Topgrade should probably work on whichever platform it can be build. The real question is whether
+Topgrade knows that platform and can utilize its unique features, such as the operating system's
+pacakge manager. Topgrade is tested on and knows the following platforms:
+
+* Linux
+  * Arch
+  * CentOS/RHEL
+  * Fedora
+  * Debian/Ubuntu
+  * Gentoo
+  * openSUSE
+  * Void
+* FreeBSD
+* macOS
+* Windows
+
 ## Installation
 Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
 
