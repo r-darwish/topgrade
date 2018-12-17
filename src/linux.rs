@@ -242,7 +242,7 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Resul
             .wait()?
             .check()?;
 
-        if cleanup {   
+        if cleanup {
             Executor::new(&sudo, dry_run)
                 .args(&["/usr/bin/apt", "clean"])
                 .spawn()?
