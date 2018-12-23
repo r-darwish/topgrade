@@ -73,7 +73,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(feature = "self-update")]
     {
-        if !opt.dry_run && !env::var("TOPGRADE_NO_SELF_UPGRADE").is_ok() {
+        if !opt.dry_run && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             if let Err(e) = self_update::self_update() {
                 print_warning(format!("Self update error: {}", e));
                 if let Some(cause) = e.cause() {
