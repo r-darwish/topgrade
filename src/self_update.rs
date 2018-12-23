@@ -44,6 +44,7 @@ pub fn self_update() -> Result<(), Error> {
             print_warning("Respawning...");
             let err = Command::new(current_exe.context(ErrorKind::SelfUpdate)?)
                 .args(env::args().skip(1))
+                .env("TOPGRADE_NO_SELF_UPGRADE", "")
                 .exec();
             Err(err).context(ErrorKind::SelfUpdate)?
         }
