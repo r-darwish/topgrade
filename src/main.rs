@@ -76,6 +76,9 @@ fn run() -> Result<(), Error> {
         if !opt.dry_run {
             if let Err(e) = self_update::self_update() {
                 print_warning(format!("Self update error: {}", e));
+                if let Some(cause) = e.cause() {
+                    print_warning(format!("Caused by: {}", cause));
+                }
             }
         }
     }

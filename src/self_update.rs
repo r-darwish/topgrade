@@ -2,6 +2,7 @@ use super::error::{Error, ErrorKind};
 use super::terminal::*;
 use failure::ResultExt;
 use self_update_crate;
+use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
 #[cfg(unix)]
 use std::env;
 #[cfg(unix)]
@@ -15,7 +16,7 @@ pub fn self_update() -> Result<(), Error> {
     let current_exe = env::current_exe();
 
     let target = self_update_crate::get_target().context(ErrorKind::SelfUpdate)?;
-    let result = self_update_crate::backends::github::Update::configure()
+    let result = Update::configure()
         .context(ErrorKind::SelfUpdate)?
         .repo_owner("r-darwish")
         .repo_name("topgrade")
@@ -27,11 +28,12 @@ pub fn self_update() -> Result<(), Error> {
         .no_confirm(true)
         .build()
         .context(ErrorKind::SelfUpdate)?
-        .update()
+        .update2()
         .context(ErrorKind::SelfUpdate)?;
 
-    if let self_update_crate::Status::Updated(version) = &result {
-        println!("\nTopgrade upgraded to {}", version);
+    if let GitHubUpdateStatus::Updated(release) = &result {
+        println!("\nTopgrade upgraded to {}:\n", release.version());
+        println!("{}", release.body);
     } else {
         println!("Topgrade is up-to-date");
     }

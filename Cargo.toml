@@ -31,6 +31,9 @@ nix = "0.12.0"
 [profile.release]
 lto = true
 
+[patch.crates-io]
+self_update = { git = "https://github.com/r-darwish/self_update", branch = "github-extended" }
+
 [features]
 default = []
 
