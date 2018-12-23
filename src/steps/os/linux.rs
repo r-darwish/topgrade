@@ -63,7 +63,7 @@ impl Distribution {
         print_separator("System update");
 
         let success = match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, dry_run),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, dry_run),
             Distribution::CentOS => upgrade_redhat(&sudo, dry_run),
             Distribution::Fedora => upgrade_fedora(&sudo, dry_run),
             Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, cleanup, dry_run),
@@ -103,7 +103,7 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Result<(), Error> {
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
@@ -125,6 +125,16 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
             .check()?;
     } else {
         print_warning("No sudo or yay detected. Skipping system upgrade");
+    }
+
+    if cleanup {
+        if let Some(sudo) = &sudo {
+            Executor::new(&sudo, dry_run)
+                .args(&["/usr/bin/pacman", "-Scc"])
+                .spawn()?
+                .wait()?
+                .check()?;
+        }
     }
 
     Ok(())
