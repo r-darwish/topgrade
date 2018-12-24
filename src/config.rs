@@ -1,7 +1,7 @@
 use super::error::{Error, ErrorKind};
 use directories::BaseDirs;
 use failure::ResultExt;
-use serde_derive::Deserialize;
+use serde::Deserialize;
 use shellexpand;
 use std::collections::BTreeMap;
 use std::fs;
