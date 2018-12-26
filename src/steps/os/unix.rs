@@ -61,6 +61,11 @@ pub fn run_homebrew(cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)
         let inner = || -> Result<(), Error> {
             Executor::new(&brew, dry_run).arg("update").spawn()?.wait()?.check()?;
             Executor::new(&brew, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
+            Executor::new(&brew, dry_run)
+                .args(&["cask", "upgrade"])
+                .spawn()?
+                .wait()?
+                .check()?;
             if cleanup {
                 Executor::new(&brew, dry_run).arg("cleanup").spawn()?.wait()?.check()?;
             }
