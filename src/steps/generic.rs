@@ -18,9 +18,7 @@ pub fn run_cargo_update(run_type: RunType) -> Option<(&'static str, bool)> {
             run_type
                 .execute(cargo_update)
                 .args(&["install-update", "--git", "--all"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
 
             Ok(())
         }()
@@ -39,12 +37,7 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str,
             print_separator("RubyGems");
 
             let success = || -> Result<(), Error> {
-                run_type
-                    .execute(&gem)
-                    .args(&["update", "--user-install"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&gem).args(&["update", "--user-install"]).check_run()?;
 
                 Ok(())
             }()
@@ -66,9 +59,7 @@ pub fn run_emacs(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static st
                 run_type
                     .execute(&emacs)
                     .args(&["--batch", "-l", init_file.to_str().unwrap(), "--eval", EMACS_UPGRADE])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                    .check_run()?;
 
                 Ok(())
             }()
@@ -95,9 +86,7 @@ pub fn run_apm(run_type: RunType) -> Option<(&'static str, bool)> {
             run_type
                 .execute(&apm)
                 .args(&["upgrade", "--confirm=false"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
 
             Ok(())
         }()
@@ -116,15 +105,10 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static s
 
         let success = || -> Result<(), Error> {
             if rustup.is_descendant_of(base_dirs.home_dir()) {
-                run_type
-                    .execute(&rustup)
-                    .args(&["self", "update"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&rustup).args(&["self", "update"]).check_run()?;
             }
 
-            run_type.execute(&rustup).arg("update").spawn()?.wait()?;
+            run_type.execute(&rustup).arg("update").check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -141,12 +125,7 @@ pub fn run_jetpack(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Jetpack");
 
         let success = || -> Result<(), Error> {
-            run_type
-                .execute(&jetpack)
-                .args(&["global", "update"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&jetpack).args(&["global", "update"]).check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -163,8 +142,8 @@ pub fn run_opam_update(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("OCaml Package Manager");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&opam).arg("update").spawn()?.wait()?;
-            run_type.execute(&opam).arg("upgrade").spawn()?.wait()?;
+            run_type.execute(&opam).arg("update").check_run()?;
+            run_type.execute(&opam).arg("upgrade").check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -184,9 +163,7 @@ pub fn run_vcpkg_update(run_type: RunType) -> Option<(&'static str, bool)> {
             run_type
                 .execute(&vcpkg)
                 .args(&["upgrade", "--no-dry-run"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -203,7 +180,7 @@ pub fn run_pipx_update(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("pipx");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&pipx).arg("upgrade-all").spawn()?.wait()?.check()?;
+            run_type.execute(&pipx).arg("upgrade-all").check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -217,7 +194,7 @@ pub fn run_pipx_update(run_type: RunType) -> Option<(&'static str, bool)> {
 #[must_use]
 pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Result<(), Error> {
     print_separator(name);
-    run_type.execute("sh").arg("-c").arg(command).spawn()?.wait()?.check()?;
+    run_type.execute("sh").arg("-c").arg(command).check_run()?;
 
     Ok(())
 }
@@ -241,15 +218,10 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&
                 print_separator("Composer");
 
                 let success = || -> Result<(), Error> {
-                    run_type
-                        .execute(&composer)
-                        .args(&["global", "update"])
-                        .spawn()?
-                        .wait()?
-                        .check()?;
+                    run_type.execute(&composer).args(&["global", "update"]).check_run()?;
 
                     if let Some(valet) = utils::which("valet") {
-                        run_type.execute(&valet).arg("install").spawn()?.wait()?;
+                        run_type.execute(&valet).arg("install").check_run()?;
                     }
 
                     Ok(())

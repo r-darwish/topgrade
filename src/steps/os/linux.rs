@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
-use crate::utils::{which, Check};
+use crate::utils::which;
 use failure::ResultExt;
 use std::fs;
 use std::path::PathBuf;
@@ -115,26 +115,16 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
                 return Err(ErrorKind::NotSystemPython)?;
             }
         }
-        run_type.execute(yay).spawn()?.wait()?.check()?;
+        run_type.execute(yay).check_run()?;
     } else if let Some(sudo) = &sudo {
-        run_type
-            .execute(&sudo)
-            .args(&["/usr/bin/pacman", "-Syu"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        run_type.execute(&sudo).args(&["/usr/bin/pacman", "-Syu"]).check_run()?;
     } else {
         print_warning("No sudo or yay detected. Skipping system upgrade");
     }
 
     if cleanup {
         if let Some(sudo) = &sudo {
-            run_type
-                .execute(&sudo)
-                .args(&["/usr/bin/pacman", "-Scc"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&sudo).args(&["/usr/bin/pacman", "-Scc"]).check_run()?;
         }
     }
 
@@ -143,12 +133,7 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
 
 fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        run_type
-            .execute(&sudo)
-            .args(&["/usr/bin/yum", "upgrade"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        run_type.execute(&sudo).args(&["/usr/bin/yum", "upgrade"]).check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -161,16 +146,12 @@ fn upgrade_opensuse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Err
         run_type
             .execute(&sudo)
             .args(&["/usr/bin/zypper", "refresh"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
 
         run_type
             .execute(&sudo)
             .args(&["/usr/bin/zypper", "dist-upgrade"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -183,9 +164,7 @@ fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> 
         run_type
             .execute(&sudo)
             .args(&["/usr/bin/xbps-install", "-Su"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -195,12 +174,7 @@ fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> 
 
 fn upgrade_fedora(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        run_type
-            .execute(&sudo)
-            .args(&["/usr/bin/dnf", "upgrade"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        run_type.execute(&sudo).args(&["/usr/bin/dnf", "upgrade"]).check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -211,13 +185,7 @@ fn upgrade_fedora(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
 fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         if let Some(layman) = which("layman") {
-            run_type
-                .execute(&sudo)
-                .arg(layman)
-                .args(&["-s", "ALL"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&sudo).arg(layman).args(&["-s", "ALL"]).check_run()?;
         }
 
         println!("Syncing portage");
@@ -225,21 +193,17 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
             .execute(&sudo)
             .arg("/usr/bin/emerge")
             .args(&["-q", "--sync"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
 
         if let Some(eix_update) = which("eix-update") {
-            run_type.execute(&sudo).arg(eix_update).spawn()?.wait()?;
+            run_type.execute(&sudo).arg(eix_update).check_run()?;
         }
 
         run_type
             .execute(&sudo)
             .arg("/usr/bin/emerge")
             .args(&["-uDNa", "world"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -249,34 +213,20 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
 
 fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        run_type
-            .execute(&sudo)
-            .args(&["/usr/bin/apt", "update"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        run_type.execute(&sudo).args(&["/usr/bin/apt", "update"]).check_run()?;
 
         run_type
             .execute(&sudo)
             .args(&["/usr/bin/apt", "dist-upgrade"])
-            .spawn()?
-            .wait()?
-            .check()?;
+            .check_run()?;
 
         if cleanup {
-            run_type
-                .execute(&sudo)
-                .args(&["/usr/bin/apt", "clean"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&sudo).args(&["/usr/bin/apt", "clean"]).check_run()?;
 
             run_type
                 .execute(&sudo)
                 .args(&["/usr/bin/apt", "autoremove"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
         }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -292,7 +242,7 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'s
             print_separator("Check for needed restarts");
 
             let success = || -> Result<(), Error> {
-                run_type.execute(&sudo).arg(needrestart).spawn()?.wait()?.check()?;
+                run_type.execute(&sudo).arg(needrestart).check_run()?;
 
                 Ok(())
             }()
@@ -311,13 +261,8 @@ pub fn run_fwupdmgr(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Firmware upgrades");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&fwupdmgr).arg("refresh").spawn()?.wait()?.check()?;
-            run_type
-                .execute(&fwupdmgr)
-                .arg("get-updates")
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&fwupdmgr).arg("refresh").check_run()?;
+            run_type.execute(&fwupdmgr).arg("get-updates").check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -337,9 +282,7 @@ pub fn flatpak_user_update(run_type: RunType) -> Option<(&'static str, bool)> {
             run_type
                 .execute(&flatpak)
                 .args(&["update", "--user", "-y"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -360,9 +303,7 @@ pub fn flatpak_global_update(sudo: &Option<PathBuf>, run_type: RunType) -> Optio
                 run_type
                     .execute(&sudo)
                     .args(&[flatpak.to_str().unwrap(), "update", "-y"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                    .check_run()?;
                 Ok(())
             }()
             .is_ok();
@@ -385,9 +326,7 @@ pub fn run_snap(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static s
                     run_type
                         .execute(&sudo)
                         .args(&[snap.to_str().unwrap(), "refresh"])
-                        .spawn()?
-                        .wait()?
-                        .check()?;
+                        .check_run()?;
 
                     Ok(())
                 }()
@@ -408,12 +347,7 @@ pub fn run_etc_update(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'st
             print_separator("etc-update");
 
             let success = || -> Result<(), Error> {
-                run_type
-                    .execute(&sudo)
-                    .arg(&etc_update.to_str().unwrap())
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&sudo).arg(&etc_update.to_str().unwrap()).check_run()?;
 
                 Ok(())
             }()

@@ -13,12 +13,7 @@ pub fn run_chocolatey(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Chocolatey");
 
         let success = || -> Result<(), Error> {
-            run_type
-                .execute(&choco)
-                .args(&["upgrade", "all"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&choco).args(&["upgrade", "all"]).check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -35,13 +30,8 @@ pub fn run_scoop(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Scoop");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&scoop).args(&["update"]).spawn()?.wait()?.check()?;
-            run_type
-                .execute(&scoop)
-                .args(&["update", "*"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&scoop).args(&["update"]).check_run()?;
+            run_type.execute(&scoop).args(&["update", "*"]).check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -102,12 +92,7 @@ impl Powershell {
             print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), Error> {
-                run_type
-                    .execute(&powershell)
-                    .arg("Update-Module")
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&powershell).arg("Update-Module").check_run()?;
                 Ok(())
             }()
             .is_ok();
@@ -128,9 +113,7 @@ impl Powershell {
                     run_type
                         .execute(&powershell)
                         .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
-                        .spawn()?
-                        .wait()?
-                        .check()?;
+                        .check_run()?;
                     Ok(())
                 }()
                 .is_ok();

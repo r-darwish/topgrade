@@ -19,7 +19,7 @@ pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str,
         print_separator("tmux plugins");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&tpm).arg("all").spawn()?.wait()?;
+            run_type.execute(&tpm).arg("all").check_run()?;
             Ok(())
         }()
         .is_ok();

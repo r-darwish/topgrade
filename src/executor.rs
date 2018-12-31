@@ -124,6 +124,13 @@ impl Executor {
 
         Ok(result)
     }
+
+    /// A convinence method for `spawn().wait().check()`.
+    /// Returns an error if something went wrong during the execution or if the
+    /// process exited with failure.
+    pub fn check_run(&mut self) -> Result<(), Error> {
+        self.spawn()?.wait()?.check()
+    }
 }
 
 /// A struct represending a command. Trying to execute it will just print its arguments.

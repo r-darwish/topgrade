@@ -15,9 +15,7 @@ pub fn upgrade_freebsd(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'s
             run_type
                 .execute(sudo)
                 .args(&["/usr/sbin/freebsd-update", "fetch", "install"])
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
             Ok(())
         }()
         .is_ok();
@@ -35,12 +33,7 @@ pub fn upgrade_packages(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'
 
     if let Some(sudo) = sudo {
         let success = || -> Result<(), Error> {
-            run_type
-                .execute(sudo)
-                .args(&["/usr/sbin/pkg", "upgrade"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(sudo).args(&["/usr/sbin/pkg", "upgrade"]).check_run()?;
             Ok(())
         }()
         .is_ok();

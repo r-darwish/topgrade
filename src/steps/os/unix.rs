@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::{which, Check};
+use crate::utils::which;
 use directories::BaseDirs;
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
@@ -13,9 +13,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static st
                 run_type
                     .execute(zsh)
                     .args(&["-c", "source ~/.zshrc && zplug update"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                    .check_run()?;
                 Ok(())
             }()
             .is_ok();
@@ -36,15 +34,8 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static s
                 run_type
                     .execute(&fish)
                     .args(&["-c", "fisher self-update"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
-                run_type
-                    .execute(&fish)
-                    .args(&["-c", "fisher"])
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                    .check_run()?;
+                run_type.execute(&fish).args(&["-c", "fisher"]).check_run()?;
                 Ok(())
             }()
             .is_ok();
@@ -62,16 +53,11 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Option<(&'static str, b
         print_separator("Brew");
 
         let inner = || -> Result<(), Error> {
-            run_type.execute(&brew).arg("update").spawn()?.wait()?;
-            run_type.execute(&brew).arg("upgrade").spawn()?.wait()?;
-            run_type
-                .execute(&brew)
-                .args(&["cask", "upgrade"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&brew).arg("update").check_run()?;
+            run_type.execute(&brew).arg("upgrade").check_run()?;
+            run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
             if cleanup {
-                run_type.execute(&brew).arg("cleanup").spawn()?.wait()?;
+                run_type.execute(&brew).arg("cleanup").check_run()?;
             }
             Ok(())
         };
@@ -89,8 +75,8 @@ pub fn run_nix(run_type: RunType) -> Option<(&'static str, bool)> {
             print_separator("Nix");
 
             let inner = || -> Result<(), Error> {
-                run_type.execute(&nix).arg("upgrade-nix").spawn()?.wait()?.check()?;
-                run_type.execute(&nix_env).arg("--upgrade").spawn()?.wait()?.check()?;
+                run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+                run_type.execute(&nix_env).arg("--upgrade").check_run()?;
                 Ok(())
             };
 

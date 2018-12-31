@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::{which, Check};
+use crate::utils::which;
 use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
@@ -70,17 +70,13 @@ impl Git {
                 .execute(git)
                 .args(&["pull", "--rebase", "--autostash"])
                 .current_dir(&path)
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
 
             run_type
                 .execute(git)
                 .args(&["submodule", "update", "--init", "--recursive"])
                 .current_dir(&path)
-                .spawn()?
-                .wait()?
-                .check()?;
+                .check_run()?;
 
             Ok(())
         }()

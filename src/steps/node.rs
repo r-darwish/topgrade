@@ -30,12 +30,7 @@ impl NPM {
     }
 
     fn upgrade(&self, run_type: RunType) -> Result<(), Error> {
-        run_type
-            .execute(&self.command)
-            .args(&["update", "-g"])
-            .spawn()?
-            .wait()?
-            .check()?;
+        run_type.execute(&self.command).args(&["update", "-g"]).check_run()?;
 
         Ok(())
     }
@@ -61,12 +56,7 @@ pub fn yarn_global_update(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Yarn");
 
         let success = || -> Result<(), Error> {
-            run_type
-                .execute(&yarn)
-                .args(&["global", "upgrade", "-s"])
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()?;
             Ok(())
         }()
         .is_ok();

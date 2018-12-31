@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::{which, Check, PathExt};
+use crate::utils::{which, PathExt};
 use directories::BaseDirs;
 use std::fs;
 use std::path::PathBuf;
@@ -69,9 +69,7 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
             "-s",
             "-V1",
         ])
-        .spawn()?
-        .wait()?
-        .check()?;
+        .check_run()?;
 
     println!();
 
