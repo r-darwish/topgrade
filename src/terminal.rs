@@ -70,7 +70,7 @@ impl Terminal {
             .ok();
     }
 
-    fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
+    fn should_retry(&mut self, interrupted: bool) -> Result<bool, io::Error> {
         if self.width.is_none() {
             return Ok(false);
         }
@@ -80,7 +80,7 @@ impl Terminal {
                 "\n{}",
                 style(format!(
                     "Retry? [y/N] {}",
-                    if !running {
+                    if interrupted {
                         "(Press Ctrl+C again to stop Topgrade) "
                     } else {
                         ""
@@ -111,8 +111,8 @@ impl Default for Terminal {
     }
 }
 
-pub fn should_retry(running: bool) -> Result<bool, io::Error> {
-    TERMINAL.lock().unwrap().should_retry(running)
+pub fn should_retry(interrupted: bool) -> Result<bool, io::Error> {
+    TERMINAL.lock().unwrap().should_retry(interrupted)
 }
 
 pub fn print_separator<P: AsRef<str>>(message: P) {

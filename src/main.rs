@@ -31,13 +31,13 @@ where
             return Ok(Some((key, success)));
         }
 
-        let running = ctrlc::running();
-        if !running {
-            ctrlc::set_running(true);
+        let interrupted = ctrlc::interrupted();
+        if interrupted {
+            ctrlc::unset_interrupted();
         }
 
-        let should_ask = !running || !no_retry;
-        let should_retry = should_ask && should_retry(running).context(ErrorKind::Retry)?;
+        let should_ask = interrupted || !no_retry;
+        let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
 
         if !should_retry {
             return Ok(Some((key, success)));

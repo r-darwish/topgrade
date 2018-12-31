@@ -1,23 +1,31 @@
+//! SIGINT handling in Unix systems.
 use lazy_static::lazy_static;
 use nix::sys::signal;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 lazy_static! {
-    static ref RUNNING: AtomicBool = AtomicBool::new(true);
+    /// A global variable telling whether the application has been interrupted.
+    static ref INTERRUPTED: AtomicBool = AtomicBool::new(false);
 }
 
-pub fn running() -> bool {
-    RUNNING.load(Ordering::SeqCst)
+/// Tells whether the program has been interrupted
+pub fn interrupted() -> bool {
+    INTERRUPTED.load(Ordering::SeqCst)
 }
 
-pub fn set_running(value: bool) {
-    RUNNING.store(value, Ordering::SeqCst)
+/// Clears the interrupted flag
+pub fn unset_interrupted() {
+    debug_assert!(INTERRUPTED.load(Ordering::SeqCst));
+    INTERRUPTED.store(false, Ordering::SeqCst)
 }
 
+/// Handle SIGINT. Set the interruption flag.
 extern "C" fn handle_sigint(_: i32) {
-    set_running(false);
+    INTERRUPTED.store(true, Ordering::SeqCst)
 }
 
+/// Set the necessary signal handlers.
+/// The function panics on failure.
 pub fn set_handler() {
     let sig_action = signal::SigAction::new(
         signal::SigHandler::Handler(handle_sigint),
