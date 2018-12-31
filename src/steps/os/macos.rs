@@ -4,11 +4,11 @@ use crate::terminal::print_separator;
 use crate::utils::Check;
 
 #[must_use]
-pub fn upgrade_macos(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_macos(run_type: RunType) -> Option<(&'static str, bool)> {
     print_separator("App Store");
 
     let success = || -> Result<(), Error> {
-        Executor::new("softwareupdate", dry_run)
+        run_type.execute("softwareupdate")
             .args(&["--install", "--all"])
             .spawn()?
             .wait()?

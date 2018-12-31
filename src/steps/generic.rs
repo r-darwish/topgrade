@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{self, Check, PathExt};
 use directories::BaseDirs;
@@ -10,12 +10,13 @@ use std::process::Command;
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 
 #[must_use]
-pub fn run_cargo_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_cargo_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(cargo_update) = utils::which("cargo-install-update") {
         print_separator("Cargo");
 
         let success = || -> Result<(), Error> {
-            Executor::new(cargo_update, dry_run)
+            run_type
+                .execute(cargo_update)
                 .args(&["install-update", "--git", "--all"])
                 .spawn()?
                 .wait()?
@@ -32,13 +33,14 @@ pub fn run_cargo_update(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_gem(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(gem) = utils::which("gem") {
         if base_dirs.home_dir().join(".gem").exists() {
             print_separator("RubyGems");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&gem, dry_run)
+                run_type
+                    .execute(&gem)
                     .args(&["update", "--user-install"])
                     .spawn()?
                     .wait()?
@@ -55,13 +57,14 @@ pub fn run_gem(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, boo
 }
 
 #[must_use]
-pub fn run_emacs(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_emacs(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(emacs) = utils::which("emacs") {
         if let Some(init_file) = base_dirs.home_dir().join(".emacs.d/init.el").if_exists() {
             print_separator("Emacs");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&emacs, dry_run)
+                run_type
+                    .execute(&emacs)
                     .args(&["--batch", "-l", init_file.to_str().unwrap(), "--eval", EMACS_UPGRADE])
                     .spawn()?
                     .wait()?
@@ -84,12 +87,13 @@ pub fn run_emacs(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, b
     target_os = "netbsd",
     target_os = "dragonfly"
 )))]
-pub fn run_apm(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_apm(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(apm) = utils::which("apm") {
         print_separator("Atom Package Manager");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&apm, dry_run)
+            run_type
+                .execute(&apm)
                 .args(&["upgrade", "--confirm=false"])
                 .spawn()?
                 .wait()?
@@ -106,20 +110,21 @@ pub fn run_apm(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_rustup(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(rustup) = utils::which("rustup") {
         print_separator("rustup");
 
         let success = || -> Result<(), Error> {
             if rustup.is_descendant_of(base_dirs.home_dir()) {
-                Executor::new(&rustup, dry_run)
+                run_type
+                    .execute(&rustup)
                     .args(&["self", "update"])
                     .spawn()?
                     .wait()?
                     .check()?;
             }
 
-            Executor::new(&rustup, dry_run).arg("update").spawn()?.wait()?.check()?;
+            run_type.execute(&rustup).arg("update").spawn()?.wait()?;
             Ok(())
         }()
         .is_ok();
@@ -131,12 +136,13 @@ pub fn run_rustup(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, 
 }
 
 #[must_use]
-pub fn run_jetpack(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_jetpack(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(jetpack) = utils::which("jetpack") {
         print_separator("Jetpack");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&jetpack, dry_run)
+            run_type
+                .execute(&jetpack)
                 .args(&["global", "update"])
                 .spawn()?
                 .wait()?
@@ -152,13 +158,13 @@ pub fn run_jetpack(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_opam_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_opam_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(opam) = utils::which("opam") {
         print_separator("OCaml Package Manager");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&opam, dry_run).arg("update").spawn()?.wait()?.check()?;
-            Executor::new(&opam, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
+            run_type.execute(&opam).arg("update").spawn()?.wait()?;
+            run_type.execute(&opam).arg("upgrade").spawn()?.wait()?;
             Ok(())
         }()
         .is_ok();
@@ -170,12 +176,13 @@ pub fn run_opam_update(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_vcpkg_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_vcpkg_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(vcpkg) = utils::which("vcpkg") {
         print_separator("vcpkg");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&vcpkg, dry_run)
+            run_type
+                .execute(&vcpkg)
                 .args(&["upgrade", "--no-dry-run"])
                 .spawn()?
                 .wait()?
@@ -191,16 +198,12 @@ pub fn run_vcpkg_update(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_pipx_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_pipx_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(pipx) = utils::which("pipx") {
         print_separator("pipx");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&pipx, dry_run)
-                .arg("upgrade-all")
-                .spawn()?
-                .wait()?
-                .check()?;
+            run_type.execute(&pipx).arg("upgrade-all").spawn()?.wait()?.check()?;
             Ok(())
         }()
         .is_ok();
@@ -212,20 +215,15 @@ pub fn run_pipx_update(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_custom_command(name: &str, command: &str, dry_run: bool) -> Result<(), Error> {
+pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Result<(), Error> {
     print_separator(name);
-    Executor::new("sh", dry_run)
-        .arg("-c")
-        .arg(command)
-        .spawn()?
-        .wait()?
-        .check()?;
+    run_type.execute("sh").arg("-c").arg(command).spawn()?.wait()?.check()?;
 
     Ok(())
 }
 
 #[must_use]
-pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(composer) = utils::which("composer") {
         let composer_home = || -> Result<PathBuf, Error> {
             let output = Command::new(&composer)
@@ -243,14 +241,15 @@ pub fn run_composer_update(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'sta
                 print_separator("Composer");
 
                 let success = || -> Result<(), Error> {
-                    Executor::new(&composer, dry_run)
+                    run_type
+                        .execute(&composer)
                         .args(&["global", "update"])
                         .spawn()?
                         .wait()?
                         .check()?;
 
                     if let Some(valet) = utils::which("valet") {
-                        Executor::new(&valet, dry_run).arg("install").spawn()?.wait()?.check()?;
+                        run_type.execute(&valet).arg("install").spawn()?.wait()?;
                     }
 
                     Ok(())

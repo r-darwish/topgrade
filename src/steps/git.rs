@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check};
 use log::{debug, error};
@@ -58,7 +58,7 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P, dry_run: bool) -> Option<(String, bool)> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P, run_type: RunType) -> Option<(String, bool)> {
         let path = path.as_ref();
 
         print_separator(format!("Pulling {}", path.display()));
@@ -66,14 +66,16 @@ impl Git {
         let git = self.git.as_ref().unwrap();
 
         let success = || -> Result<(), Error> {
-            Executor::new(git, dry_run)
+            run_type
+                .execute(git)
                 .args(&["pull", "--rebase", "--autostash"])
                 .current_dir(&path)
                 .spawn()?
                 .wait()?
                 .check()?;
 
-            Executor::new(git, dry_run)
+            run_type
+                .execute(git)
                 .args(&["submodule", "update", "--init", "--recursive"])
                 .current_dir(&path)
                 .spawn()?

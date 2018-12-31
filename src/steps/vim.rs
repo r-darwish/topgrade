@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::executor::Executor;
+use crate::executor::{RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
@@ -54,8 +54,8 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 }
 
 #[must_use]
-fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, dry_run: bool) -> Result<(), Error> {
-    Executor::new(&vim, dry_run)
+fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, run_type: RunType) -> Result<(), Error> {
+    run_type.execute(&vim)
         .args(&[
             "-N",
             "-u",
@@ -78,12 +78,12 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, dr
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(vim) = which("vim") {
         if let Some(vimrc) = vimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&vimrc) {
                 print_separator(&format!("Vim ({:?})", plugin_framework));
-                let success = upgrade(&vim, &vimrc, plugin_framework, dry_run).is_ok();
+                let success = upgrade(&vim, &vimrc, plugin_framework, run_type).is_ok();
                 return Some(("vim", success));
             }
         }
@@ -93,12 +93,12 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str,
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(nvim) = which("nvim") {
         if let Some(nvimrc) = nvimrc(&base_dirs) {
             if let Some(plugin_framework) = PluginFramework::detect(&nvimrc) {
                 print_separator(&format!("Neovim ({:?})", plugin_framework));
-                let success = upgrade(&nvim, &nvimrc, plugin_framework, dry_run).is_ok();
+                let success = upgrade(&nvim, &nvimrc, plugin_framework, run_type).is_ok();
                 return Some(("Neovim", success));
             }
         }

@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
@@ -29,8 +29,9 @@ impl NPM {
         ))
     }
 
-    fn upgrade(&self, dry_run: bool) -> Result<(), Error> {
-        Executor::new(&self.command, dry_run)
+    fn upgrade(&self, run_type: RunType) -> Result<(), Error> {
+        run_type
+            .execute(&self.command)
             .args(&["update", "-g"])
             .spawn()?
             .wait()?
@@ -41,12 +42,12 @@ impl NPM {
 }
 
 #[must_use]
-pub fn run_npm_upgrade(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(npm) = which("npm").map(NPM::new) {
         if let Ok(npm_root) = npm.root() {
             if npm_root.is_descendant_of(base_dirs.home_dir()) {
                 print_separator("Node Package Manager");
-                let success = npm.upgrade(dry_run).is_ok();
+                let success = npm.upgrade(run_type).is_ok();
                 return Some(("NPM", success));
             }
         }
@@ -55,12 +56,13 @@ pub fn run_npm_upgrade(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static 
 }
 
 #[must_use]
-pub fn yarn_global_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn yarn_global_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(yarn) = which("yarn") {
         print_separator("Yarn");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&yarn, dry_run)
+            run_type
+                .execute(&yarn)
                 .args(&["global", "upgrade", "-s"])
                 .spawn()?
                 .wait()?

@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
@@ -10,7 +10,7 @@ use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 
-pub fn run_tpm(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(tpm) = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
@@ -19,7 +19,7 @@ pub fn run_tpm(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, boo
         print_separator("tmux plugins");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&tpm, dry_run).arg("all").spawn()?.wait()?.check()?;
+            run_type.execute(&tpm).arg("all").spawn()?.wait()?;
             Ok(())
         }()
         .is_ok();

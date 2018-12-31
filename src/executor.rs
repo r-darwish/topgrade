@@ -1,27 +1,71 @@
+//! Utilities for command execution
 use super::error::{Error, ErrorKind};
 use super::utils::Check;
 use failure::ResultExt;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
+use std::str::{FromStr, ParseBoolError};
 
+/// An enum telling whether Topgrade should perform dry runs or actually perform the steps.
+#[derive(Clone, Copy, Debug)]
+pub enum RunType {
+    /// Executing commands will just print the command with its argument.
+    Dry,
+
+    /// Executing commands will perform actual execution.
+    Wet,
+}
+
+impl RunType {
+    /// Create a new instance from a boolean telling whether to dry run.
+    fn new(dry_run: bool) -> Self {
+        if dry_run {
+            RunType::Dry
+        } else {
+            RunType::Wet
+        }
+    }
+
+    /// Create an instance of `Executor` that should run `program`.
+    pub fn execute<S: AsRef<OsStr>>(self, program: S) -> Executor {
+        match self {
+            RunType::Dry => Executor::Dry(DryCommand {
+                program: program.as_ref().into(),
+                ..Default::default()
+            }),
+            RunType::Wet => Executor::Wet(Command::new(program)),
+        }
+    }
+
+    #[cfg(feature = "self-update")]
+    /// Tells whether we're performing a dry run.
+    pub fn dry(self) -> bool {
+        match self {
+            RunType::Dry => true,
+            RunType::Wet => false,
+        }
+    }
+}
+
+impl FromStr for RunType {
+    type Err = ParseBoolError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::new(bool::from_str(s)?))
+    }
+}
+
+/// An enum providing a similar interface to `std::process::Command`.
+/// If the enum is set to `Wet`, execution will be performed with `std::process::Command`.
+/// If the enum is set to `Dry`, execution will just print the command with its arguments.
 pub enum Executor {
     Wet(Command),
     Dry(DryCommand),
 }
 
 impl Executor {
-    pub fn new<S: AsRef<OsStr>>(program: S, dry: bool) -> Self {
-        if dry {
-            Executor::Dry(DryCommand {
-                program: program.as_ref().into(),
-                ..Default::default()
-            })
-        } else {
-            Executor::Wet(Command::new(program))
-        }
-    }
-
+    /// See `std::process::Command::arg`
     pub fn arg<S: AsRef<OsStr>>(&mut self, arg: S) -> &mut Executor {
         match self {
             Executor::Wet(c) => {
@@ -35,6 +79,7 @@ impl Executor {
         self
     }
 
+    /// See `std::process::Command::args`
     pub fn args<I, S>(&mut self, args: I) -> &mut Executor
     where
         I: IntoIterator<Item = S>,
@@ -52,6 +97,7 @@ impl Executor {
         self
     }
 
+    /// See `std::process::Command::current_dir`
     pub fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Executor {
         match self {
             Executor::Wet(c) => {
@@ -63,6 +109,7 @@ impl Executor {
         self
     }
 
+    /// See `std::process::Command::spawn`
     pub fn spawn(&mut self) -> Result<ExecutorChild, Error> {
         let result = match self {
             Executor::Wet(c) => c.spawn().context(ErrorKind::ProcessExecution).map(ExecutorChild::Wet)?,
@@ -88,6 +135,7 @@ impl Executor {
     }
 }
 
+/// A struct represending a command. Trying to execute it will just print its arguments.
 #[derive(Default)]
 pub struct DryCommand {
     program: OsString,
@@ -95,12 +143,14 @@ pub struct DryCommand {
     directory: Option<OsString>,
 }
 
+/// The Result of spawn. Contains an actual `std::process::Child` if executed by a wet command.
 pub enum ExecutorChild {
     Wet(Child),
     Dry,
 }
 
 impl ExecutorChild {
+    /// See `std::process::Child::wait`
     pub fn wait(&mut self) -> Result<ExecutorExitStatus, Error> {
         let result = match self {
             ExecutorChild::Wet(c) => c
@@ -114,6 +164,7 @@ impl ExecutorChild {
     }
 }
 
+/// The Result of wait. Contains an actual `std::process::ExitStatus` if executed by a wet command.
 pub enum ExecutorExitStatus {
     Wet(ExitStatus),
     Dry,

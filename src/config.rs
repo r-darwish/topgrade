@@ -1,4 +1,5 @@
 use super::error::{Error, ErrorKind};
+use super::executor::RunType;
 use directories::BaseDirs;
 use failure::ResultExt;
 use serde::Deserialize;
@@ -78,7 +79,7 @@ pub struct Opt {
 
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
-    pub dry_run: bool,
+    pub run_type: RunType,
 
     /// Do not ask to retry failed steps
     #[structopt(long = "no-retry")]

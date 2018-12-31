@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{which, Check};
 use failure::ResultExt;
@@ -59,17 +59,17 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("System update");
 
         let success = match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, dry_run),
-            Distribution::CentOS => upgrade_redhat(&sudo, dry_run),
-            Distribution::Fedora => upgrade_fedora(&sudo, dry_run),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, cleanup, dry_run),
-            Distribution::Gentoo => upgrade_gentoo(&sudo, dry_run),
-            Distribution::OpenSuse => upgrade_opensuse(&sudo, dry_run),
-            Distribution::Void => upgrade_void(&sudo, dry_run),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
+            Distribution::CentOS => upgrade_redhat(&sudo, run_type),
+            Distribution::Fedora => upgrade_fedora(&sudo, run_type),
+            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type),
+            Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
+            Distribution::OpenSuse => upgrade_opensuse(&sudo, run_type),
+            Distribution::Void => upgrade_void(&sudo, run_type),
         };
 
         Some(("System update", success.is_ok()))
@@ -103,7 +103,7 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Result<(), Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
@@ -115,10 +115,10 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
                 return Err(ErrorKind::NotSystemPython)?;
             }
         }
-
-        Executor::new(yay, dry_run).spawn()?.wait()?.check()?;
+        run_type.execute(yay).spawn()?.wait()?.check()?;
     } else if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/pacman", "-Syu"])
             .spawn()?
             .wait()?
@@ -129,7 +129,8 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
 
     if cleanup {
         if let Some(sudo) = &sudo {
-            Executor::new(&sudo, dry_run)
+            run_type
+                .execute(&sudo)
                 .args(&["/usr/bin/pacman", "-Scc"])
                 .spawn()?
                 .wait()?
@@ -140,9 +141,10 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/yum", "upgrade"])
             .spawn()?
             .wait()?
@@ -154,15 +156,17 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn upgrade_opensuse(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_opensuse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/zypper", "refresh"])
             .spawn()?
             .wait()?
             .check()?;
 
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/zypper", "dist-upgrade"])
             .spawn()?
             .wait()?
@@ -174,9 +178,10 @@ fn upgrade_opensuse(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> 
     Ok(())
 }
 
-fn upgrade_void(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/xbps-install", "-Su"])
             .spawn()?
             .wait()?
@@ -188,9 +193,10 @@ fn upgrade_void(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn upgrade_fedora(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_fedora(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/dnf", "upgrade"])
             .spawn()?
             .wait()?
@@ -202,10 +208,11 @@ fn upgrade_fedora(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
+fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         if let Some(layman) = which("layman") {
-            Executor::new(&sudo, dry_run)
+            run_type
+                .execute(&sudo)
                 .arg(layman)
                 .args(&["-s", "ALL"])
                 .spawn()?
@@ -214,7 +221,8 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
         }
 
         println!("Syncing portage");
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .arg("/usr/bin/emerge")
             .args(&["-q", "--sync"])
             .spawn()?
@@ -222,10 +230,11 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
             .check()?;
 
         if let Some(eix_update) = which("eix-update") {
-            Executor::new(&sudo, dry_run).arg(eix_update).spawn()?.wait()?.check()?;
+            run_type.execute(&sudo).arg(eix_update).spawn()?.wait()?;
         }
 
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .arg("/usr/bin/emerge")
             .args(&["-uDNa", "world"])
             .spawn()?
@@ -238,28 +247,32 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, dry_run: bool) -> Result<(), Error> {
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Result<(), Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/apt", "update"])
             .spawn()?
             .wait()?
             .check()?;
 
-        Executor::new(&sudo, dry_run)
+        run_type
+            .execute(&sudo)
             .args(&["/usr/bin/apt", "dist-upgrade"])
             .spawn()?
             .wait()?
             .check()?;
 
         if cleanup {
-            Executor::new(&sudo, dry_run)
+            run_type
+                .execute(&sudo)
                 .args(&["/usr/bin/apt", "clean"])
                 .spawn()?
                 .wait()?
                 .check()?;
 
-            Executor::new(&sudo, dry_run)
+            run_type
+                .execute(&sudo)
                 .args(&["/usr/bin/apt", "autoremove"])
                 .spawn()?
                 .wait()?
@@ -273,17 +286,13 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, dry_run: bool) -> Resul
 }
 
 #[must_use]
-pub fn run_needrestart(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_needrestart(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(needrestart) = which("needrestart") {
             print_separator("Check for needed restarts");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&sudo, dry_run)
-                    .arg(needrestart)
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&sudo).arg(needrestart).spawn()?.wait()?.check()?;
 
                 Ok(())
             }()
@@ -297,17 +306,14 @@ pub fn run_needrestart(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stati
 }
 
 #[must_use]
-pub fn run_fwupdmgr(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_fwupdmgr(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(fwupdmgr) = which("fwupdmgr") {
         print_separator("Firmware upgrades");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&fwupdmgr, dry_run)
-                .arg("refresh")
-                .spawn()?
-                .wait()?
-                .check()?;
-            Executor::new(&fwupdmgr, dry_run)
+            run_type.execute(&fwupdmgr).arg("refresh").spawn()?.wait()?.check()?;
+            run_type
+                .execute(&fwupdmgr)
                 .arg("get-updates")
                 .spawn()?
                 .wait()?
@@ -323,12 +329,13 @@ pub fn run_fwupdmgr(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn flatpak_user_update(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn flatpak_user_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(flatpak) = which("flatpak") {
         print_separator("Flatpak User Packages");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&flatpak, dry_run)
+            run_type
+                .execute(&flatpak)
                 .args(&["update", "--user", "-y"])
                 .spawn()?
                 .wait()?
@@ -344,13 +351,14 @@ pub fn flatpak_user_update(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn flatpak_global_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn flatpak_global_update(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(flatpak) = which("flatpak") {
             print_separator("Flatpak Global Packages");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&sudo, dry_run)
+                run_type
+                    .execute(&sudo)
                     .args(&[flatpak.to_str().unwrap(), "update", "-y"])
                     .spawn()?
                     .wait()?
@@ -367,14 +375,15 @@ pub fn flatpak_global_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&
 }
 
 #[must_use]
-pub fn run_snap(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_snap(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(snap) = which("snap") {
             if PathBuf::from("/var/snapd.socket").exists() {
                 print_separator("snap");
 
                 let success = || -> Result<(), Error> {
-                    Executor::new(&sudo, dry_run)
+                    run_type
+                        .execute(&sudo)
                         .args(&[snap.to_str().unwrap(), "refresh"])
                         .spawn()?
                         .wait()?
@@ -393,13 +402,14 @@ pub fn run_snap(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, 
 }
 
 #[must_use]
-pub fn run_etc_update(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_etc_update(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(sudo) = sudo {
         if let Some(etc_update) = which("etc-update") {
             print_separator("etc-update");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&sudo, dry_run)
+                run_type
+                    .execute(&sudo)
                     .arg(&etc_update.to_str().unwrap())
                     .spawn()?
                     .wait()?

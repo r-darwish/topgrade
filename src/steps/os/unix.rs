@@ -1,16 +1,17 @@
 use crate::error::Error;
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check};
 use directories::BaseDirs;
 
-pub fn run_zplug(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {
         if base_dirs.home_dir().join(".zplug").exists() {
             print_separator("zplug");
 
             let success = || -> Result<(), Error> {
-                Executor::new(zsh, dry_run)
+                run_type
+                    .execute(zsh)
                     .args(&["-c", "source ~/.zshrc && zplug update"])
                     .spawn()?
                     .wait()?
@@ -26,18 +27,20 @@ pub fn run_zplug(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, b
     None
 }
 
-pub fn run_fisher(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(fish) = which("fish") {
         if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
             print_separator("fisher");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&fish, dry_run)
+                run_type
+                    .execute(&fish)
                     .args(&["-c", "fisher self-update"])
                     .spawn()?
                     .wait()?
                     .check()?;
-                Executor::new(&fish, dry_run)
+                run_type
+                    .execute(&fish)
                     .args(&["-c", "fisher"])
                     .spawn()?
                     .wait()?
@@ -54,20 +57,21 @@ pub fn run_fisher(base_dirs: &BaseDirs, dry_run: bool) -> Option<(&'static str, 
 }
 
 #[must_use]
-pub fn run_homebrew(cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(brew) = which("brew") {
         print_separator("Brew");
 
         let inner = || -> Result<(), Error> {
-            Executor::new(&brew, dry_run).arg("update").spawn()?.wait()?.check()?;
-            Executor::new(&brew, dry_run).arg("upgrade").spawn()?.wait()?.check()?;
-            Executor::new(&brew, dry_run)
+            run_type.execute(&brew).arg("update").spawn()?.wait()?;
+            run_type.execute(&brew).arg("upgrade").spawn()?.wait()?;
+            run_type
+                .execute(&brew)
                 .args(&["cask", "upgrade"])
                 .spawn()?
                 .wait()?
                 .check()?;
             if cleanup {
-                Executor::new(&brew, dry_run).arg("cleanup").spawn()?.wait()?.check()?;
+                run_type.execute(&brew).arg("cleanup").spawn()?.wait()?;
             }
             Ok(())
         };
@@ -79,22 +83,14 @@ pub fn run_homebrew(cleanup: bool, dry_run: bool) -> Option<(&'static str, bool)
 }
 
 #[must_use]
-pub fn run_nix(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_nix(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(nix) = which("nix") {
         if let Some(nix_env) = which("nix-env") {
             print_separator("Nix");
 
             let inner = || -> Result<(), Error> {
-                Executor::new(&nix, dry_run)
-                    .arg("upgrade-nix")
-                    .spawn()?
-                    .wait()?
-                    .check()?;
-                Executor::new(&nix_env, dry_run)
-                    .arg("--upgrade")
-                    .spawn()?
-                    .wait()?
-                    .check()?;
+                run_type.execute(&nix).arg("upgrade-nix").spawn()?.wait()?.check()?;
+                run_type.execute(&nix_env).arg("--upgrade").spawn()?.wait()?.check()?;
                 Ok(())
             };
 

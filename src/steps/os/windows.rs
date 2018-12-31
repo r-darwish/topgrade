@@ -8,12 +8,12 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[must_use]
-pub fn run_chocolatey(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_chocolatey(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(choco) = utils::which("choco") {
         print_separator("Chocolatey");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&choco, dry_run)
+            run_type.execute(&choco)
                 .args(&["upgrade", "all"])
                 .spawn()?
                 .wait()?
@@ -29,17 +29,17 @@ pub fn run_chocolatey(dry_run: bool) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn run_scoop(dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn run_scoop(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(scoop) = utils::which("scoop") {
         print_separator("Scoop");
 
         let success = || -> Result<(), Error> {
-            Executor::new(&scoop, dry_run)
+            run_type.execute(&scoop)
                 .args(&["update"])
                 .spawn()?
                 .wait()?
                 .check()?;
-            Executor::new(&scoop, dry_run)
+            run_type.execute(&scoop)
                 .args(&["update", "*"])
                 .spawn()?
                 .wait()?
@@ -99,12 +99,12 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn update_modules(&self, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn update_modules(&self, run_type: RunType) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
             print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), Error> {
-                Executor::new(&powershell, dry_run)
+                run_type.execute(&powershell)
                     .arg("Update-Module")
                     .spawn()?
                     .wait()?
@@ -120,13 +120,13 @@ impl Powershell {
     }
 
     #[must_use]
-    pub fn windows_update(&self, dry_run: bool) -> Option<(&'static str, bool)> {
+    pub fn windows_update(&self, run_type: RunType) -> Option<(&'static str, bool)> {
         if let Some(powershell) = &self.path {
             if Self::has_command(&powershell, "Install-WindowsUpdate") {
                 print_separator("Windows Update");
 
                 let success = || -> Result<(), Error> {
-                    Executor::new(&powershell, dry_run)
+                    run_type.execute(&powershell)
                         .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
                         .spawn()?
                         .wait()?

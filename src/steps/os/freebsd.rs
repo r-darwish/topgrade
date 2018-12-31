@@ -7,12 +7,12 @@ use std::path::PathBuf;
 use std::process::Command;
 
 #[must_use]
-pub fn upgrade_freebsd(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_freebsd(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     print_separator("FreeBSD Update");
 
     if let Some(sudo) = sudo {
         let success = || -> Result<(), Error> {
-            Executor::new(sudo, dry_run)
+            run_type.execute(sudo)
                 .args(&["/usr/sbin/freebsd-update", "fetch", "install"])
                 .spawn()?
                 .wait()?
@@ -29,12 +29,12 @@ pub fn upgrade_freebsd(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'stati
 }
 
 #[must_use]
-pub fn upgrade_packages(sudo: &Option<PathBuf>, dry_run: bool) -> Option<(&'static str, bool)> {
+pub fn upgrade_packages(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
     print_separator("FreeBSD Packages");
 
     if let Some(sudo) = sudo {
         let success = || -> Result<(), Error> {
-            Executor::new(sudo, dry_run)
+            run_type.execute(sudo)
                 .args(&["/usr/sbin/pkg", "upgrade"])
                 .spawn()?
                 .wait()?
