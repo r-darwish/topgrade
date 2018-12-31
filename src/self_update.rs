@@ -17,18 +17,18 @@ pub fn self_update() -> Result<(), Error> {
 
     let target = self_update_crate::get_target().context(ErrorKind::SelfUpdate)?;
     let result = Update::configure()
-        .context(ErrorKind::SelfUpdate)?
-        .repo_owner("r-darwish")
-        .repo_name("topgrade")
-        .target(&target)
-        .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
-        .show_output(false)
-        .show_download_progress(true)
-        .current_version(self_update_crate::cargo_crate_version!())
-        .no_confirm(true)
-        .build()
-        .context(ErrorKind::SelfUpdate)?
-        .update2()
+        .and_then(|mut u| {
+            u.repo_owner("r-darwish")
+                .repo_name("topgrade")
+                .target(&target)
+                .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
+                .show_output(false)
+                .show_download_progress(true)
+                .current_version(self_update_crate::cargo_crate_version!())
+                .no_confirm(true)
+                .build()
+        })
+        .and_then(|u| u.update2())
         .context(ErrorKind::SelfUpdate)?;
 
     if let GitHubUpdateStatus::Updated(release) = &result {
