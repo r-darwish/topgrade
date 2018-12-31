@@ -5,7 +5,6 @@ use failure::ResultExt;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
-use std::str::{FromStr, ParseBoolError};
 
 /// An enum telling whether Topgrade should perform dry runs or actually perform the steps.
 #[derive(Clone, Copy, Debug)]
@@ -19,7 +18,7 @@ pub enum RunType {
 
 impl RunType {
     /// Create a new instance from a boolean telling whether to dry run.
-    fn new(dry_run: bool) -> Self {
+    pub fn new(dry_run: bool) -> Self {
         if dry_run {
             RunType::Dry
         } else {
@@ -45,14 +44,6 @@ impl RunType {
             RunType::Dry => true,
             RunType::Wet => false,
         }
-    }
-}
-
-impl FromStr for RunType {
-    type Err = ParseBoolError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(Self::new(bool::from_str(s)?))
     }
 }
 

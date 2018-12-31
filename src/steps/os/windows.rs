@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::Executor;
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{self, which, Check};
 use failure::ResultExt;
