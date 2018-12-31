@@ -8,7 +8,8 @@ pub fn upgrade_macos(run_type: RunType) -> Option<(&'static str, bool)> {
     print_separator("App Store");
 
     let success = || -> Result<(), Error> {
-        run_type.execute("softwareupdate")
+        run_type
+            .execute("softwareupdate")
             .args(&["--install", "--all"])
             .spawn()?
             .wait()?

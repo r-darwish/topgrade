@@ -125,7 +125,10 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     report.push_result(execute(|| unix::run_homebrew(opt.cleanup, opt.run_type), opt.no_retry)?);
     #[cfg(target_os = "freebsd")]
-    report.push_result(execute(|| freebsd::upgrade_packages(&sudo, opt.run_type), opt.no_retry)?);
+    report.push_result(execute(
+        || freebsd::upgrade_packages(&sudo, opt.run_type),
+        opt.no_retry,
+    )?);
     #[cfg(unix)]
     report.push_result(execute(|| unix::run_nix(opt.run_type), opt.no_retry)?);
 

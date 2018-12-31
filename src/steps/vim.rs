@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::executor::{RunType};
+use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
@@ -55,7 +55,8 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 
 #[must_use]
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, run_type: RunType) -> Result<(), Error> {
-    run_type.execute(&vim)
+    run_type
+        .execute(&vim)
         .args(&[
             "-N",
             "-u",

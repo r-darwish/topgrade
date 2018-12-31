@@ -13,7 +13,8 @@ pub fn run_chocolatey(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Chocolatey");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&choco)
+            run_type
+                .execute(&choco)
                 .args(&["upgrade", "all"])
                 .spawn()?
                 .wait()?
@@ -34,12 +35,9 @@ pub fn run_scoop(run_type: RunType) -> Option<(&'static str, bool)> {
         print_separator("Scoop");
 
         let success = || -> Result<(), Error> {
-            run_type.execute(&scoop)
-                .args(&["update"])
-                .spawn()?
-                .wait()?
-                .check()?;
-            run_type.execute(&scoop)
+            run_type.execute(&scoop).args(&["update"]).spawn()?.wait()?.check()?;
+            run_type
+                .execute(&scoop)
                 .args(&["update", "*"])
                 .spawn()?
                 .wait()?
@@ -104,7 +102,8 @@ impl Powershell {
             print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), Error> {
-                run_type.execute(&powershell)
+                run_type
+                    .execute(&powershell)
                     .arg("Update-Module")
                     .spawn()?
                     .wait()?
@@ -126,7 +125,8 @@ impl Powershell {
                 print_separator("Windows Update");
 
                 let success = || -> Result<(), Error> {
-                    run_type.execute(&powershell)
+                    run_type
+                        .execute(&powershell)
                         .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
                         .spawn()?
                         .wait()?
