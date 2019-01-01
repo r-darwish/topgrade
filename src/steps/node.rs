@@ -1,9 +1,8 @@
-use crate::error::{Error, ErrorKind};
-use crate::executor::RunType;
+use crate::error::Error;
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{which, Check, PathExt};
+use crate::utils::{which, PathExt};
 use directories::BaseDirs;
-use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -17,16 +16,10 @@ impl NPM {
     }
 
     fn root(&self) -> Result<PathBuf, Error> {
-        let output = Command::new(&self.command)
+        Command::new(&self.command)
             .args(&["root", "-g"])
-            .output()
-            .context(ErrorKind::ProcessExecution)?;
-
-        output.status.check()?;
-
-        Ok(PathBuf::from(
-            &String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?,
-        ))
+            .check_output()
+            .map(PathBuf::from)
     }
 
     fn upgrade(&self, run_type: RunType) -> Result<(), Error> {

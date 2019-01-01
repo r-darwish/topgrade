@@ -1,5 +1,5 @@
 use crate::error::Error;
-use crate::executor::RunType;
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::which;
 use log::{debug, error};
@@ -38,15 +38,10 @@ impl Git {
                     let output = Command::new(&git)
                         .args(&["rev-parse", "--show-toplevel"])
                         .current_dir(path)
-                        .output();
-
-                    if let Ok(output) = output {
-                        if !output.status.success() {
-                            return None;
-                        }
-
-                        return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
-                    }
+                        .check_output()
+                        .ok()
+                        .map(|output| output.trim().to_string());
+                    return output;
                 }
             }
             Err(e) => match e.kind() {

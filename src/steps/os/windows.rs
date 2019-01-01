@@ -1,8 +1,7 @@
-use crate::error::{Error, ErrorKind};
-use crate::executor::RunType;
+use crate::error::Error;
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{self, which, Check};
-use failure::ResultExt;
+use crate::utils::{self, which};
 use log::error;
 use std::path::PathBuf;
 use std::process::Command;
@@ -57,9 +56,7 @@ impl Powershell {
         || -> Result<(), Error> {
             Command::new(&powershell)
                 .args(&["-Command", &format!("Get-Command {}", command)])
-                .output()
-                .context(ErrorKind::ProcessExecution)?
-                .check()?;
+                .check_output()?;
             Ok(())
         }()
         .is_ok()
@@ -67,16 +64,10 @@ impl Powershell {
 
     pub fn profile(&self) -> Option<PathBuf> {
         if let Some(powershell) = &self.path {
-            let result = || -> Result<PathBuf, Error> {
-                let output = Command::new(powershell)
-                    .args(&["-Command", "echo $profile"])
-                    .output()
-                    .context(ErrorKind::ProcessExecution)?;
-                output.status.check()?;
-                Ok(PathBuf::from(
-                    String::from_utf8_lossy(&output.stdout).trim().to_string(),
-                ))
-            }();
+            let result = Command::new(powershell)
+                .args(&["-Command", "echo $profile"])
+                .check_output()
+                .map(PathBuf::from);
 
             match result {
                 Err(e) => error!("Error getting Powershell profile: {}", e),

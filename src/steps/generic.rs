@@ -1,9 +1,8 @@
-use crate::error::{Error, ErrorKind};
-use crate::executor::RunType;
+use crate::error::Error;
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{self, Check, PathExt};
+use crate::utils::{self, PathExt};
 use directories::BaseDirs;
-use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -202,16 +201,10 @@ pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Resul
 #[must_use]
 pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(composer) = utils::which("composer") {
-        let composer_home = || -> Result<PathBuf, Error> {
-            let output = Command::new(&composer)
-                .args(&["global", "config", "--absolute", "home"])
-                .output()
-                .context(ErrorKind::ProcessExecution)?;
-            output.status.check()?;
-            Ok(PathBuf::from(
-                &String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?,
-            ))
-        }();
+        let composer_home = Command::new(&composer)
+            .args(&["global", "config", "--absolute", "home"])
+            .check_output()
+            .map(PathBuf::from);
 
         if let Ok(composer_home) = composer_home {
             if composer_home.is_descendant_of(base_dirs.home_dir()) {

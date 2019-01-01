@@ -176,3 +176,20 @@ impl Check for ExecutorExitStatus {
         }
     }
 }
+
+/// Extension methods for `std::process::Command`
+pub trait CommandExt {
+    /// Run the command, wait for it to complete, check the return code and decode the output as UTF-8.
+    fn check_output(&mut self) -> Result<String, Error>;
+}
+
+impl CommandExt for Command {
+    fn check_output(&mut self) -> Result<String, Error> {
+        let output = self.output().context(ErrorKind::ProcessExecution)?;
+        let status = output.status;
+        if !status.success() {
+            Err(ErrorKind::ProcessFailed(status))?
+        }
+        Ok(String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?)
+    }
+}
