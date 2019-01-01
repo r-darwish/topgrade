@@ -149,6 +149,14 @@ dependencies = [
 
 [[package]]
 name = "clicolors-control"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "clicolors-control 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "clicolors-control"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
@@ -168,12 +176,11 @@ dependencies = [
 
 [[package]]
 name = "console"
-version = "0.7.2"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "atty 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "clicolors-control 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "encode_unicode 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clicolors-control 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.45 (registry+https://github.com/rust-lang/crates.io-index)",
  "parking_lot 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -263,11 +270,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "either"
 version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "encode_unicode"
-version = "0.3.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -1512,7 +1514,7 @@ dependencies = [
 name = "topgrade"
 version = "1.4.0"
 dependencies = [
- "console 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "console 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "directories 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "env_logger 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1758,9 +1760,10 @@ dependencies = [
 "checksum cc 1.0.28 (registry+https://github.com/rust-lang/crates.io-index)" = "bb4a8b715cb4597106ea87c7c84b2f1d452c7492033765df7f32651e66fcf749"
 "checksum cfg-if 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "082bb9b28e00d3c9d39cc03e64ce4cea0f1bb9b3fde493f0cbc008472d22bdf4"
 "checksum clap 2.32.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b957d88f4b6a63b9d70d5f454ac8011819c6efa7727858f458ab71c756ce2d3e"
+"checksum clicolors-control 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "495303f76458db51aa330df9510cfbb2e3ad57c6b82da7b38aad2a89088a91da"
 "checksum clicolors-control 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "73abfd4c73d003a674ce5d2933fca6ce6c42480ea84a5ffe0a2dc39ed56300f9"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
-"checksum console 0.7.2 (registry+https://github.com/rust-lang/crates.io-index)" = "4ceeb6d030ed175896450ad583a39e67a77b8b2ab8802c2aae594112adc783a2"
+"checksum console 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4ba5561f4d4d89e0f246d4dd83846d96f617e886b96c7aee36e68791c98f89ce"
 "checksum core-foundation 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "286e0b41c3a20da26536c6000a280585d519fd07b3956b43aed8a79e9edce980"
 "checksum core-foundation-sys 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "716c271e8613ace48344f723b60b900a93150271e5be206212d052bbc0883efa"
 "checksum crc 1.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "d663548de7f5cca343f1e0a48d14dcfb0e9eb4e079ec58883b7251539fa10aeb"
@@ -1771,7 +1774,6 @@ dependencies = [
 "checksum directories 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "72d337a64190607d4fcca2cb78982c5dd57f4916e19696b48a575fa746b6cb0f"
 "checksum dtoa 0.4.3 (registry+https://github.com/rust-lang/crates.io-index)" = "6d301140eb411af13d3115f9a562c85cc6b541ade9dfa314132244aaee7489dd"
 "checksum either 1.5.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3be565ca5c557d7f59e7cfcf1844f9e3033650c929c6566f511e8005f205c1d0"
-"checksum encode_unicode 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)" = "90b2c9496c001e8cb61827acdefad780795c42264c137744cae6f7d9e3450abd"
 "checksum encoding_rs 0.8.13 (registry+https://github.com/rust-lang/crates.io-index)" = "1a8fa54e6689eb2549c4efed8d00d7f3b2b994a064555b0e8df4ae3764bcc4be"
 "checksum env_logger 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "afb070faf94c85d17d50ca44f6ad076bce18ae92f0037d350947240a36e9d42e"
 "checksum failure 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)" = "e945b93ec214c6e97b520ec6c5d80267fc97af327658ee5b9f35984626e51fbf"
