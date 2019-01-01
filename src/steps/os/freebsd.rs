@@ -1,7 +1,6 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
-use crate::utils::Check;
 use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
