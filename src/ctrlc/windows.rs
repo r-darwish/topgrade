@@ -1,7 +1,7 @@
 //! A stub for Ctrl + C handling.
 
 pub fn interrupted() -> bool {
-    true
+    false
 }
 
 pub fn unset_interrupted() {}
