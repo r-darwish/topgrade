@@ -1,5 +1,7 @@
 use super::error::{Error, ErrorKind};
+use custom_derive::custom_derive;
 use directories::BaseDirs;
+use enum_derive::{enum_derive_util, EnumFromStr};
 use failure::ResultExt;
 use serde::Deserialize;
 use shellexpand;
@@ -9,6 +11,23 @@ use structopt::StructOpt;
 use toml;
 
 type Commands = BTreeMap<String, String>;
+
+custom_derive! {
+    #[derive(Debug, EnumFromStr, PartialEq)]
+    #[allow(non_camel_case_types)]
+    pub enum Group {
+        /// Don't perform system upgrade
+        system,
+        /// Don't perform updates on configured git repos
+        git_repos,
+        /// Don't upgrade Vim packages or configuration files
+        vim,
+        /// Don't upgrade Emacs packages or configuration files
+        emacs,
+        /// Don't upgrade ruby gems
+        gem,
+    }
+}
 
 #[derive(Deserialize, Default)]
 pub struct Config {
@@ -60,26 +79,6 @@ pub struct Opt {
     #[structopt(short = "c", long = "cleanup")]
     pub cleanup: bool,
 
-    /// Don't perform system upgrade
-    #[structopt(long = "no-system")]
-    pub no_system: bool,
-
-    /// Don't perform updates on configured git repos
-    #[structopt(long = "no-git-repos")]
-    pub no_git_repos: bool,
-
-    /// Don't upgrade Emacs packages or configuration files
-    #[structopt(long = "no-emacs")]
-    pub no_emacs: bool,
-
-    /// Don't upgrade Vim packages or configuration files
-    #[structopt(long = "no-vim")]
-    pub no_vim: bool,
-
-    /// Don't upgrade ruby gems
-    #[structopt(long = "no-gem")]
-    pub no_gem: bool,
-
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
@@ -87,4 +86,8 @@ pub struct Opt {
     /// Do not ask to retry failed steps
     #[structopt(long = "no-retry")]
     pub no_retry: bool,
+
+    /// Do not perform upgrades for the given groups. Allowed options: system, git_repos, vim, emacs
+    #[structopt(long = "no")]
+    pub no: Vec<Group>,
 }

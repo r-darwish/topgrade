@@ -9,7 +9,7 @@ mod steps;
 mod terminal;
 mod utils;
 
-use self::config::Config;
+use self::config::{Config, Group};
 use self::error::{Error, ErrorKind};
 use self::report::Report;
 use self::steps::*;
@@ -101,7 +101,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        if !opt.no_system {
+        if !opt.no.contains(&Group::system) {
             match &distribution {
                 Ok(distribution) => {
                     report.push_result(execute(
@@ -130,11 +130,11 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     report.push_result(execute(|| unix::run_nix(run_type), opt.no_retry)?);
 
-    if !opt.no_emacs {
+    if !opt.no.contains(&Group::emacs) {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     }
 
-    if !opt.no_vim {
+    if !opt.no.contains(&Group::vim) {
         git_repos.insert(base_dirs.home_dir().join(".vim"));
         git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
     }
@@ -155,7 +155,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !opt.no_git_repos {
+    if !opt.no.contains(&Group::git_repos) {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
                 git_repos.insert(git_repo);
@@ -176,7 +176,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_rustup(&base_dirs, run_type), opt.no_retry)?);
     report.push_result(execute(|| generic::run_cargo_update(run_type), opt.no_retry)?);
 
-    if !opt.no_emacs {
+    if !opt.no.contains(&Group::emacs) {
         report.push_result(execute(|| generic::run_emacs(&base_dirs, run_type), opt.no_retry)?);
     }
 
@@ -185,7 +185,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_pipx_update(run_type), opt.no_retry)?);
     report.push_result(execute(|| generic::run_jetpack(run_type), opt.no_retry)?);
 
-    if !opt.no_vim {
+    if !opt.no.contains(&Group::vim) {
         report.push_result(execute(|| vim::upgrade_vim(&base_dirs, run_type), opt.no_retry)?);
         report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, run_type), opt.no_retry)?);
     }
@@ -205,7 +205,7 @@ fn run() -> Result<(), Error> {
     )))]
     report.push_result(execute(|| generic::run_apm(run_type), opt.no_retry)?);
 
-    if !opt.no_gem {
+    if !opt.no.contains(&Group::gem) {
         report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
     }
 

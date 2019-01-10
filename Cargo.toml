@@ -23,6 +23,8 @@ walkdir = "2.2.7"
 console = "=0.7.1"
 self_update_crate = { version = "0.5.1", optional = true, package =  "self_update" }
 lazy_static = "1.2.0"
+custom_derive = "0.1.7"
+enum_derive = "0.1.7"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.12.0"
