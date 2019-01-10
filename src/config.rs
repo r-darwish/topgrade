@@ -76,6 +76,10 @@ pub struct Opt {
     #[structopt(long = "no-vim")]
     pub no_vim: bool,
 
+    /// Don't upgrade ruby packages or configuration files
+    #[structopt(long = "no-ruby")]
+    pub no_ruby: bool,
+
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
