@@ -29,13 +29,13 @@ impl std::str::FromStr for Group {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
             "system" => Group::System,
-            "git_repos" => Group::GitRepos,
+            "git-repos" => Group::GitRepos,
             "vim" => Group::Vim,
             "emacs" => Group::Emacs,
             "gem" => Group::Gem,
             _ => {
                 return Err(structopt::clap::Error::with_description(
-                    "Allowed values: system, git_repos, vim, emacs, gem",
+                    "Allowed values: system, git-repos, vim, emacs, gem",
                     structopt::clap::ErrorKind::InvalidValue,
                 ));
             }
@@ -101,7 +101,7 @@ pub struct Opt {
     #[structopt(long = "no-retry")]
     pub no_retry: bool,
 
-    /// Do not perform upgrades for the given groups. Allowed options: system, git_repos, vim, emacs
+    /// Do not perform upgrades for the given groups. Allowed options: system, git-repos, vim, emacs
     #[structopt(long = "no")]
     pub no: Vec<Group>,
 }

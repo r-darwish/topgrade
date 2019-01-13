@@ -111,7 +111,7 @@ Just run `topgrade`. It will run the following steps:
 * `-c/--cleanup` - Topgrade will instruct package managers to remove old or unused files
 * `-n/--dry-run` - Print what should be run.
 * `--no system` - Skip the system upgrade phase.
-* `--no git_repos` - Don't pull custom git repositories.
+* `--no git-repos` - Don't pull custom git repositories.
 * `--no emacs` - Don't upgrade Emacs packages or configuration files.
 * `--no-retry` - Don't ask to retry failed steps.
 * `--no vim` - Don't upgrade Vim/NeoVim packages or configuration files.
