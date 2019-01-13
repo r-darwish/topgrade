@@ -204,7 +204,10 @@ fn run() -> Result<(), Error> {
         target_os = "dragonfly"
     )))]
     report.push_result(execute(|| generic::run_apm(run_type), opt.no_retry)?);
-    report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
+
+    if !opt.no_gem {
+        report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
+    }
 
     #[cfg(target_os = "linux")]
     {
