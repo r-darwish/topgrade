@@ -233,21 +233,21 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "macos")]
     {
-        if !opt.no_system {
+        if !opt.no.contains(&Group::system) {
             report.push_result(execute(|| macos::upgrade_macos(run_type), opt.no_retry)?);
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
-        if !opt.no_system {
+        if !opt.no.contains(&Group::system) {
             report.push_result(execute(|| freebsd::upgrade_freebsd(&sudo, run_type), opt.no_retry)?);
         }
     }
 
     #[cfg(windows)]
     {
-        if !opt.no_system {
+        if !opt.no.contains(&Group::system) {
             report.push_result(execute(|| powershell.windows_update(run_type), opt.no_retry)?);
         }
     }
