@@ -102,6 +102,6 @@ pub struct Opt {
     pub no_retry: bool,
 
     /// Do not perform upgrades for the given groups. Allowed options: system, git-repos, vim, emacs
-    #[structopt(long = "no")]
-    pub no: Vec<Group>,
+    #[structopt(long = "disable")]
+    pub disable: Vec<Group>,
 }
