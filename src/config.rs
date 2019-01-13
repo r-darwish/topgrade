@@ -11,29 +11,28 @@ use toml;
 type Commands = BTreeMap<String, String>;
 
 #[derive(Debug, PartialEq)]
-#[allow(non_camel_case_types)]
 pub enum Group {
     /// Don't perform system upgrade
-    system,
+    System,
     /// Don't perform updates on configured git repos
-    git_repos,
+    GitRepos,
     /// Don't upgrade Vim packages or configuration files
-    vim,
+    Vim,
     /// Don't upgrade Emacs packages or configuration files
-    emacs,
+    Emacs,
     /// Don't upgrade ruby gems
-    gem,
+    Gem,
 }
 
 impl std::str::FromStr for Group {
     type Err = structopt::clap::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
-            "system" => Group::system,
-            "git_repos" => Group::git_repos,
-            "vim" => Group::vim,
-            "emacs" => Group::emacs,
-            "gem" => Group::gem,
+            "system" => Group::System,
+            "git_repos" => Group::GitRepos,
+            "vim" => Group::Vim,
+            "emacs" => Group::Emacs,
+            "gem" => Group::Gem,
             _ => {
                 return Err(structopt::clap::Error::with_description(
                     "Allowed values: system, git_repos, vim, emacs, gem",

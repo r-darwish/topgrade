@@ -101,7 +101,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        if !opt.no.contains(&Group::system) {
+        if !opt.no.contains(&Group::System) {
             match &distribution {
                 Ok(distribution) => {
                     report.push_result(execute(
@@ -130,11 +130,11 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     report.push_result(execute(|| unix::run_nix(run_type), opt.no_retry)?);
 
-    if !opt.no.contains(&Group::emacs) {
+    if !opt.no.contains(&Group::Emacs) {
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
     }
 
-    if !opt.no.contains(&Group::vim) {
+    if !opt.no.contains(&Group::Vim) {
         git_repos.insert(base_dirs.home_dir().join(".vim"));
         git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
     }
@@ -155,7 +155,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !opt.no.contains(&Group::git_repos) {
+    if !opt.no.contains(&Group::GitRepos) {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
                 git_repos.insert(git_repo);
@@ -176,7 +176,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_rustup(&base_dirs, run_type), opt.no_retry)?);
     report.push_result(execute(|| generic::run_cargo_update(run_type), opt.no_retry)?);
 
-    if !opt.no.contains(&Group::emacs) {
+    if !opt.no.contains(&Group::Emacs) {
         report.push_result(execute(|| generic::run_emacs(&base_dirs, run_type), opt.no_retry)?);
     }
 
@@ -185,7 +185,7 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| generic::run_pipx_update(run_type), opt.no_retry)?);
     report.push_result(execute(|| generic::run_jetpack(run_type), opt.no_retry)?);
 
-    if !opt.no.contains(&Group::vim) {
+    if !opt.no.contains(&Group::Vim) {
         report.push_result(execute(|| vim::upgrade_vim(&base_dirs, run_type), opt.no_retry)?);
         report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, run_type), opt.no_retry)?);
     }
@@ -205,7 +205,7 @@ fn run() -> Result<(), Error> {
     )))]
     report.push_result(execute(|| generic::run_apm(run_type), opt.no_retry)?);
 
-    if !opt.no.contains(&Group::gem) {
+    if !opt.no.contains(&Group::Gem) {
         report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
     }
 
@@ -233,21 +233,21 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "macos")]
     {
-        if !opt.no.contains(&Group::system) {
+        if !opt.no.contains(&Group::System) {
             report.push_result(execute(|| macos::upgrade_macos(run_type), opt.no_retry)?);
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
-        if !opt.no.contains(&Group::system) {
+        if !opt.no.contains(&Group::System) {
             report.push_result(execute(|| freebsd::upgrade_freebsd(&sudo, run_type), opt.no_retry)?);
         }
     }
 
     #[cfg(windows)]
     {
-        if !opt.no.contains(&Group::system) {
+        if !opt.no.contains(&Group::System) {
             report.push_result(execute(|| powershell.windows_update(run_type), opt.no_retry)?);
         }
     }
