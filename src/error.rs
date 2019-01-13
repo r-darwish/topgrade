@@ -41,6 +41,9 @@ pub enum ErrorKind {
     #[fail(display = "Self-update failure")]
     #[cfg(feature = "self-update")]
     SelfUpdate,
+
+    #[fail(display = "A step should be skipped")]
+    SkipStep,
 }
 
 impl Fail for Error {

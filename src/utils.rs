@@ -32,6 +32,9 @@ where
 {
     fn if_exists(self) -> Option<Self>;
     fn is_descendant_of(&self, ancestor: &Path) -> bool;
+
+    /// Returns the path if it exists or ErrorKind::SkipStep otherwise
+    fn require(self) -> Result<Self, Error>;
 }
 
 impl PathExt for PathBuf {
@@ -45,6 +48,14 @@ impl PathExt for PathBuf {
 
     fn is_descendant_of(&self, ancestor: &Path) -> bool {
         self.iter().zip(ancestor.iter()).all(|(a, b)| a == b)
+    }
+
+    fn require(self) -> Result<Self, Error> {
+        if self.exists() {
+            Ok(self)
+        } else {
+            Err(ErrorKind::SkipStep)?
+        }
     }
 }
 
@@ -149,5 +160,23 @@ mod tests {
     #[test]
     fn test_long_path() {
         assert_eq!("C:\\hi", humanize("//?/C:/hi"));
+    }
+}
+
+pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error> {
+    match which_crate::which(&binary_name) {
+        Ok(path) => {
+            debug!("Detected {:?} as {:?}", &path, &binary_name);
+            Ok(path)
+        }
+        Err(e) => match e.kind() {
+            which_crate::ErrorKind::CannotFindBinaryPath => {
+                debug!("Cannot find {:?}", &binary_name);
+                Err(ErrorKind::SkipStep)?
+            }
+            _ => {
+                panic!("Detecting {:?} failed: {}", &binary_name, e);
+            }
+        },
     }
 }

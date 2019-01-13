@@ -15,14 +15,16 @@ use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
 use failure::{Fail, ResultExt};
+use log::debug;
 use std::borrow::Cow;
 use std::env;
+use std::fmt::Debug;
 use std::io;
 #[cfg(windows)]
 use std::path::PathBuf;
 use std::process::exit;
 
-fn execute<'a, F, M>(func: F, no_retry: bool) -> Result<Option<(M, bool)>, Error>
+fn execute_legacy<'a, F, M>(func: F, no_retry: bool) -> Result<Option<(M, bool)>, Error>
 where
     M: Into<Cow<'a, str>>,
     F: Fn() -> Option<(M, bool)>,
@@ -46,6 +48,42 @@ where
     }
 
     Ok(None)
+}
+
+fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
+where
+    F: Fn() -> Result<(), Error>,
+    M: Into<Cow<'a, str>> + Debug,
+{
+    debug!("Executing {:?}", key);
+
+    loop {
+        match func() {
+            Ok(()) => {
+                report.push_result(Some((key, true)));
+                break;
+            }
+            Err(ref e) if e.kind() == ErrorKind::SkipStep => {
+                break;
+            }
+            Err(_) => {
+                let interrupted = ctrlc::interrupted();
+                if interrupted {
+                    ctrlc::unset_interrupted();
+                }
+
+                let should_ask = interrupted || !no_retry;
+                let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
+
+                if !should_retry {
+                    report.push_result(Some((key, false)));
+                    break;
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn run() -> Result<(), Error> {
@@ -96,7 +134,10 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     {
         if powershell.profile().is_some() && config.should_run(Step::Powershell) {
-            report.push_result(execute(|| powershell.update_modules(run_type), config.no_retry())?);
+            report.push_result(execute_legacy(
+                || powershell.update_modules(run_type),
+                config.no_retry(),
+            )?);
         }
     }
 
@@ -108,7 +149,7 @@ fn run() -> Result<(), Error> {
         if config.should_run(Step::System) {
             match &distribution {
                 Ok(distribution) => {
-                    report.push_result(execute(
+                    report.push_result(execute_legacy(
                         || distribution.upgrade(&sudo, config.cleanup(), run_type),
                         config.no_retry(),
                     )?);
@@ -117,28 +158,31 @@ fn run() -> Result<(), Error> {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
-            report.push_result(execute(|| linux::run_etc_update(&sudo, run_type), config.no_retry())?);
+            report.push_result(execute_legacy(
+                || linux::run_etc_update(&sudo, run_type),
+                config.no_retry(),
+            )?);
         }
     }
 
     #[cfg(windows)]
-    report.push_result(execute(|| windows::run_chocolatey(run_type), config.no_retry())?);
+    report.push_result(execute_legacy(|| windows::run_chocolatey(run_type), config.no_retry())?);
 
     #[cfg(windows)]
-    report.push_result(execute(|| windows::run_scoop(run_type), config.no_retry())?);
+    report.push_result(execute_legacy(|| windows::run_scoop(run_type), config.no_retry())?);
 
     #[cfg(unix)]
-    report.push_result(execute(
+    report.push_result(execute_legacy(
         || unix::run_homebrew(config.cleanup(), run_type),
         config.no_retry(),
     )?);
     #[cfg(target_os = "freebsd")]
-    report.push_result(execute(
+    report.push_result(execute_legacy(
         || freebsd::upgrade_packages(&sudo, run_type),
         config.no_retry(),
     )?);
     #[cfg(unix)]
-    report.push_result(execute(|| unix::run_nix(run_type), config.no_retry())?);
+    report.push_result(execute_legacy(|| unix::run_nix(run_type), config.no_retry())?);
 
     if config.should_run(Step::Emacs) {
         #[cfg(unix)]
@@ -182,48 +226,97 @@ fn run() -> Result<(), Error> {
         }
     }
     for repo in git_repos.repositories() {
-        report.push_result(execute(|| git.pull(&repo, run_type), config.no_retry())?);
+        report.push_result(execute_legacy(|| git.pull(&repo, run_type), config.no_retry())?);
     }
 
     #[cfg(unix)]
     {
-        report.push_result(execute(|| unix::run_zplug(&base_dirs, run_type), config.no_retry())?);
-        report.push_result(execute(|| unix::run_fisher(&base_dirs, run_type), config.no_retry())?);
-        report.push_result(execute(|| tmux::run_tpm(&base_dirs, run_type), config.no_retry())?);
+        report.push_result(execute_legacy(
+            || unix::run_zplug(&base_dirs, run_type),
+            config.no_retry(),
+        )?);
+        report.push_result(execute_legacy(
+            || unix::run_fisher(&base_dirs, run_type),
+            config.no_retry(),
+        )?);
+        report.push_result(execute_legacy(
+            || tmux::run_tpm(&base_dirs, run_type),
+            config.no_retry(),
+        )?);
     }
 
-    report.push_result(execute(
+    execute(
+        &mut report,
+        "rustup",
         || generic::run_rustup(&base_dirs, run_type),
         config.no_retry(),
-    )?);
-    report.push_result(execute(|| generic::run_cargo_update(run_type), config.no_retry())?);
+    )?;
+    execute(
+        &mut report,
+        "cargo",
+        || generic::run_cargo_update(run_type),
+        config.no_retry(),
+    )?;
 
     if config.should_run(Step::Emacs) {
-        report.push_result(execute(|| generic::run_emacs(&base_dirs, run_type), config.no_retry())?);
+        execute(
+            &mut report,
+            "Emacs",
+            || generic::run_emacs(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
     }
 
-    report.push_result(execute(|| generic::run_opam_update(run_type), config.no_retry())?);
-    report.push_result(execute(|| generic::run_vcpkg_update(run_type), config.no_retry())?);
-    report.push_result(execute(|| generic::run_pipx_update(run_type), config.no_retry())?);
-    report.push_result(execute(|| generic::run_jetpack(run_type), config.no_retry())?);
+    execute(
+        &mut report,
+        "opam",
+        || generic::run_opam_update(run_type),
+        config.no_retry(),
+    )?;
+    execute(
+        &mut report,
+        "vcpkg",
+        || generic::run_vcpkg_update(run_type),
+        config.no_retry(),
+    )?;
+    execute(
+        &mut report,
+        "pipx",
+        || generic::run_pipx_update(run_type),
+        config.no_retry(),
+    )?;
+    execute(
+        &mut report,
+        "jetpak",
+        || generic::run_jetpack(run_type),
+        config.no_retry(),
+    )?;
 
     if config.should_run(Step::Vim) {
-        report.push_result(execute(|| vim::upgrade_vim(&base_dirs, run_type), config.no_retry())?);
-        report.push_result(execute(
+        report.push_result(execute_legacy(
+            || vim::upgrade_vim(&base_dirs, run_type),
+            config.no_retry(),
+        )?);
+        report.push_result(execute_legacy(
             || vim::upgrade_neovim(&base_dirs, run_type),
             config.no_retry(),
         )?);
     }
 
-    report.push_result(execute(
+    report.push_result(execute_legacy(
         || node::run_npm_upgrade(&base_dirs, run_type),
         config.no_retry(),
     )?);
-    report.push_result(execute(
+    execute(
+        &mut report,
+        "composer",
         || generic::run_composer_update(&base_dirs, run_type),
         config.no_retry(),
+    )?;
+    report.push_result(execute_legacy(
+        || node::yarn_global_update(run_type),
+        config.no_retry(),
     )?);
-    report.push_result(execute(|| node::yarn_global_update(run_type), config.no_retry())?);
 
     #[cfg(not(any(
         target_os = "freebsd",
@@ -231,21 +324,26 @@ fn run() -> Result<(), Error> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    report.push_result(execute(|| generic::run_apm(run_type), config.no_retry())?);
+    execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
 
     if config.should_run(Step::Gem) {
-        report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), config.no_retry())?);
+        execute(
+            &mut report,
+            "gem",
+            || generic::run_gem(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
     }
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|| linux::flatpak_update(run_type), config.no_retry())?);
-        report.push_result(execute(|| linux::run_snap(&sudo, run_type), config.no_retry())?);
+        report.push_result(execute_legacy(|| linux::flatpak_update(run_type), config.no_retry())?);
+        report.push_result(execute_legacy(|| linux::run_snap(&sudo, run_type), config.no_retry())?);
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            report.push_result(execute(
+            report.push_result(execute_legacy(
                 || Some((name, generic::run_custom_command(&name, &command, run_type).is_ok())),
                 config.no_retry(),
             )?);
@@ -254,21 +352,24 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|| linux::run_fwupdmgr(run_type), config.no_retry())?);
-        report.push_result(execute(|| linux::run_needrestart(&sudo, run_type), config.no_retry())?);
+        report.push_result(execute_legacy(|| linux::run_fwupdmgr(run_type), config.no_retry())?);
+        report.push_result(execute_legacy(
+            || linux::run_needrestart(&sudo, run_type),
+            config.no_retry(),
+        )?);
     }
 
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute(|| macos::upgrade_macos(run_type), config.no_retry())?);
+            report.push_result(execute_legacy(|| macos::upgrade_macos(run_type), config.no_retry())?);
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute(
+            report.push_result(execute_legacy(
                 || freebsd::upgrade_freebsd(&sudo, run_type),
                 config.no_retry(),
             )?);
@@ -278,7 +379,10 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute(|| powershell.windows_update(run_type), config.no_retry())?);
+            report.push_result(execute_legacy(
+                || powershell.windows_update(run_type),
+                config.no_retry(),
+            )?);
         }
     }
 
