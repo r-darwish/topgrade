@@ -1,7 +1,5 @@
 use super::error::{Error, ErrorKind};
-use custom_derive::custom_derive;
 use directories::BaseDirs;
-use enum_derive::{enum_derive_util, EnumFromStr};
 use failure::ResultExt;
 use serde::Deserialize;
 use shellexpand;
@@ -12,20 +10,37 @@ use toml;
 
 type Commands = BTreeMap<String, String>;
 
-custom_derive! {
-    #[derive(Debug, EnumFromStr, PartialEq)]
-    #[allow(non_camel_case_types)]
-    pub enum Group {
-        /// Don't perform system upgrade
-        system,
-        /// Don't perform updates on configured git repos
-        git_repos,
-        /// Don't upgrade Vim packages or configuration files
-        vim,
-        /// Don't upgrade Emacs packages or configuration files
-        emacs,
-        /// Don't upgrade ruby gems
-        gem,
+#[derive(Debug, PartialEq)]
+#[allow(non_camel_case_types)]
+pub enum Group {
+    /// Don't perform system upgrade
+    system,
+    /// Don't perform updates on configured git repos
+    git_repos,
+    /// Don't upgrade Vim packages or configuration files
+    vim,
+    /// Don't upgrade Emacs packages or configuration files
+    emacs,
+    /// Don't upgrade ruby gems
+    gem,
+}
+
+impl std::str::FromStr for Group {
+    type Err = structopt::clap::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s {
+            "system" => Group::system,
+            "git_repos" => Group::git_repos,
+            "vim" => Group::vim,
+            "emacs" => Group::emacs,
+            "gem" => Group::gem,
+            _ => {
+                return Err(structopt::clap::Error::with_description(
+                    "Allowed values: system, git_repos, vim, emacs, gem",
+                    structopt::clap::ErrorKind::InvalidValue,
+                ));
+            }
+        })
     }
 }
 
