@@ -205,7 +205,7 @@ fn run() -> Result<(), Error> {
     )))]
     report.push_result(execute(|| generic::run_apm(run_type), opt.no_retry)?);
 
-    if !opt.no_ruby {
+    if !opt.no_gem {
         report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
     }
 
