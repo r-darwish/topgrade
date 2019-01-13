@@ -116,6 +116,8 @@ Just run `topgrade`. It will run the following steps:
 * `--no-retry` - Don't ask to retry failed steps.
 * `--disable vim` - Don't upgrade Vim/NeoVim packages or configuration files.
 
+`--disable` flags can also be combined like so: `--disable system vim`
+
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
 
