@@ -115,6 +115,7 @@ Just run `topgrade`. It will run the following steps:
 * `--disable emacs` - Don't upgrade Emacs packages or configuration files.
 * `--no-retry` - Don't ask to retry failed steps.
 * `--disable vim` - Don't upgrade Vim/NeoVim packages or configuration files.
+* `--disable gem` - Don't upgrade ruby gems.
 
 `--disable` flags can also be combined like so: `--disable system vim`
 
