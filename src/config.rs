@@ -11,7 +11,7 @@ use toml;
 type Commands = BTreeMap<String, String>;
 
 #[derive(Debug, PartialEq)]
-pub enum Group {
+pub enum Step {
     /// Don't perform system upgrade
     System,
     /// Don't perform updates on configured git repos
@@ -24,15 +24,15 @@ pub enum Group {
     Gem,
 }
 
-impl std::str::FromStr for Group {
+impl std::str::FromStr for Step {
     type Err = structopt::clap::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(match s {
-            "system" => Group::System,
-            "git-repos" => Group::GitRepos,
-            "vim" => Group::Vim,
-            "emacs" => Group::Emacs,
-            "gem" => Group::Gem,
+            "system" => Step::System,
+            "git-repos" => Step::GitRepos,
+            "vim" => Step::Vim,
+            "emacs" => Step::Emacs,
+            "gem" => Step::Gem,
             _ => {
                 return Err(structopt::clap::Error::with_description(
                     "Allowed values: system, git-repos, vim, emacs, gem",
@@ -101,7 +101,7 @@ pub struct Opt {
     #[structopt(long = "no-retry")]
     pub no_retry: bool,
 
-    /// Do not perform upgrades for the given groups. Allowed options: system, git-repos, vim, emacs
+    /// Do not perform upgrades for the given steps. Allowed options: system, git-repos, vim, emacs
     #[structopt(long = "disable")]
-    pub disable: Vec<Group>,
+    pub disable: Vec<Step>,
 }
