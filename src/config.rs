@@ -1,16 +1,33 @@
 use super::error::{Error, ErrorKind};
 use directories::BaseDirs;
 use failure::ResultExt;
+use lazy_static::lazy_static;
 use serde::Deserialize;
 use shellexpand;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use structopt::StructOpt;
 use toml;
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(Debug, PartialEq)]
+lazy_static! {
+    // While this is used to automatically generate possible value list everywhere in the code, the
+    // README.md file still needs to be manually updated.
+    static ref STEPS_MAPPING: HashMap<&'static str, Step> = {
+        let mut m = HashMap::new();
+
+        m.insert("system", Step::System);
+        m.insert("git-repos", Step::GitRepos);
+        m.insert("vim", Step::Vim);
+        m.insert("emacs", Step::Emacs);
+        m.insert("gem", Step::Gem);
+
+        m
+    };
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Step {
     /// Don't perform system upgrade
     System,
@@ -24,22 +41,16 @@ pub enum Step {
     Gem,
 }
 
+impl Step {
+    fn possible_values() -> Vec<&'static str> {
+        STEPS_MAPPING.keys().cloned().collect()
+    }
+}
+
 impl std::str::FromStr for Step {
     type Err = structopt::clap::Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        Ok(match s {
-            "system" => Step::System,
-            "git-repos" => Step::GitRepos,
-            "vim" => Step::Vim,
-            "emacs" => Step::Emacs,
-            "gem" => Step::Gem,
-            _ => {
-                return Err(structopt::clap::Error::with_description(
-                    "Allowed values: system, git-repos, vim, emacs, gem",
-                    structopt::clap::ErrorKind::InvalidValue,
-                ));
-            }
-        })
+        Ok(STEPS_MAPPING.get(s).unwrap().clone())
     }
 }
 
@@ -101,7 +112,7 @@ pub struct Opt {
     #[structopt(long = "no-retry")]
     pub no_retry: bool,
 
-    /// Do not perform upgrades for the given steps. Allowed options: system, git-repos, vim, emacs
-    #[structopt(long = "disable")]
+    /// Do not perform upgrades for the given steps
+    #[structopt(long = "disable", raw(possible_values = "&Step::possible_values()"))]
     pub disable: Vec<Step>,
 }
