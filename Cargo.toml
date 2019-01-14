@@ -10,8 +10,8 @@ edition = "2018"
 
 [dependencies]
 directories = "1.0.2"
-failure = "0.1.4"
-failure_derive = "0.1.4"
+failure = "0.1.5"
+failure_derive = "0.1.5"
 serde = { version = "1.0.84", features = ["derive"] }
 toml = "0.4.10"
 which_crate = { version = "2.0.1", package =  "which" }
@@ -20,7 +20,7 @@ structopt = "0.2.14"
 log = "0.4.6"
 env_logger = "0.6.0"
 walkdir = "2.2.7"
-console = "=0.7.1"
+console = "0.7.3"
 self_update_crate = { version = "0.5.1", optional = true, package =  "self_update" }
 lazy_static = "1.2.0"
 
