@@ -211,8 +211,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|| linux::flatpak_user_update(run_type), opt.no_retry)?);
-        report.push_result(execute(|| linux::flatpak_global_update(&sudo, run_type), opt.no_retry)?);
+        report.push_result(execute(|| linux::flatpak_update(run_type), opt.no_retry)?);
         report.push_result(execute(|| linux::run_snap(&sudo, run_type), opt.no_retry)?);
     }
 

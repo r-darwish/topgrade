@@ -274,7 +274,7 @@ pub fn run_fwupdmgr(run_type: RunType) -> Option<(&'static str, bool)> {
 }
 
 #[must_use]
-pub fn flatpak_user_update(run_type: RunType) -> Option<(&'static str, bool)> {
+pub fn flatpak_update(run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(flatpak) = which("flatpak") {
         print_separator("Flatpak User Packages");
 
@@ -283,33 +283,15 @@ pub fn flatpak_user_update(run_type: RunType) -> Option<(&'static str, bool)> {
                 .execute(&flatpak)
                 .args(&["update", "--user", "-y"])
                 .check_run()?;
+            run_type
+                .execute(&flatpak)
+                .args(&["update", "--system", "-y"])
+                .check_run()?;
             Ok(())
         }()
         .is_ok();
 
         return Some(("Flatpak User Packages", success));
-    }
-
-    None
-}
-
-#[must_use]
-pub fn flatpak_global_update(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(sudo) = sudo {
-        if let Some(flatpak) = which("flatpak") {
-            print_separator("Flatpak Global Packages");
-
-            let success = || -> Result<(), Error> {
-                run_type
-                    .execute(&sudo)
-                    .args(&[flatpak.to_str().unwrap(), "update", "-y"])
-                    .check_run()?;
-                Ok(())
-            }()
-            .is_ok();
-
-            return Some(("Flatpak Global Packages", success));
-        }
     }
 
     None
