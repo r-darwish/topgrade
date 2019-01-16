@@ -1,14 +1,58 @@
 use super::error::{Error, ErrorKind};
 use directories::BaseDirs;
 use failure::ResultExt;
+use lazy_static::lazy_static;
 use serde::Deserialize;
 use shellexpand;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashMap};
 use std::fs;
 use structopt::StructOpt;
 use toml;
 
 type Commands = BTreeMap<String, String>;
+
+lazy_static! {
+    // While this is used to automatically generate possible value list everywhere in the code, the
+    // README.md file still needs to be manually updated.
+    static ref STEPS_MAPPING: HashMap<&'static str, Step> = {
+        let mut m = HashMap::new();
+
+        m.insert("system", Step::System);
+        m.insert("git-repos", Step::GitRepos);
+        m.insert("vim", Step::Vim);
+        m.insert("emacs", Step::Emacs);
+        m.insert("gem", Step::Gem);
+
+        m
+    };
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Step {
+    /// Don't perform system upgrade
+    System,
+    /// Don't perform updates on configured git repos
+    GitRepos,
+    /// Don't upgrade Vim packages or configuration files
+    Vim,
+    /// Don't upgrade Emacs packages or configuration files
+    Emacs,
+    /// Don't upgrade ruby gems
+    Gem,
+}
+
+impl Step {
+    fn possible_values() -> Vec<&'static str> {
+        STEPS_MAPPING.keys().cloned().collect()
+    }
+}
+
+impl std::str::FromStr for Step {
+    type Err = structopt::clap::Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(STEPS_MAPPING.get(s).unwrap().clone())
+    }
+}
 
 #[derive(Deserialize, Default)]
 pub struct Config {
@@ -60,26 +104,6 @@ pub struct Opt {
     #[structopt(short = "c", long = "cleanup")]
     pub cleanup: bool,
 
-    /// Don't perform system upgrade
-    #[structopt(long = "no-system")]
-    pub no_system: bool,
-
-    /// Don't perform updates on configured git repos
-    #[structopt(long = "no-git-repos")]
-    pub no_git_repos: bool,
-
-    /// Don't upgrade Emacs packages or configuration files
-    #[structopt(long = "no-emacs")]
-    pub no_emacs: bool,
-
-    /// Don't upgrade Vim packages or configuration files
-    #[structopt(long = "no-vim")]
-    pub no_vim: bool,
-
-    /// Don't upgrade ruby gems
-    #[structopt(long = "no-gem")]
-    pub no_gem: bool,
-
     /// Print what would be done
     #[structopt(short = "n", long = "dry-run")]
     pub dry_run: bool,
@@ -87,4 +111,8 @@ pub struct Opt {
     /// Do not ask to retry failed steps
     #[structopt(long = "no-retry")]
     pub no_retry: bool,
+
+    /// Do not perform upgrades for the given steps
+    #[structopt(long = "disable", raw(possible_values = "&Step::possible_values()"))]
+    pub disable: Vec<Step>,
 }

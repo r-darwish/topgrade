@@ -110,11 +110,14 @@ Just run `topgrade`. It will run the following steps:
   Topgrade already runs inside tmux. This is useful when using topgrade on remote systems.
 * `-c/--cleanup` - Topgrade will instruct package managers to remove old or unused files
 * `-n/--dry-run` - Print what should be run.
-* `--no-system` - Skip the system upgrade phase.
-* `--no-git-repos` - Don't pull custom git repositories.
-* `--no-emacs` - Don't upgrade Emacs packages or configuration files.
+* `--disable system` - Skip the system upgrade phase.
+* `--disable git-repos` - Don't pull custom git repositories.
+* `--disable emacs` - Don't upgrade Emacs packages or configuration files.
 * `--no-retry` - Don't ask to retry failed steps.
-* `--no-vim` - Don't upgrade Vim/NeoVim packages or configuration files.
+* `--disable vim` - Don't upgrade Vim/NeoVim packages or configuration files.
+* `--disable gem` - Don't upgrade ruby gems.
+
+`--disable` flags can also be combined like so: `--disable system vim`
 
 ## Customization
 You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
