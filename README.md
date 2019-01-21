@@ -119,7 +119,7 @@ Just run `topgrade`. It will run the following steps:
 * `--no-retry` - Don't ask to retry failed steps.
 
 ## Customization
-You can place a configuration file at `~/.config/topgrade.toml` (on macOS `~/Library/Preferences/topgrade.toml`).. Here's an example:
+Here's an example for a configuration file:
 
 
 ``` toml
@@ -138,3 +138,11 @@ git_repos = [
   will not proceed
 * `commands` - Custom upgrade steps. If any command fails it will be reported in the summary as all
   upgrade steps are reported, but it will not cause Topgrade to stop.
+
+### Configuration path
+
+The configuration should be placed in the following paths depending by the operating system:
+
+* **macOS** - `~/Library/Preferences/topgrade.toml`
+* **Windows** - `%APPDATA%/topgrade.toml`
+* **Other Unix systems** - `~/.config/topgrade.toml`
