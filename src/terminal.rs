@@ -119,6 +119,7 @@ pub fn print_separator<P: AsRef<str>>(message: P) {
     TERMINAL.lock().unwrap().print_separator(message)
 }
 
+#[allow(dead_code)]
 pub fn print_warning<P: AsRef<str>>(message: P) {
     TERMINAL.lock().unwrap().print_warning(message)
 }
@@ -127,6 +128,7 @@ pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
     TERMINAL.lock().unwrap().print_result(key, succeeded)
 }
 
+#[cfg(windows)]
 /// Tells whether the terminal is dumb.
 pub fn is_dumb() -> bool {
     TERMINAL.lock().unwrap().width.is_none()
