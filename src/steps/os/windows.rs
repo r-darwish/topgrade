@@ -67,7 +67,7 @@ impl Powershell {
             let result = Command::new(powershell)
                 .args(&["-Command", "echo $profile"])
                 .check_output()
-                .map(PathBuf::from);
+                .map(|output| PathBuf::from(output.trim()));
 
             match result {
                 Err(e) => error!("Error getting Powershell profile: {}", e),
