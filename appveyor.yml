@@ -20,17 +20,14 @@ install:
   - rustup-init.exe -y --default-host %TARGET% --default-toolchain %RUST_VERSION%
   - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
   - rustup component add rustfmt-preview clippy-preview
-  - cargo fmt --all -- --check
-  - cargo clippy --all-targets --all-features -- -D warnings
   - rustc -Vv
   - cargo -V
 
 test_script:
   - if [%APPVEYOR_REPO_TAG%]==[false] (
-      cargo check --target %TARGET% &&
-      cargo check --target %TARGET% --release &&
-      cargo check --target %TARGET% --all-features &&
-      cargo check --target %TARGET% --all-features --release
+      cargo fmt --all -- --check &&
+      cargo clippy --all-targets --all-features -- -D warnings &&
+      cargo clippy --all-targets -- -D warnings
     )
 
 before_deploy:
