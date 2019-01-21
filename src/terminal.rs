@@ -126,3 +126,8 @@ pub fn print_warning<P: AsRef<str>>(message: P) {
 pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
     TERMINAL.lock().unwrap().print_result(key, succeeded)
 }
+
+/// Tells whether the terminal is dumb.
+pub fn is_dumb() -> bool {
+    TERMINAL.lock().unwrap().width.is_none()
+}

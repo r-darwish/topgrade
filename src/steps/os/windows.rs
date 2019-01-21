@@ -1,6 +1,6 @@
 use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
-use crate::terminal::print_separator;
+use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{self, which};
 use log::error;
 use std::path::PathBuf;
@@ -46,9 +46,13 @@ pub struct Powershell {
 }
 
 impl Powershell {
+    /// Returns a powershell instance.
+    ///
+    /// If the powershell binary is not found, or the current terminal is dumb
+    /// then the instance of this struct will skip all the powershell steps.
     pub fn new() -> Self {
         Powershell {
-            path: which("powershell"),
+            path: which("powershell").filter(|_| !is_dumb()),
         }
     }
 
