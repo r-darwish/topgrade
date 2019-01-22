@@ -127,6 +127,9 @@ git_repos = [
     "~/dev/topgrade",
 ]
 
+# Same options as the command line flag
+disable = ["system", "emacs"]
+
 [pre_commands]
 "Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
 

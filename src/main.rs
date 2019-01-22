@@ -21,7 +21,6 @@ use std::io;
 #[cfg(windows)]
 use std::path::PathBuf;
 use std::process::exit;
-use structopt::StructOpt;
 
 fn execute<'a, F, M>(func: F, no_retry: bool) -> Result<Option<(M, bool)>, Error>
 where
@@ -52,9 +51,10 @@ where
 fn run() -> Result<(), Error> {
     ctrlc::set_handler();
 
-    let opt = config::Opt::from_args();
+    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
+    let config = Config::load(&base_dirs)?;
 
-    if opt.run_in_tmux && env::var("TMUX").is_err() {
+    if config.run_in_tmux() && env::var("TMUX").is_err() {
         #[cfg(unix)]
         {
             tmux::run_in_tmux();
@@ -63,16 +63,14 @@ fn run() -> Result<(), Error> {
 
     env_logger::init();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);
 
-    let config = Config::read(&base_dirs)?;
     let mut report = Report::new();
 
     #[cfg(any(target_os = "freebsd", target_os = "linux"))]
     let sudo = utils::which("sudo");
-    let run_type = executor::RunType::new(opt.dry_run);
+    let run_type = executor::RunType::new(config.dry_run());
 
     #[cfg(feature = "self-update")]
     {
@@ -97,8 +95,8 @@ fn run() -> Result<(), Error> {
 
     #[cfg(windows)]
     {
-        if powershell.profile().is_some() && !opt.disable.contains(&Step::Powershell) {
-            report.push_result(execute(|| powershell.update_modules(run_type), opt.no_retry)?);
+        if powershell.profile().is_some() && config.should_run(Step::Powershell) {
+            report.push_result(execute(|| powershell.update_modules(run_type), config.no_retry())?);
         }
     }
 
@@ -107,36 +105,42 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        if !opt.disable.contains(&Step::System) {
+        if config.should_run(Step::System) {
             match &distribution {
                 Ok(distribution) => {
                     report.push_result(execute(
-                        || distribution.upgrade(&sudo, opt.cleanup, run_type),
-                        opt.no_retry,
+                        || distribution.upgrade(&sudo, config.cleanup(), run_type),
+                        config.no_retry(),
                     )?);
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
-            report.push_result(execute(|| linux::run_etc_update(&sudo, run_type), opt.no_retry)?);
+            report.push_result(execute(|| linux::run_etc_update(&sudo, run_type), config.no_retry())?);
         }
     }
 
     #[cfg(windows)]
-    report.push_result(execute(|| windows::run_chocolatey(run_type), opt.no_retry)?);
+    report.push_result(execute(|| windows::run_chocolatey(run_type), config.no_retry())?);
 
     #[cfg(windows)]
-    report.push_result(execute(|| windows::run_scoop(run_type), opt.no_retry)?);
+    report.push_result(execute(|| windows::run_scoop(run_type), config.no_retry())?);
 
     #[cfg(unix)]
-    report.push_result(execute(|| unix::run_homebrew(opt.cleanup, run_type), opt.no_retry)?);
+    report.push_result(execute(
+        || unix::run_homebrew(config.cleanup(), run_type),
+        config.no_retry(),
+    )?);
     #[cfg(target_os = "freebsd")]
-    report.push_result(execute(|| freebsd::upgrade_packages(&sudo, run_type), opt.no_retry)?);
+    report.push_result(execute(
+        || freebsd::upgrade_packages(&sudo, run_type),
+        config.no_retry(),
+    )?);
     #[cfg(unix)]
-    report.push_result(execute(|| unix::run_nix(run_type), opt.no_retry)?);
+    report.push_result(execute(|| unix::run_nix(run_type), config.no_retry())?);
 
-    if !opt.disable.contains(&Step::Emacs) {
+    if config.should_run(Step::Emacs) {
         #[cfg(unix)]
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
 
@@ -149,7 +153,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !opt.disable.contains(&Step::Vim) {
+    if config.should_run(Step::Vim) {
         git_repos.insert(base_dirs.home_dir().join(".vim"));
         git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
     }
@@ -170,7 +174,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if !opt.disable.contains(&Step::GitRepos) {
+    if config.should_run(Step::GitRepos) {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
                 git_repos.insert(git_repo);
@@ -178,39 +182,48 @@ fn run() -> Result<(), Error> {
         }
     }
     for repo in git_repos.repositories() {
-        report.push_result(execute(|| git.pull(&repo, run_type), opt.no_retry)?);
+        report.push_result(execute(|| git.pull(&repo, run_type), config.no_retry())?);
     }
 
     #[cfg(unix)]
     {
-        report.push_result(execute(|| unix::run_zplug(&base_dirs, run_type), opt.no_retry)?);
-        report.push_result(execute(|| unix::run_fisher(&base_dirs, run_type), opt.no_retry)?);
-        report.push_result(execute(|| tmux::run_tpm(&base_dirs, run_type), opt.no_retry)?);
+        report.push_result(execute(|| unix::run_zplug(&base_dirs, run_type), config.no_retry())?);
+        report.push_result(execute(|| unix::run_fisher(&base_dirs, run_type), config.no_retry())?);
+        report.push_result(execute(|| tmux::run_tpm(&base_dirs, run_type), config.no_retry())?);
     }
 
-    report.push_result(execute(|| generic::run_rustup(&base_dirs, run_type), opt.no_retry)?);
-    report.push_result(execute(|| generic::run_cargo_update(run_type), opt.no_retry)?);
+    report.push_result(execute(
+        || generic::run_rustup(&base_dirs, run_type),
+        config.no_retry(),
+    )?);
+    report.push_result(execute(|| generic::run_cargo_update(run_type), config.no_retry())?);
 
-    if !opt.disable.contains(&Step::Emacs) {
-        report.push_result(execute(|| generic::run_emacs(&base_dirs, run_type), opt.no_retry)?);
+    if config.should_run(Step::Emacs) {
+        report.push_result(execute(|| generic::run_emacs(&base_dirs, run_type), config.no_retry())?);
     }
 
-    report.push_result(execute(|| generic::run_opam_update(run_type), opt.no_retry)?);
-    report.push_result(execute(|| generic::run_vcpkg_update(run_type), opt.no_retry)?);
-    report.push_result(execute(|| generic::run_pipx_update(run_type), opt.no_retry)?);
-    report.push_result(execute(|| generic::run_jetpack(run_type), opt.no_retry)?);
+    report.push_result(execute(|| generic::run_opam_update(run_type), config.no_retry())?);
+    report.push_result(execute(|| generic::run_vcpkg_update(run_type), config.no_retry())?);
+    report.push_result(execute(|| generic::run_pipx_update(run_type), config.no_retry())?);
+    report.push_result(execute(|| generic::run_jetpack(run_type), config.no_retry())?);
 
-    if !opt.disable.contains(&Step::Vim) {
-        report.push_result(execute(|| vim::upgrade_vim(&base_dirs, run_type), opt.no_retry)?);
-        report.push_result(execute(|| vim::upgrade_neovim(&base_dirs, run_type), opt.no_retry)?);
+    if config.should_run(Step::Vim) {
+        report.push_result(execute(|| vim::upgrade_vim(&base_dirs, run_type), config.no_retry())?);
+        report.push_result(execute(
+            || vim::upgrade_neovim(&base_dirs, run_type),
+            config.no_retry(),
+        )?);
     }
 
-    report.push_result(execute(|| node::run_npm_upgrade(&base_dirs, run_type), opt.no_retry)?);
+    report.push_result(execute(
+        || node::run_npm_upgrade(&base_dirs, run_type),
+        config.no_retry(),
+    )?);
     report.push_result(execute(
         || generic::run_composer_update(&base_dirs, run_type),
-        opt.no_retry,
+        config.no_retry(),
     )?);
-    report.push_result(execute(|| node::yarn_global_update(run_type), opt.no_retry)?);
+    report.push_result(execute(|| node::yarn_global_update(run_type), config.no_retry())?);
 
     #[cfg(not(any(
         target_os = "freebsd",
@@ -218,51 +231,54 @@ fn run() -> Result<(), Error> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    report.push_result(execute(|| generic::run_apm(run_type), opt.no_retry)?);
+    report.push_result(execute(|| generic::run_apm(run_type), config.no_retry())?);
 
-    if !opt.disable.contains(&Step::Gem) {
-        report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), opt.no_retry)?);
+    if config.should_run(Step::Gem) {
+        report.push_result(execute(|| generic::run_gem(&base_dirs, run_type), config.no_retry())?);
     }
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|| linux::flatpak_update(run_type), opt.no_retry)?);
-        report.push_result(execute(|| linux::run_snap(&sudo, run_type), opt.no_retry)?);
+        report.push_result(execute(|| linux::flatpak_update(run_type), config.no_retry())?);
+        report.push_result(execute(|| linux::run_snap(&sudo, run_type), config.no_retry())?);
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             report.push_result(execute(
                 || Some((name, generic::run_custom_command(&name, &command, run_type).is_ok())),
-                opt.no_retry,
+                config.no_retry(),
             )?);
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute(|| linux::run_fwupdmgr(run_type), opt.no_retry)?);
-        report.push_result(execute(|| linux::run_needrestart(&sudo, run_type), opt.no_retry)?);
+        report.push_result(execute(|| linux::run_fwupdmgr(run_type), config.no_retry())?);
+        report.push_result(execute(|| linux::run_needrestart(&sudo, run_type), config.no_retry())?);
     }
 
     #[cfg(target_os = "macos")]
     {
-        if !opt.disable.contains(&Step::System) {
-            report.push_result(execute(|| macos::upgrade_macos(run_type), opt.no_retry)?);
+        if config.should_run(Step::System) {
+            report.push_result(execute(|| macos::upgrade_macos(run_type), config.no_retry())?);
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
-        if !opt.disable.contains(&Step::System) {
-            report.push_result(execute(|| freebsd::upgrade_freebsd(&sudo, run_type), opt.no_retry)?);
+        if config.should_run(Step::System) {
+            report.push_result(execute(
+                || freebsd::upgrade_freebsd(&sudo, run_type),
+                config.no_retry(),
+            )?);
         }
     }
 
     #[cfg(windows)]
     {
-        if !opt.disable.contains(&Step::System) {
-            report.push_result(execute(|| powershell.windows_update(run_type), opt.no_retry)?);
+        if config.should_run(Step::System) {
+            report.push_result(execute(|| powershell.windows_update(run_type), config.no_retry())?);
         }
     }
 
