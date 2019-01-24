@@ -36,7 +36,6 @@ impl Terminal {
                             border = max(2, min(80, width as usize) - 3 - message.len())
                         ))
                         .bold()
-                        .white()
                     ))
                     .ok();
             }
