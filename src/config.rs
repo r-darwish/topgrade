@@ -39,6 +39,10 @@ pub enum Step {
     Emacs,
     /// Don't upgrade ruby gems
     Gem,
+
+    #[cfg(windows)]
+    /// Don't update Powershell modules
+    Powershell,
 }
 
 impl Step {

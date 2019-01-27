@@ -2,7 +2,6 @@ use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{self, which};
-use log::error;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -43,6 +42,7 @@ pub fn run_scoop(run_type: RunType) -> Option<(&'static str, bool)> {
 
 pub struct Powershell {
     path: Option<PathBuf>,
+    profile: Option<PathBuf>,
 }
 
 impl Powershell {
@@ -51,9 +51,17 @@ impl Powershell {
     /// If the powershell binary is not found, or the current terminal is dumb
     /// then the instance of this struct will skip all the powershell steps.
     pub fn new() -> Self {
-        Powershell {
-            path: which("powershell").filter(|_| !is_dumb()),
-        }
+        let path = which("powershell").filter(|_| !is_dumb());
+
+        let profile = path.as_ref().and_then(|path| {
+            Command::new(path)
+                .args(&["-Command", "echo $profile"])
+                .check_output()
+                .map(|output| PathBuf::from(output.trim()))
+                .ok()
+        });
+
+        Powershell { path, profile }
     }
 
     pub fn has_command(powershell: &PathBuf, command: &str) -> bool {
@@ -66,19 +74,8 @@ impl Powershell {
         .is_ok()
     }
 
-    pub fn profile(&self) -> Option<PathBuf> {
-        if let Some(powershell) = &self.path {
-            let result = Command::new(powershell)
-                .args(&["-Command", "echo $profile"])
-                .check_output()
-                .map(|output| PathBuf::from(output.trim()));
-
-            match result {
-                Err(e) => error!("Error getting Powershell profile: {}", e),
-                Ok(path) => return Some(path),
-            }
-        }
-        None
+    pub fn profile(&self) -> Option<&PathBuf> {
+        self.profile.as_ref()
     }
 
     #[must_use]

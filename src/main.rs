@@ -96,7 +96,11 @@ fn run() -> Result<(), Error> {
     let powershell = windows::Powershell::new();
 
     #[cfg(windows)]
-    report.push_result(execute(|| powershell.update_modules(run_type), opt.no_retry)?);
+    {
+        if powershell.profile().is_some() && !opt.disable.contains(&Step::Powershell) {
+            report.push_result(execute(|| powershell.update_modules(run_type), opt.no_retry)?);
+        }
+    }
 
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();
