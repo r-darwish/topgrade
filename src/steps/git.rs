@@ -8,10 +8,12 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[derive(Debug)]
 pub struct Git {
     git: Option<PathBuf>,
 }
 
+#[derive(Debug)]
 pub struct Repositories<'a> {
     git: &'a Git,
     repositories: HashSet<String>,

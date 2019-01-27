@@ -18,6 +18,8 @@ use failure::{Fail, ResultExt};
 use std::borrow::Cow;
 use std::env;
 use std::io;
+#[cfg(windows)]
+use std::path::PathBuf;
 use std::process::exit;
 use structopt::StructOpt;
 
@@ -131,7 +133,16 @@ fn run() -> Result<(), Error> {
     report.push_result(execute(|| unix::run_nix(run_type), opt.no_retry)?);
 
     if !opt.disable.contains(&Step::Emacs) {
+        #[cfg(unix)]
         git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
+
+        #[cfg(windows)]
+        {
+            git_repos.insert(base_dirs.data_dir().join(".emacs.d"));
+            if let Ok(home) = env::var("HOME") {
+                git_repos.insert(PathBuf::from(home).join(".emacs.d"));
+            }
+        }
     }
 
     if !opt.disable.contains(&Step::Vim) {
