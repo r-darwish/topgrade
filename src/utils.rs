@@ -89,7 +89,7 @@ impl<'a> fmt::Display for HumanizedPath<'a> {
             let mut iterator = self.path.components().peekable();
 
             while let Some(component) = iterator.next() {
-                let is_prefix = if let Component::RootDir = &component {
+                let is_prefix = if let Component::Prefix(_) = &component {
                     true
                 } else {
                     false
@@ -121,5 +121,35 @@ impl<'a> fmt::Display for HumanizedPath<'a> {
         }
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+#[cfg(windows)]
+mod tests {
+    use super::*;
+
+    fn humanize<P: AsRef<Path>>(path: P) -> String {
+        format!("{}", HumanizedPath::from(path.as_ref()))
+    }
+
+    #[test]
+    fn test_just_drive() {
+        assert_eq!("C:\\", humanize("C:\\"));
+    }
+
+    #[test]
+    fn test_path() {
+        assert_eq!("C:\\hi", humanize("C:\\hi"));
+    }
+
+    #[test]
+    fn test_unc() {
+        assert_eq!("\\\\server\\share\\", humanize("\\\\server\\share"));
+    }
+
+    #[test]
+    fn test_long_path() {
+        assert_eq!("C:\\hi", humanize("//?/C:/hi"));
     }
 }
