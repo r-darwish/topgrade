@@ -27,7 +27,7 @@ test_script:
   - if [%APPVEYOR_REPO_TAG%]==[false] (
       cargo fmt --all -- --check &&
       cargo clippy --all-targets --all-features -- -D warnings &&
-      cargo clippy --all-targets -- -D warnings
+      cargo clippy --all-targets -- -D warnings &&
       cargo test
     )
 
