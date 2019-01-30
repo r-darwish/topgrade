@@ -89,32 +89,29 @@ impl<'a> fmt::Display for HumanizedPath<'a> {
             let mut iterator = self.path.components().peekable();
 
             while let Some(component) = iterator.next() {
-                let is_prefix = if let Component::Prefix(_) = &component {
-                    true
-                } else {
-                    false
-                };
+                let final_component = iterator.peek().is_none();
 
-                let printed = match &component {
-                    Component::Normal(c) if *c == "?" => false,
-                    Component::RootDir | Component::CurDir => false,
+                match &component {
+                    Component::Normal(c) if *c == "?" => (),
+                    Component::RootDir | Component::CurDir => (),
                     Component::ParentDir => {
                         write!(f, "..")?;
-                        true
+
+                        if !final_component {
+                            write!(f, "{}", std::path::MAIN_SEPARATOR)?;
+                        }
                     }
                     Component::Prefix(p) => {
-                        write!(f, "{}", p.as_os_str().to_string_lossy())?;
-                        true
+                        write!(f, "{}{}", p.as_os_str().to_string_lossy(), std::path::MAIN_SEPARATOR)?;
                     }
                     Component::Normal(c) => {
                         write!(f, "{}", c.to_string_lossy())?;
-                        true
+
+                        if !final_component {
+                            write!(f, "{}", std::path::MAIN_SEPARATOR)?;
+                        }
                     }
                 };
-
-                if printed && (iterator.peek().is_some() || is_prefix) {
-                    write!(f, "{}", std::path::MAIN_SEPARATOR)?;
-                }
             }
         } else {
             write!(f, "{}", self.path.display())?;
