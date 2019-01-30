@@ -1,8 +1,8 @@
 use super::error::{Error, ErrorKind};
 use log::{debug, error};
 use std::ffi::OsStr;
-use std::fmt::Debug;
-use std::path::{Path, PathBuf};
+use std::fmt::{self, Debug};
+use std::path::{Component, Path, PathBuf};
 use std::process::{ExitStatus, Output};
 use which_crate;
 
@@ -66,5 +66,60 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
 
             None
         }
+    }
+}
+
+/// `std::fmt::Display` implementation for `std::path::Path`.
+///
+/// This struct differs from `std::path::Display` in that in Windows it takes care of printing slashes
+/// instead of backslashes and don't print the `\\?` prefix in long paths.
+pub struct HumanizedPath<'a> {
+    path: &'a Path,
+}
+
+impl<'a> From<&'a Path> for HumanizedPath<'a> {
+    fn from(path: &'a Path) -> Self {
+        Self { path }
+    }
+}
+
+impl<'a> fmt::Display for HumanizedPath<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        if cfg!(windows) {
+            let mut iterator = self.path.components().peekable();
+
+            while let Some(component) = iterator.next() {
+                let is_prefix = if let Component::RootDir = &component {
+                    true
+                } else {
+                    false
+                };
+
+                let printed = match &component {
+                    Component::Normal(c) if *c == "?" => false,
+                    Component::RootDir | Component::CurDir => false,
+                    Component::ParentDir => {
+                        write!(f, "..")?;
+                        true
+                    }
+                    Component::Prefix(p) => {
+                        write!(f, "{}", p.as_os_str().to_string_lossy())?;
+                        true
+                    }
+                    Component::Normal(c) => {
+                        write!(f, "{}", c.to_string_lossy())?;
+                        true
+                    }
+                };
+
+                if printed && (iterator.peek().is_some() || is_prefix) {
+                    write!(f, "{}", std::path::MAIN_SEPARATOR)?;
+                }
+            }
+        } else {
+            write!(f, "{}", self.path.display())?;
+        }
+
+        Ok(())
     }
 }

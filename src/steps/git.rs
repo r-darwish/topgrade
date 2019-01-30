@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::which;
+use crate::utils::{which, HumanizedPath};
 use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
@@ -58,7 +58,7 @@ impl Git {
     pub fn pull<P: AsRef<Path>>(&self, path: P, run_type: RunType) -> Option<(String, bool)> {
         let path = path.as_ref();
 
-        print_separator(format!("Pulling {}", path.display()));
+        print_separator(format!("Pulling {}", HumanizedPath::from(path)));
 
         let git = self.git.as_ref().unwrap();
 
@@ -73,7 +73,7 @@ impl Git {
         }()
         .is_ok();
 
-        Some((format!("git: {}", path.display()), success))
+        Some((format!("git: {}", HumanizedPath::from(path)), success))
     }
 }
 
