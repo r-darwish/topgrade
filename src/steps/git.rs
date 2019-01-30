@@ -69,12 +69,6 @@ impl Git {
                 .current_dir(&path)
                 .check_run()?;
 
-            run_type
-                .execute(git)
-                .args(&["submodule", "update", "--init", "--recursive"])
-                .current_dir(&path)
-                .check_run()?;
-
             Ok(())
         }()
         .is_ok();
