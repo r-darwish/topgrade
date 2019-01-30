@@ -71,8 +71,8 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
 
 /// `std::fmt::Display` implementation for `std::path::Path`.
 ///
-/// This struct differs from `std::path::Display` in that in Windows it takes care of printing slashes
-/// instead of backslashes and don't print the `\\?` prefix in long paths.
+/// This struct differs from `std::path::Display` in that in Windows it takes care of printing backslashes
+/// instead of slashes and don't print the `\\?` prefix in long paths.
 pub struct HumanizedPath<'a> {
     path: &'a Path,
 }
