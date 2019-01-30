@@ -9,6 +9,7 @@ main() {
     cross clippy --all-targets --all-features -- -D warnings
 
     if [ ! -z $DISABLE_TESTS ]; then
+        cross test
         return
     fi
 
