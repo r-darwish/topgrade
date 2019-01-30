@@ -33,7 +33,13 @@ impl Terminal {
                             "\n―― {} {:―^border$}",
                             message,
                             "",
-                            border = max(2, min(80, width as usize) - 3 - message.len())
+                            border = max(
+                                2,
+                                min(80, width as usize)
+                                    .checked_sub(3)
+                                    .and_then(|e| e.checked_sub(message.len()))
+                                    .unwrap_or(0)
+                            )
                         ))
                         .bold()
                     ))
