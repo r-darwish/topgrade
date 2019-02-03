@@ -1,8 +1,10 @@
 use crate::error::Error;
-use crate::executor::RunType;
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::which;
 use directories::BaseDirs;
+use std::path::Path;
+use std::process::Command;
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {
@@ -55,7 +57,18 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Option<(&'static str, b
         let inner = || -> Result<(), Error> {
             run_type.execute(&brew).arg("update").check_run()?;
             run_type.execute(&brew).arg("upgrade").check_run()?;
-            run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
+
+            let cask_upgrade_exists = Command::new(&brew)
+                .args(&["--repository", "buo/cask-upgrade"])
+                .check_output()
+                .map(|p| Path::new(p.trim()).exists())?;
+
+            if cask_upgrade_exists {
+                run_type.execute(&brew).args(&["cu", "-a"]).check_run()?;
+            } else {
+                run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
+            }
+
             if cleanup {
                 run_type.execute(&brew).arg("cleanup").check_run()?;
             }
