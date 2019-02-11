@@ -181,7 +181,7 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error
     }
 }
 
-#[cfg(linux)]
+#[cfg(target_os = "linux")]
 pub fn require_option<T>(option: Option<T>) -> Result<T, Error> {
     if let Some(value) = option {
         Ok(value)
