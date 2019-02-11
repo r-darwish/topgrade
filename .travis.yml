@@ -73,3 +73,8 @@ before_cache:
 notifications:
   email:
     on_success: never
+
+branches:
+  except:
+    - staging.tmp
+    - trying.tmp
