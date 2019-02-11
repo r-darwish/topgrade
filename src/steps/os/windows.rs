@@ -84,7 +84,10 @@ impl Powershell {
             print_separator("Powershell Modules Update");
 
             let success = || -> Result<(), Error> {
-                run_type.execute(&powershell).arg("Update-Module").check_run()?;
+                run_type
+                    .execute(&powershell)
+                    .args(&["Update-Module", "-v"])
+                    .check_run()?;
                 Ok(())
             }()
             .is_ok();
