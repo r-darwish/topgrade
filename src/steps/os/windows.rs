@@ -1,43 +1,24 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
-use crate::utils::{self, which};
+use crate::utils::{require, require_option, which};
 use std::path::PathBuf;
 use std::process::Command;
 
-#[must_use]
-pub fn run_chocolatey(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(choco) = utils::which("choco") {
-        print_separator("Chocolatey");
+pub fn run_chocolatey(run_type: RunType) -> Result<(), Error> {
+    let choco = require("choco")?;
 
-        let success = || -> Result<(), Error> {
-            run_type.execute(&choco).args(&["upgrade", "all"]).check_run()?;
-            Ok(())
-        }()
-        .is_ok();
-
-        return Some(("Chocolatey", success));
-    }
-
-    None
+    print_separator("Chocolatey");
+    run_type.execute(&choco).args(&["upgrade", "all"]).check_run()
 }
 
-#[must_use]
-pub fn run_scoop(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(scoop) = utils::which("scoop") {
-        print_separator("Scoop");
+pub fn run_scoop(run_type: RunType) -> Result<(), Error> {
+    let scoop = require("scoop")?;
 
-        let success = || -> Result<(), Error> {
-            run_type.execute(&scoop).args(&["update"]).check_run()?;
-            run_type.execute(&scoop).args(&["update", "*"]).check_run()?;
-            Ok(())
-        }()
-        .is_ok();
+    print_separator("Scoop");
 
-        return Some(("Scoop", success));
-    }
-
-    None
+    run_type.execute(&scoop).args(&["update"]).check_run()?;
+    run_type.execute(&scoop).args(&["update", "*"]).check_run()
 }
 
 pub struct Powershell {
@@ -78,42 +59,24 @@ impl Powershell {
         self.profile.as_ref()
     }
 
-    #[must_use]
-    pub fn update_modules(&self, run_type: RunType) -> Option<(&'static str, bool)> {
-        if let Some(powershell) = &self.path {
-            print_separator("Powershell Modules Update");
+    pub fn update_modules(&self, run_type: RunType) -> Result<(), Error> {
+        let powershell = require_option(self.path.as_ref())?;
 
-            let success = || -> Result<(), Error> {
-                run_type.execute(&powershell).arg("Update-Module").check_run()?;
-                Ok(())
-            }()
-            .is_ok();
-
-            return Some(("Powershell Modules Update", success));
-        }
-
-        None
+        print_separator("Powershell Modules Update");
+        run_type.execute(&powershell).args(&["Update-Module", "-v"]).check_run()
     }
 
-    #[must_use]
-    pub fn windows_update(&self, run_type: RunType) -> Option<(&'static str, bool)> {
-        if let Some(powershell) = &self.path {
-            if Self::has_command(&powershell, "Install-WindowsUpdate") {
-                print_separator("Windows Update");
+    pub fn windows_update(&self, run_type: RunType) -> Result<(), Error> {
+        let powershell = require_option(self.path.as_ref())?;
 
-                let success = || -> Result<(), Error> {
-                    run_type
-                        .execute(&powershell)
-                        .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
-                        .check_run()?;
-                    Ok(())
-                }()
-                .is_ok();
-
-                return Some(("Windows Update", success));
-            }
+        if !Self::has_command(&powershell, "Install-WindowsUpdate") {
+            Err(ErrorKind::SkipStep)?;
         }
+        print_separator("Windows Update");
 
-        None
+        run_type
+            .execute(&powershell)
+            .args(&["-Command", "Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose"])
+            .check_run()
     }
 }
