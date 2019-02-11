@@ -134,10 +134,12 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     {
         if powershell.profile().is_some() && config.should_run(Step::Powershell) {
-            report.push_result(execute_legacy(
+            execute(
+                &mut report,
+                "Powershell Modules Update",
                 || powershell.update_modules(run_type),
                 config.no_retry(),
-            )?);
+            )?;
         }
     }
 
@@ -168,10 +170,15 @@ fn run() -> Result<(), Error> {
     }
 
     #[cfg(windows)]
-    report.push_result(execute_legacy(|| windows::run_chocolatey(run_type), config.no_retry())?);
+    execute(
+        &mut report,
+        "Chocolatey",
+        || windows::run_chocolatey(run_type),
+        config.no_retry(),
+    )?;
 
     #[cfg(windows)]
-    report.push_result(execute_legacy(|| windows::run_scoop(run_type), config.no_retry())?);
+    execute(&mut report, "Scoop", || windows::run_scoop(run_type), config.no_retry())?;
 
     #[cfg(unix)]
     report.push_result(execute_legacy(
@@ -383,10 +390,12 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute_legacy(
+            execute(
+                &mut report,
+                "Windows update",
                 || powershell.windows_update(run_type),
                 config.no_retry(),
-            )?);
+            )?;
         }
     }
 
