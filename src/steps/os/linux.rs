@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
-use crate::utils::which;
+use crate::utils::{require, require_option, which};
 use failure::ResultExt;
 use std::fs;
 use std::path::PathBuf;
@@ -59,10 +59,10 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Option<(&'static str, bool)> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
         print_separator("System update");
 
-        let success = match self {
+        match self {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
             Distribution::CentOS => upgrade_redhat(&sudo, run_type),
             Distribution::Fedora => upgrade_fedora(&sudo, run_type),
@@ -70,9 +70,7 @@ impl Distribution {
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::OpenSuse => upgrade_opensuse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
-        };
-
-        Some(("System update", success.is_ok()))
+        }
     }
 
     pub fn show_summary(self) {
@@ -235,24 +233,15 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> R
     Ok(())
 }
 
-#[must_use]
-pub fn run_needrestart(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(sudo) = sudo {
-        if let Some(needrestart) = which("needrestart") {
-            print_separator("Check for needed restarts");
+pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
+    let needrestart = require("needrestart")?;
 
-            let success = || -> Result<(), Error> {
-                run_type.execute(&sudo).arg(needrestart).check_run()?;
+    print_separator("Check for needed restarts");
 
-                Ok(())
-            }()
-            .is_ok();
+    run_type.execute(&sudo).arg(needrestart).check_run()?;
 
-            return Some(("Restarts", success));
-        }
-    }
-
-    None
+    Ok(())
 }
 
 #[must_use]

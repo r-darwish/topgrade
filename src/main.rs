@@ -149,10 +149,12 @@ fn run() -> Result<(), Error> {
         if config.should_run(Step::System) {
             match &distribution {
                 Ok(distribution) => {
-                    report.push_result(execute_legacy(
+                    execute(
+                        &mut report,
+                        "System update",
                         || distribution.upgrade(&sudo, config.cleanup(), run_type),
                         config.no_retry(),
-                    )?);
+                    )?;
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
@@ -353,10 +355,12 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "linux")]
     {
         report.push_result(execute_legacy(|| linux::run_fwupdmgr(run_type), config.no_retry())?);
-        report.push_result(execute_legacy(
-            || linux::run_needrestart(&sudo, run_type),
+        execute(
+            &mut report,
+            "Restarts",
+            || linux::run_needrestart(sudo.as_ref(), run_type),
             config.no_retry(),
-        )?);
+        )?;
     }
 
     #[cfg(target_os = "macos")]

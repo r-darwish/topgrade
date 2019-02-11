@@ -180,3 +180,11 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error
         },
     }
 }
+
+pub fn require_option<T>(option: Option<T>) -> Result<T, Error> {
+    if let Some(value) = option {
+        Ok(value)
+    } else {
+        Err(ErrorKind::SkipStep)?
+    }
+}
