@@ -3,6 +3,7 @@ use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{self, PathExt};
 use directories::BaseDirs;
+use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -59,7 +60,11 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> 
 
     print_separator("rustup");
 
-    if rustup.is_descendant_of(base_dirs.home_dir()) {
+    if rustup
+        .canonicalize()
+        .context(ErrorKind::StepFailed)?
+        .is_descendant_of(base_dirs.home_dir())
+    {
         run_type.execute(&rustup).args(&["self", "update"]).check_run()?;
     }
 
