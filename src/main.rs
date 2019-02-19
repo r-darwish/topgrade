@@ -294,6 +294,8 @@ fn run() -> Result<(), Error> {
         || generic::run_pipx_update(run_type),
         config.no_retry(),
     )?;
+    #[cfg(unix)]
+    execute(&mut report, "pearl", || unix::run_pearl(run_type), config.no_retry())?;
     execute(
         &mut report,
         "jetpak",
