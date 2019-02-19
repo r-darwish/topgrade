@@ -79,3 +79,4 @@ branches:
     - staging
     - trying
     - master
+    - /^v[\d.]+$/
