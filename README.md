@@ -58,6 +58,7 @@ Just run `topgrade`. It will run the following steps:
 * **FreeBSD**: Upgrade and audit packages
 * **Unix**: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * **Unix**: Run `nix upgrade-nix && nix --upgrade`.
+* **Unix**: Run `pearl upgrade`.
 * **Windows**: Upgrade Powershell modules
 * **Windows**: Upgrade all [Chocolatey](https://chocolatey.org/) packages
 * **Windows**: Upgrade all [Scoop](https://scoop.sh) packages
