@@ -75,6 +75,7 @@ notifications:
     on_success: never
 
 branches:
-  except:
-    - staging.tmp
-    - trying.tmp
+  only:
+    - staging
+    - trying
+    - master

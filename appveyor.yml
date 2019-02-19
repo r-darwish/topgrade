@@ -57,6 +57,7 @@ notifications:
 build: false
 
 branches:
-  except:
-    - staging.tmp
-    - trying.tmp
+  only:
+    - staging
+    - trying
+    - master
