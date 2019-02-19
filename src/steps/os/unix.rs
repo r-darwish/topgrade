@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::which;
+use crate::utils::{require, which};
 use directories::BaseDirs;
 use std::path::Path;
 use std::process::Command;
@@ -98,4 +98,11 @@ pub fn run_nix(run_type: RunType) -> Option<(&'static str, bool)> {
     }
 
     None
+}
+
+pub fn run_pearl(run_type: RunType) -> Result<(), Error> {
+    let pearl = require("pearl")?;
+    print_separator("pearl");
+
+    run_type.execute(&pearl).arg("update").check_run()
 }
