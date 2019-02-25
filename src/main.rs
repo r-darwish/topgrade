@@ -162,10 +162,12 @@ fn run() -> Result<(), Error> {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
-            report.push_result(execute_legacy(
-                || linux::run_etc_update(&sudo, run_type),
+            execute(
+                &mut report,
+                "etc-update",
+                || linux::run_etc_update(sudo.as_ref(), run_type),
                 config.no_retry(),
-            )?);
+            )?;
         }
     }
 
@@ -348,8 +350,18 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute_legacy(|| linux::flatpak_update(run_type), config.no_retry())?);
-        report.push_result(execute_legacy(|| linux::run_snap(&sudo, run_type), config.no_retry())?);
+        execute(
+            &mut report,
+            "Flatpak",
+            || linux::flatpak_update(run_type),
+            config.no_retry(),
+        )?;
+        execute(
+            &mut report,
+            "snap",
+            || linux::run_snap(sudo.as_ref(), run_type),
+            config.no_retry(),
+        )?;
     }
 
     if let Some(commands) = config.commands() {
@@ -363,7 +375,12 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        report.push_result(execute_legacy(|| linux::run_fwupdmgr(run_type), config.no_retry())?);
+        execute(
+            &mut report,
+            "Firmware upgrades",
+            || linux::run_fwupdmgr(run_type),
+            config.no_retry(),
+        )?;
         execute(
             &mut report,
             "Restarts",
