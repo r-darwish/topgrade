@@ -245,88 +245,51 @@ pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), 
 }
 
 #[must_use]
-pub fn run_fwupdmgr(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(fwupdmgr) = which("fwupdmgr") {
-        print_separator("Firmware upgrades");
+pub fn run_fwupdmgr(run_type: RunType) -> Result<(), Error> {
+    let fwupdmgr = require("fwupdmgr")?;
 
-        let success = || -> Result<(), Error> {
-            run_type.execute(&fwupdmgr).arg("refresh").check_run()?;
-            run_type.execute(&fwupdmgr).arg("get-updates").check_run()?;
-            Ok(())
-        }()
-        .is_ok();
+    print_separator("Firmware upgrades");
 
-        return Some(("Firmware upgrade", success));
-    }
-
-    None
+    run_type.execute(&fwupdmgr).arg("refresh").check_run()?;
+    run_type.execute(&fwupdmgr).arg("get-updates").check_run()
 }
 
 #[must_use]
-pub fn flatpak_update(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(flatpak) = which("flatpak") {
-        print_separator("Flatpak User Packages");
+pub fn flatpak_update(run_type: RunType) -> Result<(), Error> {
+    let flatpak = require("flatpak")?;
+    print_separator("Flatpak User Packages");
 
-        let success = || -> Result<(), Error> {
-            run_type
-                .execute(&flatpak)
-                .args(&["update", "--user", "-y"])
-                .check_run()?;
-            run_type
-                .execute(&flatpak)
-                .args(&["update", "--system", "-y"])
-                .check_run()?;
-            Ok(())
-        }()
-        .is_ok();
-
-        return Some(("Flatpak User Packages", success));
-    }
-
-    None
+    run_type
+        .execute(&flatpak)
+        .args(&["update", "--user", "-y"])
+        .check_run()?;
+    run_type
+        .execute(&flatpak)
+        .args(&["update", "--system", "-y"])
+        .check_run()
 }
 
 #[must_use]
-pub fn run_snap(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(sudo) = sudo {
-        if let Some(snap) = which("snap") {
-            if PathBuf::from("/var/snapd.socket").exists() {
-                print_separator("snap");
+pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
+    let snap = require("snap")?;
 
-                let success = || -> Result<(), Error> {
-                    run_type
-                        .execute(&sudo)
-                        .args(&[snap.to_str().unwrap(), "refresh"])
-                        .check_run()?;
-
-                    Ok(())
-                }()
-                .is_ok();
-
-                return Some(("snap", success));
-            }
-        }
+    if !PathBuf::from("/var/snapd.socket").exists() {
+        Err(ErrorKind::SkipStep)?;
     }
+    print_separator("snap");
 
-    None
+    run_type
+        .execute(sudo)
+        .args(&[snap.to_str().unwrap(), "refresh"])
+        .check_run()
 }
 
 #[must_use]
-pub fn run_etc_update(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(sudo) = sudo {
-        if let Some(etc_update) = which("etc-update") {
-            print_separator("etc-update");
+pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
+    let etc_update = require("etc_update")?;
+    print_separator("etc-update");
 
-            let success = || -> Result<(), Error> {
-                run_type.execute(&sudo).arg(&etc_update.to_str().unwrap()).check_run()?;
-
-                Ok(())
-            }()
-            .is_ok();
-
-            return Some(("etc-update", success));
-        }
-    }
-
-    None
+    run_type.execute(sudo).arg(&etc_update.to_str().unwrap()).check_run()
 }
