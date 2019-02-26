@@ -8,20 +8,15 @@ use std::path::Path;
 use std::process::Command;
 
 fn zplug_exists(base_dirs: &BaseDirs) -> bool {
-    let home_exists = match env::var("ZPLUG_HOME") {
-        Ok(ref zplug_home) => Path::new(zplug_home).exists(),
-        Err(_) => false,
-    };
-    let dotdir_exists = base_dirs.home_dir().join(".zplug").exists();
-    home_exists || dotdir_exists
+    env::var("ZPLUG_HOME")
+        .map(|ref zplug_home| Path::new(zplug_home).exists())
+        .map(|p| p || base_dirs.home_dir().join("zplug").exists())
+        .unwrap_or(false)
 }
 
 fn get_zshrc(base_dirs: &BaseDirs) -> Result<String, ()> {
-    let zshrc = match env::var("ZDOTDIR") {
-        Ok(ref zdotdir) => Ok(Path::new(zdotdir).join(".zshrc")),
-        Err(_) => Err(()),
-    };
-    zshrc
+    env::var("ZDOTDIR")
+        .map(|ref zdotdir| Path::new(zdotdir).join(".zshrc"))
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
         .to_str()
         .map(|s| s.to_owned())
