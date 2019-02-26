@@ -220,6 +220,7 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.home_dir().join(".tmux"));
         git_repos.insert(base_dirs.home_dir().join(".config/fish"));
         git_repos.insert(base_dirs.config_dir().join("openbox"));
+        git_repos.insert(base_dirs.config_dir().join("bspwm"));
     }
 
     #[cfg(windows)]
