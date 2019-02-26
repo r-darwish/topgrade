@@ -22,7 +22,7 @@ fn get_zshrc(base_dirs: &BaseDirs) -> Result<String, ()> {
         Err(_) => Err(()),
     };
     zshrc
-        .unwrap_or(base_dirs.home_dir().join(".zshrc"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
         .to_str()
         .map(|s| s.to_owned())
         .ok_or(())
