@@ -3,16 +3,16 @@ use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, which};
 use directories::BaseDirs;
+use std::env;
 use std::path::Path;
 use std::process::Command;
-use std::env;
 
 fn zplug_exists(base_dirs: &BaseDirs) -> bool {
     let home_exists = match env::var("ZPLUG_HOME") {
         Ok(ref zplug_home) => Path::new(zplug_home).exists(),
         Err(_) => false,
     };
-    let dotdir_exists =  base_dirs.home_dir().join(".zplug").exists();
+    let dotdir_exists = base_dirs.home_dir().join(".zplug").exists();
     home_exists || dotdir_exists
 }
 
@@ -36,10 +36,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static st
             let success = || -> Result<(), Error> {
                 let zshrc = get_zshrc(base_dirs).map_err(|_| Error::from(SkipStep))?;
                 let cmd = format!("source {} && zplug update", zshrc);
-                run_type
-                    .execute(zsh)
-                    .args(&["-c", cmd.as_str()])
-                    .check_run()?;
+                run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()?;
                 Ok(())
             }()
             .is_ok();
