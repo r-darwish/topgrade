@@ -1,21 +1,37 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind::*};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, which};
 use directories::BaseDirs;
-use std::path::Path;
+use std::env;
+use std::path::{Path, PathBuf};
 use std::process::Command;
+
+fn zplug_exists(base_dirs: &BaseDirs) -> bool {
+    env::var("ZPLUG_HOME")
+        .map(|ref zplug_home| Path::new(zplug_home).exists())
+        .unwrap_or(false)
+        || base_dirs.home_dir().join("zplug").exists()
+}
+
+fn get_zshrc(base_dirs: &BaseDirs) -> Result<PathBuf, ()> {
+    env::var("ZDOTDIR")
+        .map(|ref zdotdir| Path::new(zdotdir).join(".zshrc"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
+        .to_str()
+        .map(PathBuf::from)
+        .ok_or(())
+}
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
     if let Some(zsh) = which("zsh") {
-        if base_dirs.home_dir().join(".zplug").exists() {
+        if zplug_exists(base_dirs) {
             print_separator("zplug");
 
             let success = || -> Result<(), Error> {
-                run_type
-                    .execute(zsh)
-                    .args(&["-c", "source ~/.zshrc && zplug update"])
-                    .check_run()?;
+                let zshrc = get_zshrc(base_dirs).map_err(|_| Error::from(SkipStep))?;
+                let cmd = format!("source {} && zplug update", zshrc.display());
+                run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()?;
                 Ok(())
             }()
             .is_ok();
