@@ -132,8 +132,11 @@ fn run() -> Result<(), Error> {
     let powershell = windows::Powershell::new();
 
     #[cfg(windows)]
+    let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
+
+    #[cfg(windows)]
     {
-        if powershell.profile().is_some() && config.should_run(Step::Powershell) {
+        if should_run_powershell {
             execute(
                 &mut report,
                 "Powershell Modules Update",
