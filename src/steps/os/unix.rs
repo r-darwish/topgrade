@@ -1,119 +1,76 @@
-use crate::error::{Error, ErrorKind::*};
+use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{require, which};
+use crate::utils::{require, PathExt};
 use directories::BaseDirs;
 use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-fn zplug_exists(base_dirs: &BaseDirs) -> bool {
+pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let zsh = require("zsh")?;
+
     env::var("ZPLUG_HOME")
-        .map(|ref zplug_home| Path::new(zplug_home).exists())
-        .unwrap_or(false)
-        || base_dirs.home_dir().join("zplug").exists()
-}
-
-fn get_zshrc(base_dirs: &BaseDirs) -> Result<PathBuf, ()> {
-    env::var("ZDOTDIR")
-        .map(|ref zdotdir| Path::new(zdotdir).join(".zshrc"))
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
-        .to_str()
         .map(PathBuf::from)
-        .ok_or(())
+        .unwrap_or_else(|_| base_dirs.home_dir().join("zplug"))
+        .require()?;
+
+    let zshrc = env::var("ZDOTDIR")
+        .map(|p| Path::new(&p).join(".zshrc"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
+        .require()?;
+
+    let cmd = format!("source {} && zplug update", zshrc.display());
+    run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
-pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(zsh) = which("zsh") {
-        if zplug_exists(base_dirs) {
-            print_separator("zplug");
-
-            let success = || -> Result<(), Error> {
-                let zshrc = get_zshrc(base_dirs).map_err(|_| Error::from(SkipStep))?;
-                let cmd = format!("source {} && zplug update", zshrc.display());
-                run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()?;
-                Ok(())
-            }()
-            .is_ok();
-
-            return Some(("zplug", success));
-        }
-    }
-
-    None
-}
-
-pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(fish) = which("fish") {
-        if base_dirs.home_dir().join(".config/fish/functions/fisher.fish").exists() {
-            print_separator("fisher");
-
-            let success = || -> Result<(), Error> {
-                run_type
-                    .execute(&fish)
-                    .args(&["-c", "fisher self-update"])
-                    .check_run()?;
-                run_type.execute(&fish).args(&["-c", "fisher"]).check_run()?;
-                Ok(())
-            }()
-            .is_ok();
-
-            return Some(("fisher", success));
-        }
-    }
-
-    None
+pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let fish = require("fish")?;
+    base_dirs
+        .home_dir()
+        .join(".config/fish/functions/fisher.fish")
+        .require()?;
+    run_type
+        .execute(&fish)
+        .args(&["-c", "fisher self-update"])
+        .check_run()?;
+    run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
 #[must_use]
-pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(brew) = which("brew") {
-        print_separator("Brew");
+pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    let brew = require("brew")?;
+    print_separator("Brew");
 
-        let inner = || -> Result<(), Error> {
-            run_type.execute(&brew).arg("update").check_run()?;
-            run_type.execute(&brew).arg("upgrade").check_run()?;
+    run_type.execute(&brew).arg("update").check_run()?;
+    run_type.execute(&brew).arg("upgrade").check_run()?;
 
-            let cask_upgrade_exists = Command::new(&brew)
-                .args(&["--repository", "buo/cask-upgrade"])
-                .check_output()
-                .map(|p| Path::new(p.trim()).exists())?;
+    let cask_upgrade_exists = Command::new(&brew)
+        .args(&["--repository", "buo/cask-upgrade"])
+        .check_output()
+        .map(|p| Path::new(p.trim()).exists())?;
 
-            if cask_upgrade_exists {
-                run_type.execute(&brew).args(&["cu", "-a"]).check_run()?;
-            } else {
-                run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
-            }
-
-            if cleanup {
-                run_type.execute(&brew).arg("cleanup").check_run()?;
-            }
-            Ok(())
-        };
-
-        return Some(("Brew", inner().is_ok()));
+    if cask_upgrade_exists {
+        run_type.execute(&brew).args(&["cu", "-a"]).check_run()?;
+    } else {
+        run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
     }
 
-    None
+    if cleanup {
+        run_type.execute(&brew).arg("cleanup").check_run()?;
+    }
+
+    Ok(())
 }
 
 #[must_use]
-pub fn run_nix(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(nix) = which("nix") {
-        if let Some(nix_env) = which("nix-env") {
-            print_separator("Nix");
+pub fn run_nix(run_type: RunType) -> Result<(), Error> {
+    let nix = require("nix")?;
+    let nix_env = require("nix_env")?;
 
-            let inner = || -> Result<(), Error> {
-                run_type.execute(&nix).arg("upgrade-nix").check_run()?;
-                run_type.execute(&nix_env).arg("--upgrade").check_run()?;
-                Ok(())
-            };
-
-            return Some(("Nix", inner().is_ok()));
-        }
-    }
-
-    None
+    print_separator("Nix");
+    run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+    run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
 
 pub fn run_pearl(run_type: RunType) -> Result<(), Error> {
