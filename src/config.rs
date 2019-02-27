@@ -23,6 +23,9 @@ lazy_static! {
         m.insert("emacs", Step::Emacs);
         m.insert("gem", Step::Gem);
 
+        #[cfg(windows)]
+        m.insert("powershell", Step::Powershell);
+
         m
     };
 }
