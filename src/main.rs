@@ -183,17 +183,19 @@ fn run() -> Result<(), Error> {
     execute(&mut report, "Scoop", || windows::run_scoop(run_type), config.no_retry())?;
 
     #[cfg(unix)]
-    report.push_result(execute_legacy(
+    execute(
+        &mut report,
+        "brew",
         || unix::run_homebrew(config.cleanup(), run_type),
         config.no_retry(),
-    )?);
+    )?;
     #[cfg(target_os = "freebsd")]
     report.push_result(execute_legacy(
         || freebsd::upgrade_packages(&sudo, run_type),
         config.no_retry(),
     )?);
     #[cfg(unix)]
-    report.push_result(execute_legacy(|| unix::run_nix(run_type), config.no_retry())?);
+    execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
 
     if config.should_run(Step::Emacs) {
         #[cfg(unix)]
@@ -243,14 +245,18 @@ fn run() -> Result<(), Error> {
 
     #[cfg(unix)]
     {
-        report.push_result(execute_legacy(
+        execute(
+            &mut report,
+            "zplug",
             || unix::run_zplug(&base_dirs, run_type),
             config.no_retry(),
-        )?);
-        report.push_result(execute_legacy(
+        )?;
+        execute(
+            &mut report,
+            "fisher",
             || unix::run_fisher(&base_dirs, run_type),
             config.no_retry(),
-        )?);
+        )?;
         report.push_result(execute_legacy(
             || tmux::run_tpm(&base_dirs, run_type),
             config.no_retry(),
