@@ -24,32 +24,6 @@ use std::io;
 use std::path::PathBuf;
 use std::process::exit;
 
-fn execute_legacy<'a, F, M>(func: F, no_retry: bool) -> Result<Option<(M, bool)>, Error>
-where
-    M: Into<Cow<'a, str>>,
-    F: Fn() -> Option<(M, bool)>,
-{
-    while let Some((key, success)) = func() {
-        if success {
-            return Ok(Some((key, success)));
-        }
-
-        let interrupted = ctrlc::interrupted();
-        if interrupted {
-            ctrlc::unset_interrupted();
-        }
-
-        let should_ask = interrupted || !no_retry;
-        let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
-
-        if !should_retry {
-            return Ok(Some((key, success)));
-        }
-    }
-
-    Ok(None)
-}
-
 fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
 where
     F: Fn() -> Result<(), Error>,
@@ -193,10 +167,12 @@ fn run() -> Result<(), Error> {
         config.no_retry(),
     )?;
     #[cfg(target_os = "freebsd")]
-    report.push_result(execute_legacy(
+    execute(
+        &mut report,
+        "FreeBSD Packages",
         || freebsd::upgrade_packages(&sudo, run_type),
         config.no_retry(),
-    )?);
+    )?;
     #[cfg(unix)]
     execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
 
@@ -391,10 +367,12 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            report.push_result(execute_legacy(
-                || Some((name, generic::run_custom_command(&name, &command, run_type).is_ok())),
+            execute(
+                &mut report,
+                name,
+                || generic::run_custom_command(&name, &command, run_type),
                 config.no_retry(),
-            )?);
+            )?;
         }
     }
 
@@ -429,10 +407,12 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "freebsd")]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute_legacy(
+            execute(
+                &mut report,
+                "FreeBSD Upgrade",
                 || freebsd::upgrade_freebsd(&sudo, run_type),
                 config.no_retry(),
-            )?);
+            )?;
         }
     }
 
