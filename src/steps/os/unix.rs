@@ -9,7 +9,6 @@ use std::process::Command;
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let zsh = require("zsh")?;
-    print_separator("zplug");
 
     env::var("ZPLUG_HOME")
         .map(PathBuf::from)
@@ -20,6 +19,8 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
         .map(|p| Path::new(&p).join(".zshrc"))
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
         .require()?;
+
+    print_separator("zplug");
 
     let cmd = format!("source {} && zplug update", zshrc.display());
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
