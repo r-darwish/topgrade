@@ -1,7 +1,7 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{which, PathExt};
+use crate::utils::{require, PathExt};
 use directories::BaseDirs;
 use std::path::PathBuf;
 use std::process::Command;
@@ -29,33 +29,20 @@ impl NPM {
     }
 }
 
-#[must_use]
-pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(npm) = which("npm").map(NPM::new) {
-        if let Ok(npm_root) = npm.root() {
-            if npm_root.is_descendant_of(base_dirs.home_dir()) {
-                print_separator("Node Package Manager");
-                let success = npm.upgrade(run_type).is_ok();
-                return Some(("NPM", success));
-            }
-        }
+pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let npm = require("npm").map(NPM::new)?;
+    let npm_root = npm.root()?;
+    if !npm_root.is_descendant_of(base_dirs.home_dir()) {
+        Err(ErrorKind::SkipStep)?;
     }
-    None
+
+    print_separator("Node Package Manager");
+    npm.upgrade(run_type)
 }
 
-#[must_use]
-pub fn yarn_global_update(run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(yarn) = which("yarn") {
-        print_separator("Yarn");
+pub fn yarn_global_update(run_type: RunType) -> Result<(), Error> {
+    let yarn = require("yarn")?;
 
-        let success = || -> Result<(), Error> {
-            run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()?;
-            Ok(())
-        }()
-        .is_ok();
-
-        return Some(("yarn", success));
-    }
-
-    None
+    print_separator("Yarn");
+    run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()
 }

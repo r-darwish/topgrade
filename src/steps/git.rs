@@ -55,25 +55,18 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P, run_type: RunType) -> Option<(String, bool)> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P, run_type: RunType) -> Result<(), Error> {
         let path = path.as_ref();
 
         print_separator(format!("Pulling {}", HumanizedPath::from(path)));
 
         let git = self.git.as_ref().unwrap();
 
-        let success = || -> Result<(), Error> {
-            run_type
-                .execute(git)
-                .args(&["pull", "--rebase", "--autostash"])
-                .current_dir(&path)
-                .check_run()?;
-
-            Ok(())
-        }()
-        .is_ok();
-
-        Some((format!("git: {}", HumanizedPath::from(path)), success))
+        run_type
+            .execute(git)
+            .args(&["pull", "--rebase", "--autostash"])
+            .current_dir(&path)
+            .check_run()
     }
 }
 

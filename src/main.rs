@@ -243,7 +243,12 @@ fn run() -> Result<(), Error> {
         }
     }
     for repo in git_repos.repositories() {
-        report.push_result(execute_legacy(|| git.pull(&repo, run_type), config.no_retry())?);
+        execute(
+            &mut report,
+            format!("git: {}", utils::HumanizedPath::from(std::path::Path::new(&repo))),
+            || git.pull(&repo, run_type),
+            config.no_retry(),
+        )?;
     }
 
     #[cfg(unix)]
@@ -260,10 +265,12 @@ fn run() -> Result<(), Error> {
             || unix::run_fisher(&base_dirs, run_type),
             config.no_retry(),
         )?;
-        report.push_result(execute_legacy(
+        execute(
+            &mut report,
+            "tmux",
             || tmux::run_tpm(&base_dirs, run_type),
             config.no_retry(),
-        )?);
+        )?;
     }
 
     execute(
@@ -316,30 +323,38 @@ fn run() -> Result<(), Error> {
     )?;
 
     if config.should_run(Step::Vim) {
-        report.push_result(execute_legacy(
+        execute(
+            &mut report,
+            "vim",
             || vim::upgrade_vim(&base_dirs, run_type),
             config.no_retry(),
-        )?);
-        report.push_result(execute_legacy(
+        )?;
+        execute(
+            &mut report,
+            "Neovim",
             || vim::upgrade_neovim(&base_dirs, run_type),
             config.no_retry(),
-        )?);
+        )?;
     }
 
-    report.push_result(execute_legacy(
+    execute(
+        &mut report,
+        "NPM",
         || node::run_npm_upgrade(&base_dirs, run_type),
         config.no_retry(),
-    )?);
+    )?;
     execute(
         &mut report,
         "composer",
         || generic::run_composer_update(&base_dirs, run_type),
         config.no_retry(),
     )?;
-    report.push_result(execute_legacy(
+    execute(
+        &mut report,
+        "yarn",
         || node::yarn_global_update(run_type),
         config.no_retry(),
-    )?);
+    )?;
 
     #[cfg(not(any(
         target_os = "freebsd",
@@ -402,7 +417,12 @@ fn run() -> Result<(), Error> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
-            report.push_result(execute_legacy(|| macos::upgrade_macos(run_type), config.no_retry())?);
+            execute(
+                &mut report,
+                "App Store",
+                || macos::upgrade_macos(run_type),
+                config.no_retry(),
+            )?;
         }
     }
 

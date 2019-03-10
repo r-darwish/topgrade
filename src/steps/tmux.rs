@@ -10,24 +10,15 @@ use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 
-pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(tpm) = base_dirs
+pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let tpm = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
-        .if_exists()
-    {
-        print_separator("tmux plugins");
+        .require()?;
 
-        let success = || -> Result<(), Error> {
-            run_type.execute(&tpm).arg("all").check_run()?;
-            Ok(())
-        }()
-        .is_ok();
+    print_separator("tmux plugins");
 
-        return Some(("tmux", success));
-    }
-
-    None
+    run_type.execute(&tpm).arg("all").check_run()
 }
 
 fn has_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
