@@ -5,43 +5,19 @@ use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
-#[must_use]
-pub fn upgrade_freebsd(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
+pub fn upgrade_freebsd(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
     print_separator("FreeBSD Update");
-
-    if let Some(sudo) = sudo {
-        let success = || -> Result<(), Error> {
-            run_type
-                .execute(sudo)
-                .args(&["/usr/sbin/freebsd-update", "fetch", "install"])
-                .check_run()?;
-            Ok(())
-        }()
-        .is_ok();
-
-        Some(("FreeBSD Update", success))
-    } else {
-        print_warning("No sudo or yay detected. Skipping system upgrade");
-        None
-    }
+    run_type
+        .execute(sudo)
+        .args(&["/usr/sbin/freebsd-update", "fetch", "install"])
+        .check_run()
 }
 
-#[must_use]
-pub fn upgrade_packages(sudo: &Option<PathBuf>, run_type: RunType) -> Option<(&'static str, bool)> {
+pub fn upgrade_packages(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
     print_separator("FreeBSD Packages");
-
-    if let Some(sudo) = sudo {
-        let success = || -> Result<(), Error> {
-            run_type.execute(sudo).args(&["/usr/sbin/pkg", "upgrade"]).check_run()?;
-            Ok(())
-        }()
-        .is_ok();
-
-        Some(("FreeBSD Packages", success))
-    } else {
-        print_warning("No sudo or yay detected. Skipping package upgrade");
-        None
-    }
+    run_type.execute(sudo).args(&["/usr/sbin/pkg", "upgrade"]).check_run()
 }
 
 pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<(), Error> {
