@@ -9,6 +9,7 @@ use std::process::Command;
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let zsh = require("zsh")?;
+    print_separator("zplug");
 
     env::var("ZPLUG_HOME")
         .map(PathBuf::from)
