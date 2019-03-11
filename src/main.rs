@@ -108,18 +108,6 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
 
-    #[cfg(windows)]
-    {
-        if should_run_powershell {
-            execute(
-                &mut report,
-                "Powershell Modules Update",
-                || powershell.update_modules(run_type),
-                config.no_retry(),
-            )?;
-        }
-    }
-
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();
 
@@ -225,6 +213,18 @@ fn run() -> Result<(), Error> {
             || git.pull(&repo, run_type),
             config.no_retry(),
         )?;
+    }
+
+    #[cfg(windows)]
+    {
+        if should_run_powershell {
+            execute(
+                &mut report,
+                "Powershell Modules Update",
+                || powershell.update_modules(run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     #[cfg(unix)]
