@@ -1,7 +1,7 @@
 use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::{which, PathExt};
+use crate::utils::{require, require_option, PathExt};
 use directories::BaseDirs;
 use std::fs;
 use std::path::PathBuf;
@@ -77,31 +77,21 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(vim) = which("vim") {
-        if let Some(vimrc) = vimrc(&base_dirs) {
-            if let Some(plugin_framework) = PluginFramework::detect(&vimrc) {
-                print_separator(&format!("Vim ({:?})", plugin_framework));
-                let success = upgrade(&vim, &vimrc, plugin_framework, run_type).is_ok();
-                return Some(("vim", success));
-            }
-        }
-    }
+pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let vim = require("vim")?;
+    let vimrc = require_option(vimrc(&base_dirs))?;
+    let plugin_framework = require_option(PluginFramework::detect(&vimrc))?;
 
-    None
+    print_separator(&format!("Vim ({:?})", plugin_framework));
+    upgrade(&vim, &vimrc, plugin_framework, run_type)
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Option<(&'static str, bool)> {
-    if let Some(nvim) = which("nvim") {
-        if let Some(nvimrc) = nvimrc(&base_dirs) {
-            if let Some(plugin_framework) = PluginFramework::detect(&nvimrc) {
-                print_separator(&format!("Neovim ({:?})", plugin_framework));
-                let success = upgrade(&nvim, &nvimrc, plugin_framework, run_type).is_ok();
-                return Some(("Neovim", success));
-            }
-        }
-    }
+pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let nvim = require("nvim")?;
+    let nvimrc = require_option(nvimrc(&base_dirs))?;
+    let plugin_framework = require_option(PluginFramework::detect(&nvimrc))?;
 
-    None
+    print_separator(&format!("Neovim ({:?})", plugin_framework));
+    upgrade(&nvim, &nvimrc, plugin_framework, run_type)
 }
