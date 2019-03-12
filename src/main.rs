@@ -20,8 +20,6 @@ use std::borrow::Cow;
 use std::env;
 use std::fmt::Debug;
 use std::io;
-#[cfg(windows)]
-use std::path::PathBuf;
 use std::process::exit;
 
 fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
@@ -164,16 +162,10 @@ fn run() -> Result<(), Error> {
     #[cfg(unix)]
     execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
 
+    let emacs = emacs::Emacs::new(&base_dirs);
     if config.should_run(Step::Emacs) {
-        #[cfg(unix)]
-        git_repos.insert(base_dirs.home_dir().join(".emacs.d"));
-
-        #[cfg(windows)]
-        {
-            git_repos.insert(base_dirs.data_dir().join(".emacs.d"));
-            if let Ok(home) = env::var("HOME") {
-                git_repos.insert(PathBuf::from(home).join(".emacs.d"));
-            }
+        if let Some(directory) = emacs.directory() {
+            git_repos.insert(directory);
         }
     }
 
@@ -264,12 +256,7 @@ fn run() -> Result<(), Error> {
     )?;
 
     if config.should_run(Step::Emacs) {
-        execute(
-            &mut report,
-            "Emacs",
-            || generic::run_emacs(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;
     }
 
     execute(

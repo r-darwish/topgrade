@@ -7,8 +7,6 @@ use failure::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
-const EMACS_UPGRADE: &str = include_str!("emacs.el");
-
 pub fn run_cargo_update(run_type: RunType) -> Result<(), Error> {
     let cargo_update = utils::require("cargo-install-update")?;
 
@@ -27,18 +25,6 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     print_separator("RubyGems");
 
     run_type.execute(&gem).args(&["update", "--user-install"]).check_run()
-}
-
-pub fn run_emacs(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
-    let emacs = utils::require("emacs")?;
-    let init_file = base_dirs.home_dir().join(".emacs.d/init.el").require()?;
-
-    print_separator("Emacs");
-
-    run_type
-        .execute(&emacs)
-        .args(&["--batch", "-l", init_file.to_str().unwrap(), "--eval", EMACS_UPGRADE])
-        .check_run()
 }
 
 #[cfg(not(any(
