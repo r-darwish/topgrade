@@ -53,7 +53,7 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<(), Error> {
         .map(|p| Path::new(p.trim()).exists())?;
 
     if cask_upgrade_exists {
-        run_type.execute(&brew).args(&["cu", "-a"]).check_run()?;
+        run_type.execute(&brew).args(&["cu", "-ay"]).check_run()?;
     } else {
         run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
     }
