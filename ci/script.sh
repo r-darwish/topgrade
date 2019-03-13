@@ -7,6 +7,7 @@ main() {
     cargo fmt --all -- --check
     cross clippy --all-targets -- -D warnings
     cross clippy --all-targets --all-features -- -D warnings
+    cross check --target $TARGET --release --all-features
 
     if [ ! -z $DISABLE_TESTS ]; then
         cross test
