@@ -158,7 +158,7 @@ fn run() -> Result<(), Error> {
     execute(
         &mut report,
         "FreeBSD Packages",
-        || freebsd::upgrade_packages(&sudo, run_type),
+        || freebsd::upgrade_packages(sudo.as_ref(), run_type),
         config.no_retry(),
     )?;
     #[cfg(unix)]
@@ -410,7 +410,7 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 "FreeBSD Upgrade",
-                || freebsd::upgrade_freebsd(&sudo, run_type),
+                || freebsd::upgrade_freebsd(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
         }
