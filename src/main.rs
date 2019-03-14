@@ -190,6 +190,7 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.home_dir().join(".config/fish"));
         git_repos.insert(base_dirs.config_dir().join("openbox"));
         git_repos.insert(base_dirs.config_dir().join("bspwm"));
+        git_repos.insert(base_dirs.config_dir().join("i3"));
     }
 
     #[cfg(windows)]
