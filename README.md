@@ -71,6 +71,8 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/nvim
   * ~/.vim
   * ~/.config/openbox
+  * ~/.config/bspwm
+  * ~/.config/i3
   * Powershell Profile
   * Custom defined paths
 * **Unix**: Run [zplug](https://github.com/zplug/zplug) update
