@@ -1,7 +1,9 @@
-pub fn running() -> bool {
-    true
+//! A stub for Ctrl + C handling.
+
+pub fn interrupted() -> bool {
+    false
 }
 
-pub fn set_running(_value: bool) {}
+pub fn unset_interrupted() {}
 
 pub fn set_handler() {}

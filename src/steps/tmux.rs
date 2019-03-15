@@ -1,32 +1,24 @@
-use super::executor::Executor;
-use super::terminal::Terminal;
-use super::utils::which;
-use super::utils::{Check, PathExt};
+use crate::error::{Error, ErrorKind};
+use crate::executor::RunType;
+use crate::terminal::print_separator;
+use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
-use failure::Error;
+use failure::ResultExt;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::path::Path;
 use std::process::Command;
 
-pub fn run_tpm(base_dirs: &BaseDirs, terminal: &mut Terminal, dry_run: bool) -> Option<(&'static str, bool)> {
-    if let Some(tpm) = base_dirs
+pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let tpm = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
-        .if_exists()
-    {
-        terminal.print_separator("tmux plugins");
+        .require()?;
 
-        let success = || -> Result<(), Error> {
-            Executor::new(&tpm, dry_run).arg("all").spawn()?.wait()?.check()?;
-            Ok(())
-        }().is_ok();
+    print_separator("tmux plugins");
 
-        return Some(("tmux", success));
-    }
-
-    None
+    run_type.execute(&tpm).arg("all").check_run()
 }
 
 fn has_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
@@ -40,8 +32,10 @@ fn has_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
 fn run_in_session(tmux: &Path, command: &str) -> Result<(), Error> {
     Command::new(tmux)
         .args(&["new-window", "-a", "-t", "topgrade:1", command])
-        .spawn()?
-        .wait()?
+        .spawn()
+        .context(ErrorKind::ProcessExecution)?
+        .wait()
+        .context(ErrorKind::ProcessExecution)?
         .check()?;
 
     Ok(())
@@ -70,7 +64,8 @@ pub fn run_in_tmux() -> ! {
                 "set",
                 "remain-on-exit",
                 "on",
-            ]).exec();
+            ])
+            .exec();
 
         panic!("{:?}", err);
     }

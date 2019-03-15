@@ -1,95 +1,140 @@
-use console::Term;
+use console::{style, Term};
+use lazy_static::lazy_static;
 use std::cmp::{max, min};
 use std::io::{self, Write};
-use term_size;
-use termcolor::{Color, ColorChoice, ColorSpec, StandardStream, WriteColor};
+use std::sync::Mutex;
 
-pub struct Terminal {
-    width: Option<usize>,
-    stdout: StandardStream,
+lazy_static! {
+    static ref TERMINAL: Mutex<Terminal> = Mutex::new(Terminal::new());
+}
+
+struct Terminal {
+    width: Option<u16>,
+    term: Term,
 }
 
 impl Terminal {
-    pub fn new() -> Self {
+    fn new() -> Self {
+        let term = Term::stdout();
         Self {
-            width: term_size::dimensions().map(|(w, _)| w),
-            stdout: StandardStream::stdout(ColorChoice::Auto),
+            width: term.size_checked().map(|(_, w)| w),
+            term,
         }
     }
 
-    pub fn print_separator<P: AsRef<str>>(&mut self, message: P) {
+    fn print_separator<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
         match self.width {
             Some(width) => {
-                let _ = self
-                    .stdout
-                    .set_color(ColorSpec::new().set_fg(Some(Color::White)).set_bold(true));
-                let _ = writeln!(
-                    &mut self.stdout,
-                    "\n―― {} {:―^border$}",
-                    message,
-                    "",
-                    border = max(2, min(80, width as usize) - 3 - message.len())
-                );
-                let _ = self.stdout.reset();
-                let _ = self.stdout.flush();
+                self.term
+                    .write_fmt(format_args!(
+                        "{}\n",
+                        style(format_args!(
+                            "\n―― {} {:―^border$}",
+                            message,
+                            "",
+                            border = max(
+                                2,
+                                min(80, width as usize)
+                                    .checked_sub(3)
+                                    .and_then(|e| e.checked_sub(message.len()))
+                                    .unwrap_or(0)
+                            )
+                        ))
+                        .bold()
+                    ))
+                    .ok();
             }
             None => {
-                let _ = writeln!(&mut self.stdout, "―― {} ――", message);
+                self.term.write_fmt(format_args!("―― {} ――\n", message)).ok();
             }
         }
     }
 
     #[allow(dead_code)]
-    pub fn print_warning<P: AsRef<str>>(&mut self, message: P) {
+    fn print_warning<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
-
-        let _ = self
-            .stdout
-            .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
-        let _ = writeln!(&mut self.stdout, "{}", message);
-        let _ = self.stdout.reset();
-        let _ = self.stdout.flush();
+        self.term
+            .write_fmt(format_args!("{}\n", style(message).yellow().bold()))
+            .ok();
     }
 
-    pub fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
+    fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
         let key = key.as_ref();
-        let _ = write!(&mut self.stdout, "{}: ", key);
 
-        let _ = self.stdout.set_color(
-            ColorSpec::new()
-                .set_fg(Some(if succeeded { Color::Green } else { Color::Red }))
-                .set_bold(true),
-        );
-
-        let _ = writeln!(&mut self.stdout, "{}", if succeeded { "OK" } else { "FAILED" });
-
-        let _ = self.stdout.reset();
-        let _ = self.stdout.flush();
+        self.term
+            .write_fmt(format_args!(
+                "{}: {}\n",
+                key,
+                if succeeded {
+                    style("OK").bold().green()
+                } else {
+                    style("FAILED").bold().red()
+                }
+            ))
+            .ok();
     }
 
-    pub fn should_retry(&mut self, running: bool) -> Result<bool, io::Error> {
+    fn should_retry(&mut self, interrupted: bool) -> Result<bool, io::Error> {
         if self.width.is_none() {
             return Ok(false);
         }
 
-        println!();
-        loop {
-            let _ = self
-                .stdout
-                .set_color(ColorSpec::new().set_fg(Some(Color::Yellow)).set_bold(true));
-            let _ = write!(&mut self.stdout, "Retry? [y/N] ");
-            if !running {
-                write!(&mut self.stdout, "(Press Ctrl+C again to stop Topgrade) ");
-            }
-            let _ = self.stdout.reset();
-            let _ = self.stdout.flush();
+        self.term
+            .write_fmt(format_args!(
+                "\n{}",
+                style(format!(
+                    "Retry? [y/N] {}",
+                    if interrupted {
+                        "(Press Ctrl+C again to stop Topgrade) "
+                    } else {
+                        ""
+                    }
+                ))
+                .yellow()
+                .bold()
+            ))
+            .ok();
 
-            match Term::stdout().read_char()? {
-                'y' | 'Y' => return Ok(true),
-                'n' | 'N' | '\r' | '\n' => return Ok(false),
+        let answer = loop {
+            match self.term.read_char()? {
+                'y' | 'Y' => break Ok(true),
+                'n' | 'N' | '\r' | '\n' => break Ok(false),
                 _ => (),
             }
-        }
+        };
+
+        self.term.write_str("\n").ok();
+
+        answer
     }
+}
+
+impl Default for Terminal {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+pub fn should_retry(interrupted: bool) -> Result<bool, io::Error> {
+    TERMINAL.lock().unwrap().should_retry(interrupted)
+}
+
+pub fn print_separator<P: AsRef<str>>(message: P) {
+    TERMINAL.lock().unwrap().print_separator(message)
+}
+
+#[allow(dead_code)]
+pub fn print_warning<P: AsRef<str>>(message: P) {
+    TERMINAL.lock().unwrap().print_warning(message)
+}
+
+pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
+    TERMINAL.lock().unwrap().print_result(key, succeeded)
+}
+
+#[cfg(windows)]
+/// Tells whether the terminal is dumb.
+pub fn is_dumb() -> bool {
+    TERMINAL.lock().unwrap().width.is_none()
 }

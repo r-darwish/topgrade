@@ -1,16 +1,19 @@
-use super::executor::Executor;
-use super::terminal::Terminal;
-use super::utils::{which, Check};
-use failure::Error;
+use crate::error::Error;
+use crate::executor::{CommandExt, RunType};
+use crate::terminal::print_separator;
+use crate::utils::{which, HumanizedPath};
+use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+#[derive(Debug)]
 pub struct Git {
     git: Option<PathBuf>,
 }
 
+#[derive(Debug)]
 pub struct Repositories<'a> {
     git: &'a Git,
     repositories: HashSet<String>,
@@ -37,15 +40,10 @@ impl Git {
                     let output = Command::new(&git)
                         .args(&["rev-parse", "--show-toplevel"])
                         .current_dir(path)
-                        .output();
-
-                    if let Ok(output) = output {
-                        if !output.status.success() {
-                            return None;
-                        }
-
-                        return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
-                    }
+                        .check_output()
+                        .ok()
+                        .map(|output| output.trim().to_string());
+                    return output;
                 }
             }
             Err(e) => match e.kind() {
@@ -57,32 +55,18 @@ impl Git {
         None
     }
 
-    pub fn pull<P: AsRef<Path>>(&self, path: P, terminal: &mut Terminal, dry_run: bool) -> Option<(String, bool)> {
+    pub fn pull<P: AsRef<Path>>(&self, path: P, run_type: RunType) -> Result<(), Error> {
         let path = path.as_ref();
 
-        terminal.print_separator(format!("Pulling {}", path.display()));
+        print_separator(format!("Pulling {}", HumanizedPath::from(path)));
 
         let git = self.git.as_ref().unwrap();
 
-        let success = || -> Result<(), Error> {
-            Executor::new(git, dry_run)
-                .args(&["pull", "--rebase", "--autostash"])
-                .current_dir(&path)
-                .spawn()?
-                .wait()?
-                .check()?;
-
-            Executor::new(git, dry_run)
-                .args(&["submodule", "update", "--init", "--recursive"])
-                .current_dir(&path)
-                .spawn()?
-                .wait()?
-                .check()?;
-
-            Ok(())
-        }().is_ok();
-
-        Some((format!("git: {}", path.display()), success))
+        run_type
+            .execute(git)
+            .args(&["pull", "--rebase", "--autostash"])
+            .current_dir(&path)
+            .check_run()
     }
 }
 
