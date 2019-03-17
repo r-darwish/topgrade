@@ -36,7 +36,7 @@ impl Terminal {
                             border = max(
                                 2,
                                 min(80, width as usize)
-                                    .checked_sub(3)
+                                    .checked_sub(4)
                                     .and_then(|e| e.checked_sub(message.len()))
                                     .unwrap_or(0)
                             )
