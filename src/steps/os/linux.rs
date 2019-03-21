@@ -241,7 +241,10 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> R
 
 fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).args(&["/usr/bin/eopkg", "upgrade"]).check_run()?;
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/eopkg", "upgrade"])
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
