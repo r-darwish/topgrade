@@ -17,6 +17,7 @@ pub enum Distribution {
     Gentoo,
     OpenSuse,
     Void,
+    Solus,
 }
 
 impl Distribution {
@@ -51,6 +52,10 @@ impl Distribution {
             return Ok(Distribution::Void);
         }
 
+        if content.contains("Solus") {
+            return Ok(Distribution::Solus);
+        }
+
         if PathBuf::from("/etc/gentoo-release").exists() {
             return Ok(Distribution::Gentoo);
         }
@@ -70,6 +75,7 @@ impl Distribution {
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::OpenSuse => upgrade_opensuse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
+            Distribution::Solus => upgrade_solus(&sudo, run_type),
         }
     }
 
@@ -226,6 +232,19 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> R
                 .args(&["/usr/bin/apt", "autoremove"])
                 .check_run()?;
         }
+    } else {
+        print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+    if let Some(sudo) = &sudo {
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/eopkg", "upgrade"])
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
