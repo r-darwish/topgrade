@@ -1,6 +1,8 @@
 [package]
 name = "topgrade"
 description = "Upgrade all the things"
+categories = ["os"]
+keywords = ["upgrade", "update"]
 license-file = "LICENSE"
 repository = "https://github.com/r-darwish/topgrade"
 version = "1.10.0"
