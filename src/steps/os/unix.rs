@@ -70,7 +70,7 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<(), Error> {
 #[must_use]
 pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     let nix = require("nix")?;
-    let nix_env = require("nix_env")?;
+    let nix_env = require("nix-env")?;
 
     print_separator("Nix");
     run_type.execute(&nix).arg("upgrade-nix").check_run()?;
