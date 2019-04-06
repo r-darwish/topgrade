@@ -36,6 +36,8 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> 
         .execute(&fish)
         .args(&["-c", "fisher self-update"])
         .check_run()?;
+
+    print_separator("Fisher");
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
