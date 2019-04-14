@@ -76,7 +76,9 @@ impl Distribution {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
             Distribution::CentOS => upgrade_redhat(&sudo, run_type),
             Distribution::Fedora => upgrade_fedora(&sudo, run_type),
-            Distribution::Ubuntu | Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type),
+            Distribution::Ubuntu | Distribution::Debian | Distribution::Mint => {
+                upgrade_debian(&sudo, cleanup, run_type)
+            }
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::OpenSuse => upgrade_opensuse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
