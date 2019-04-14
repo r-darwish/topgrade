@@ -18,6 +18,7 @@ pub enum Distribution {
     OpenSuse,
     Void,
     Solus,
+    Mint,
 }
 
 impl Distribution {
@@ -54,6 +55,10 @@ impl Distribution {
 
         if content.contains("Solus") {
             return Ok(Distribution::Solus);
+        }
+
+        if content.contains("Mint") {
+            return Ok(Distribution::Mint);
         }
 
         if PathBuf::from("/etc/gentoo-release").exists() {
