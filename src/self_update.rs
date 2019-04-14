@@ -28,7 +28,7 @@ pub fn self_update() -> Result<(), Error> {
                 .no_confirm(true)
                 .build()
         })
-        .and_then(|u| u.update_extended())
+        .and_then(Update::update_extended)
         .context(ErrorKind::SelfUpdate)?;
 
     if let GitHubUpdateStatus::Updated(release) = &result {

@@ -100,7 +100,7 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
         .check_output()
         .map_err(|_| Error::from(ErrorKind::SkipStep))
         .map(PathBuf::from)
-        .and_then(|p| p.require())?;
+        .and_then(PathExt::require)?;
 
     if !composer_home.is_descendant_of(base_dirs.home_dir()) {
         Err(ErrorKind::SkipStep)?;

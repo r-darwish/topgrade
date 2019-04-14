@@ -96,7 +96,7 @@ impl Distribution {
 pub fn show_pacnew() {
     let mut iter = WalkDir::new("/etc")
         .into_iter()
-        .filter_map(|e| e.ok())
+        .filter_map(Result::ok)
         .filter(|f| {
             f.path()
                 .extension()
