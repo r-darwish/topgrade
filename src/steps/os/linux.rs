@@ -50,7 +50,7 @@ impl Distribution {
 
         Ok(match os_release.id.as_ref() {
             "arch" => Distribution::Arch,
-            "centos" => Distribution::CentOS,
+            "centos" | "\"ol\"" => Distribution::CentOS,
             "fedora" => Distribution::Fedora,
             "void" => Distribution::Void,
             "solus" => Distribution::Solus,
