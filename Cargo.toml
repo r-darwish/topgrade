@@ -25,6 +25,7 @@ walkdir = "2.2.7"
 console = "0.7.5"
 self_update_crate = { version = "0.5.1", optional = true, package =  "self_update" }
 lazy_static = "1.2.0"
+serde_ini = "0.2.0"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.13.0"

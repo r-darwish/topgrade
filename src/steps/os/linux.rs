@@ -3,9 +3,20 @@ use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which};
 use failure::ResultExt;
+use serde::Deserialize;
+use serde_ini;
 use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
+
+static OS_RELEASE_PATH: &str = "/etc/os-release";
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "UPPERCASE")]
+struct OsRelease {
+    id_like: Option<String>,
+    id: String,
+}
 
 #[derive(Copy, Clone, Debug)]
 pub enum Distribution {
@@ -13,52 +24,43 @@ pub enum Distribution {
     CentOS,
     Fedora,
     Debian,
-    Ubuntu,
     Gentoo,
-    OpenSuse,
+    Suse,
     Void,
     Solus,
-    Mint,
 }
 
 impl Distribution {
+    fn parse_os_release() -> Result<Self, Error> {
+        let os_release: OsRelease =
+            serde_ini::de::from_read(fs::File::open(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?)
+                .context(ErrorKind::UnknownLinuxDistribution)?;
+
+        match os_release.id_like.as_ref().map(String::as_str) {
+            Some("debian") => {
+                return Ok(Distribution::Debian);
+            }
+            Some("\"suse\"") => {
+                return Ok(Distribution::Suse);
+            }
+            _ => (),
+        }
+
+        if let Some("debian") = os_release.id_like.as_ref().map(String::as_str) {}
+
+        Ok(match os_release.id.as_ref() {
+            "arch" => Distribution::Arch,
+            "centos" => Distribution::CentOS,
+            "fedora" => Distribution::Fedora,
+            "void" => Distribution::Void,
+            "solus" => Distribution::Solus,
+            _ => Err(ErrorKind::UnknownLinuxDistribution)?,
+        })
+    }
+
     pub fn detect() -> Result<Self, Error> {
-        let content = fs::read_to_string("/etc/os-release").context(ErrorKind::UnknownLinuxDistribution)?;
-
-        if content.contains("Arch") | content.contains("Manjaro") | content.contains("Antergos") {
-            return Ok(Distribution::Arch);
-        }
-
-        if content.contains("CentOS") || content.contains("Oracle Linux") {
-            return Ok(Distribution::CentOS);
-        }
-
-        if content.contains("Fedora") {
-            return Ok(Distribution::Fedora);
-        }
-
-        if content.contains("Ubuntu") {
-            return Ok(Distribution::Ubuntu);
-        }
-
-        if content.contains("Debian") {
-            return Ok(Distribution::Debian);
-        }
-
-        if content.contains("openSUSE") {
-            return Ok(Distribution::OpenSuse);
-        }
-
-        if content.contains("void") {
-            return Ok(Distribution::Void);
-        }
-
-        if content.contains("Solus") {
-            return Ok(Distribution::Solus);
-        }
-
-        if content.contains("Mint") {
-            return Ok(Distribution::Mint);
+        if PathBuf::from(OS_RELEASE_PATH).exists() {
+            return Self::parse_os_release();
         }
 
         if PathBuf::from("/etc/gentoo-release").exists() {
@@ -76,11 +78,9 @@ impl Distribution {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
             Distribution::CentOS => upgrade_redhat(&sudo, run_type),
             Distribution::Fedora => upgrade_fedora(&sudo, run_type),
-            Distribution::Ubuntu | Distribution::Debian | Distribution::Mint => {
-                upgrade_debian(&sudo, cleanup, run_type)
-            }
+            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
-            Distribution::OpenSuse => upgrade_opensuse(&sudo, run_type),
+            Distribution::Suse => upgrade_suse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
             Distribution::Solus => upgrade_solus(&sudo, run_type),
         }
@@ -152,7 +152,7 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
     Ok(())
 }
 
-fn upgrade_opensuse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         run_type
             .execute(&sudo)
