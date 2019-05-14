@@ -73,10 +73,3 @@ before_cache:
 notifications:
   email:
     on_success: never
-
-branches:
-  only:
-    - staging
-    - trying
-    - master
-    - /^v[\d.]+$/
