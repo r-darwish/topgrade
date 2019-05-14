@@ -11,6 +11,7 @@ pub enum PluginFramework {
     Plug,
     Vundle,
     NeoBundle,
+    Dein
 }
 
 impl PluginFramework {
@@ -23,6 +24,8 @@ impl PluginFramework {
             Some(PluginFramework::Vundle)
         } else if content.contains("plug#begin") {
             Some(PluginFramework::Plug)
+        } else if content.contains("dein#begin") {
+            Some(PluginFramework::Dein)
         } else {
             None
         }
@@ -33,6 +36,7 @@ impl PluginFramework {
             PluginFramework::NeoBundle => "NeoBundleUpdate",
             PluginFramework::Vundle => "PluginUpdate",
             PluginFramework::Plug => "PlugUpgrade | PlugUpdate",
+            PluginFramework::Dein => "call dein#install() | call dein#update()",
         }
     }
 }
