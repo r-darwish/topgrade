@@ -10,10 +10,10 @@ main() {
     cross check --target $TARGET --release --all-features
 
     if [ ! -z $DISABLE_TESTS ]; then
-        cross test
         return
     fi
 
+    cross test
 }
 
 # we don't run the "test phase" when doing deploys
