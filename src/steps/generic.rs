@@ -88,6 +88,27 @@ pub fn run_pipx_update(run_type: RunType) -> Result<(), Error> {
     run_type.execute(&pipx).arg("upgrade-all").check_run()
 }
 
+pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let myrepos = utils::require("mr")?;
+    base_dirs.home_dir().join(".mrconfig").require()?;
+
+    print_separator("myrepos");
+
+    match base_dirs.home_dir().to_str() {
+        None => Err(ErrorKind::NoBaseDirectories)?,
+        Some(p) => {
+            run_type
+                .execute(&myrepos)
+                .args(&["-m", "-q", "-s", "--directory", p, "checkout"])
+                .check_run()?;
+            run_type
+                .execute(&myrepos)
+                .args(&["-m", "-q", "-s", "--directory", p, "update"])
+                .check_run()
+        }
+    }
+}
+
 pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Result<(), Error> {
     print_separator(name);
     run_type.execute("sh").arg("-c").arg(command).check_run()
