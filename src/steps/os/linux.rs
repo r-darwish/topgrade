@@ -18,7 +18,7 @@ struct OsRelease {
     id: String,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Distribution {
     Arch,
     CentOS,
@@ -31,17 +31,13 @@ pub enum Distribution {
 }
 
 impl Distribution {
-    fn parse_os_release() -> Result<Self, Error> {
-        let os_release: OsRelease =
-            serde_ini::de::from_read(fs::File::open(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?)
-                .context(ErrorKind::UnknownLinuxDistribution)?;
-
+    fn parse_os_release(os_release: &OsRelease) -> Result<Self, Error> {
         Ok(
             match (os_release.id.as_ref(), os_release.id_like.as_ref().map(String::as_str)) {
-                (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
+                ("debian", _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
                 (_, Some("\"suse\"")) => Distribution::Suse,
-                ("arch", _) | (_, Some("archlinux")) => Distribution::Arch,
-                ("centos", _) | ("\"ol\"", _) => Distribution::CentOS,
+                ("arch", _) | (_, Some("archlinux")) | (_, Some("\"arch\"")) => Distribution::Arch,
+                ("\"centos\"", _) | ("\"ol\"", _) => Distribution::CentOS,
                 ("fedora", _) => Distribution::Fedora,
                 ("void", _) => Distribution::Void,
                 ("solus", _) => Distribution::Solus,
@@ -52,7 +48,11 @@ impl Distribution {
 
     pub fn detect() -> Result<Self, Error> {
         if PathBuf::from(OS_RELEASE_PATH).exists() {
-            return Self::parse_os_release();
+            let os_release: OsRelease =
+                serde_ini::de::from_read(fs::File::open(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?)
+                    .context(ErrorKind::UnknownLinuxDistribution)?;
+
+            return Self::parse_os_release(&os_release);
         }
 
         if PathBuf::from("/etc/gentoo-release").exists() {
@@ -310,4 +310,61 @@ pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), E
     print_separator("etc-update");
 
     run_type.execute(sudo).arg(&etc_update.to_str().unwrap()).check_run()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_template(os_release_file: &str, expected_distribution: Distribution) {
+        let os_release: OsRelease = serde_ini::de::from_str(os_release_file).unwrap();
+        assert_eq!(
+            Distribution::parse_os_release(&os_release).unwrap(),
+            expected_distribution
+        );
+    }
+    #[test]
+    fn test_arch_linux() {
+        test_template(&include_str!("os_release/arch"), Distribution::Arch);
+    }
+
+    #[test]
+    fn test_centos() {
+        test_template(&include_str!("os_release/centos"), Distribution::CentOS);
+    }
+
+    #[test]
+    fn test_debian() {
+        test_template(&include_str!("os_release/debian"), Distribution::Debian);
+    }
+
+    #[test]
+    fn test_ubuntu() {
+        test_template(&include_str!("os_release/ubuntu"), Distribution::Debian);
+    }
+
+    #[test]
+    fn test_mint() {
+        test_template(&include_str!("os_release/mint"), Distribution::Debian);
+    }
+
+    #[test]
+    fn test_opensuse() {
+        test_template(&include_str!("os_release/opensuse"), Distribution::Suse);
+    }
+
+    #[test]
+    fn test_oraclelinux() {
+        test_template(&include_str!("os_release/oracle"), Distribution::CentOS);
+    }
+
+    #[test]
+    fn test_fedora() {
+        test_template(&include_str!("os_release/fedora"), Distribution::Fedora);
+    }
+
+    #[test]
+    fn test_antergos() {
+        test_template(&include_str!("os_release/antergos"), Distribution::Arch);
+    }
 }
