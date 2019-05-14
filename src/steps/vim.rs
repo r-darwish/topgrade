@@ -11,7 +11,7 @@ pub enum PluginFramework {
     Plug,
     Vundle,
     NeoBundle,
-    Dein
+    Dein,
 }
 
 impl PluginFramework {
