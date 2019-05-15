@@ -43,7 +43,9 @@ impl Emacs {
 
         run_type
             .execute(&emacs)
-            .args(&["--batch", "-l", init_file.to_str().unwrap(), "--eval", EMACS_UPGRADE])
+            .args(&["--batch", "-l"])
+            .arg(init_file)
+            .args(&["--eval", EMACS_UPGRADE])
             .check_run()
     }
 }

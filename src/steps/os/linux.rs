@@ -297,10 +297,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
     }
     print_separator("snap");
 
-    run_type
-        .execute(sudo)
-        .args(&[snap.to_str().unwrap(), "refresh"])
-        .check_run()
+    run_type.execute(sudo).arg(snap).arg("refresh").check_run()
 }
 
 #[must_use]
@@ -309,7 +306,7 @@ pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), E
     let etc_update = require("etc_update")?;
     print_separator("etc-update");
 
-    run_type.execute(sudo).arg(&etc_update.to_str().unwrap()).check_run()
+    run_type.execute(sudo).arg(etc_update).check_run()
 }
 
 #[cfg(test)]

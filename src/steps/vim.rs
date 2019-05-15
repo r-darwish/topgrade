@@ -61,10 +61,9 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, run_type: RunType) -> Result<(), Error> {
     run_type
         .execute(&vim)
+        .args(&["-N", "-u"])
+        .arg(vimrc)
         .args(&[
-            "-N",
-            "-u",
-            vimrc.to_str().unwrap(),
             "-c",
             plugin_framework.upgrade_command(),
             "-c",
