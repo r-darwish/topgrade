@@ -103,6 +103,7 @@ Just run `topgrade`. It will run the following steps:
 * **Linux**: Update snap packages
 * **Linux**: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
   only. No upgrades will actually be performed)
+* **Linux**: Run `rpi-update` to update Raspberry Pi Firmware
 * Run custom defined commands
 * Final stage
   * **Linux**: Run [needrestart](https://github.com/liske/needrestart)
