@@ -104,6 +104,7 @@ Just run `topgrade`. It will run the following steps:
 * **Linux**: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
   only. No upgrades will actually be performed)
 * **Linux**: Run `rpi-update` to update Raspberry Pi Firmware
+* **Linux**: Run [pihole](https://pi-hole.net/) updater
 * Run custom defined commands
 * Final stage
   * **Linux**: Run [needrestart](https://github.com/liske/needrestart)

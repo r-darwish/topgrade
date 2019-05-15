@@ -374,6 +374,12 @@ fn run() -> Result<(), Error> {
     {
         execute(
             &mut report,
+            "pihole",
+            || linux::run_pihole_update(sudo.as_ref(), run_type),
+            config.no_retry(),
+        )?;
+        execute(
+            &mut report,
             "rpi-update",
             || linux::run_rpi_update(sudo.as_ref(), run_type),
             config.no_retry(),
