@@ -277,6 +277,12 @@ fn run() -> Result<(), Error> {
         || generic::run_pipx_update(run_type),
         config.no_retry(),
     )?;
+    execute(
+        &mut report,
+        "myrepos",
+        || generic::run_myrepos_update(&base_dirs, run_type),
+        config.no_retry(),
+    )?;
     #[cfg(unix)]
     execute(&mut report, "pearl", || unix::run_pearl(run_type), config.no_retry())?;
     execute(
@@ -366,6 +372,12 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
+        execute(
+            &mut report,
+            "rpi-update",
+            || linux::run_rpi_update(sudo.as_ref(), run_type),
+            config.no_retry(),
+        )?;
         execute(
             &mut report,
             "Firmware upgrades",
