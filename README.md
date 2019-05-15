@@ -84,6 +84,7 @@ Just run `topgrade`. It will run the following steps:
 * Upgrade Emacs packages (You'll get a better output if you have [Paradox](https://github.com/Malabarba/paradox) installed)
 * Upgrade [OCaml packages](https://opam.ocaml.org/)
 * Upgrade [vcpkg](https://github.com/Microsoft/vcpkg) globally installed packages
+* Upgrade [myrepos](https://myrepos.branchable.com/) managed sourcecode repositories
 * Upgrade Python packages installed using [pipx](https://github.com/cs01/pipx)
 * Upgrade [R globally installed packages](https://github.com/ankane/jetpack)
 * Upgrade Vim/Neovim packages. Works with the following plugin frameworks:
