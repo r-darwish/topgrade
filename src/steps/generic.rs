@@ -96,14 +96,14 @@ pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(),
 
     match base_dirs.home_dir().to_str() {
         None => Err(ErrorKind::NoBaseDirectories)?,
-        Some(p) => {
+        Some(home_dir_str) => {
             run_type
                 .execute(&myrepos)
-                .args(&["-m", "-q", "-s", "--directory", p, "checkout"])
+                .args(&["--directory", home_dir_str, "checkout"])
                 .check_run()?;
             run_type
                 .execute(&myrepos)
-                .args(&["-m", "-q", "-s", "--directory", p, "update"])
+                .args(&["--directory", home_dir_str, "update"])
                 .check_run()
         }
     }
