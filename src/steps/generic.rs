@@ -94,19 +94,18 @@ pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(),
 
     print_separator("myrepos");
 
-    match base_dirs.home_dir().to_str() {
-        None => Err(ErrorKind::NoBaseDirectories)?,
-        Some(home_dir_str) => {
-            run_type
-                .execute(&myrepos)
-                .args(&["--directory", home_dir_str, "checkout"])
-                .check_run()?;
-            run_type
-                .execute(&myrepos)
-                .args(&["--directory", home_dir_str, "update"])
-                .check_run()
-        }
-    }
+    run_type
+        .execute(&myrepos)
+        .arg("--directory")
+        .arg(base_dirs.home_dir())
+        .arg("checkout")
+        .check_run()?;
+    run_type
+        .execute(&myrepos)
+        .arg("--directory")
+        .arg(base_dirs.home_dir())
+        .arg("update")
+        .check_run()
 }
 
 pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Result<(), Error> {
