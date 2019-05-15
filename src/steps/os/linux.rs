@@ -311,6 +311,16 @@ pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), E
 }
 
 #[must_use]
+pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+    let sudo = require_option(sudo)?;
+    let pihole = require("pihole")?;
+
+    print_separator("pihole");
+
+    run_type.execute(sudo).arg(pihole).arg("-up").check_run()
+}
+
+#[must_use]
 pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
     let sudo = require_option(sudo)?;
     let etc_update = require("etc_update")?;
