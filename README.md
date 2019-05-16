@@ -15,7 +15,7 @@ problem by detecting which tools you use and run their appropriate package manag
 ## Supported Platforms
 Topgrade should probably work on whichever platform it can be build. The real question is whether
 Topgrade knows that platform and can utilize its unique features, such as the operating system's
-pacakge manager. Topgrade is tested on and knows the following platforms:
+package manager. Topgrade is tested on and knows the following platforms:
 
 * Linux
   * Arch
