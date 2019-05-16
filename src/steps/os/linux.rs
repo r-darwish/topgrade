@@ -3,9 +3,8 @@ use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which};
 use failure::ResultExt;
+use ini::Ini;
 use serde::Deserialize;
-use serde_ini;
-use std::fs;
 use std::path::PathBuf;
 use walkdir::WalkDir;
 
@@ -31,26 +30,25 @@ pub enum Distribution {
 }
 
 impl Distribution {
-    fn parse_os_release(os_release: &OsRelease) -> Result<Self, Error> {
-        Ok(
-            match (os_release.id.as_ref(), os_release.id_like.as_ref().map(String::as_str)) {
-                ("debian", _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
-                (_, Some("\"suse\"")) => Distribution::Suse,
-                ("arch", _) | (_, Some("archlinux")) | (_, Some("\"arch\"")) | (_, Some("arch")) => Distribution::Arch,
-                ("\"centos\"", _) | ("\"ol\"", _) => Distribution::CentOS,
-                ("fedora", _) => Distribution::Fedora,
-                ("void", _) => Distribution::Void,
-                ("solus", _) => Distribution::Solus,
-                _ => Err(ErrorKind::UnknownLinuxDistribution)?,
-            },
-        )
+    fn parse_os_release(os_release: &ini::Ini) -> Result<Self, Error> {
+        let section = os_release.section::<&str>(None).unwrap();
+        let id = section.get("ID").map(String::as_str);
+        let id_like = section.get("ID_LIKE").map(String::as_str);
+        Ok(match (id, id_like) {
+            (Some("debian"), _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
+            (_, Some("suse")) => Distribution::Suse,
+            (Some("arch"), _) | (_, Some("archlinux")) | (_, Some("arch")) => Distribution::Arch,
+            (Some("centos"), _) | (Some("ol"), _) => Distribution::CentOS,
+            (Some("fedora"), _) => Distribution::Fedora,
+            (Some("void"), _) => Distribution::Void,
+            (Some("solus"), _) => Distribution::Solus,
+            _ => Err(ErrorKind::UnknownLinuxDistribution)?,
+        })
     }
 
     pub fn detect() -> Result<Self, Error> {
         if PathBuf::from(OS_RELEASE_PATH).exists() {
-            let os_release: OsRelease =
-                serde_ini::de::from_read(fs::File::open(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?)
-                    .context(ErrorKind::UnknownLinuxDistribution)?;
+            let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?;
 
             return Self::parse_os_release(&os_release);
         }
@@ -334,7 +332,7 @@ mod tests {
     use super::*;
 
     fn test_template(os_release_file: &str, expected_distribution: Distribution) {
-        let os_release: OsRelease = serde_ini::de::from_str(os_release_file).unwrap();
+        let os_release = Ini::load_from_str(os_release_file).unwrap();
         assert_eq!(
             Distribution::parse_os_release(&os_release).unwrap(),
             expected_distribution
