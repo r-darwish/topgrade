@@ -1,0 +1,8 @@
+NAME="Manjaro Linux"
+ID=manjaro
+ID_LIKE=arch
+PRETTY_NAME="Manjaro Linux"
+ANSI_COLOR="1;32"
+HOME_URL="https://www.manjaro.org/"
+SUPPORT_URL="https://www.manjaro.org/"
+BUG_REPORT_URL="https://bugs.manjaro.org/"

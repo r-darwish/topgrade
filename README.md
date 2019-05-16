@@ -18,7 +18,7 @@ Topgrade knows that platform and can utilize its unique features, such as the op
 package manager. Topgrade is tested on and knows the following platforms:
 
 * Linux
-  * Arch
+  * Arch (Antergos, Manjaro)
   * CentOS/RHEL
   * Fedora
   * Debian/Ubuntu
@@ -47,7 +47,7 @@ Just run `topgrade`. It will run the following steps:
 * Try to self-upgrade if compiled with this feature. On Unix systems Topgrade will also respawn
   itself if it was upgraded
 * **Linux**: Run the system package manager:
-  * **Arch**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
+  * **Arch (based)**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
   * **CentOS/RHEL**: Run `yum upgrade`
   * **Fedora**: Run `dnf upgrade`
   * **Debian/Ubuntu**: Run `apt update && apt dist-upgrade`

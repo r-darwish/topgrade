@@ -36,7 +36,7 @@ impl Distribution {
             match (os_release.id.as_ref(), os_release.id_like.as_ref().map(String::as_str)) {
                 ("debian", _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
                 (_, Some("\"suse\"")) => Distribution::Suse,
-                ("arch", _) | (_, Some("archlinux")) | (_, Some("\"arch\"")) => Distribution::Arch,
+                ("arch", _) | (_, Some("archlinux")) | (_, Some("\"arch\"")) | (_, Some("arch")) => Distribution::Arch,
                 ("\"centos\"", _) | ("\"ol\"", _) => Distribution::CentOS,
                 ("fedora", _) => Distribution::Fedora,
                 ("void", _) => Distribution::Void,
@@ -384,4 +384,10 @@ mod tests {
     fn test_antergos() {
         test_template(&include_str!("os_release/antergos"), Distribution::Arch);
     }
+
+    #[test]
+    fn test_manjaro() {
+        test_template(&include_str!("os_release/manjaro"), Distribution::Arch);
+    }
+
 }
