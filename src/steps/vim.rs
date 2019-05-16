@@ -1,10 +1,13 @@
-use crate::error::Error;
-use crate::executor::RunType;
+use crate::error::{Error, ErrorKind};
+use crate::executor::{ExecutorOutput, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use directories::BaseDirs;
-use std::fs;
 use std::path::PathBuf;
+use std::{
+    fs,
+    io::{self, Write},
+};
 
 #[derive(Debug, Clone, Copy)]
 pub enum PluginFramework {
@@ -59,7 +62,7 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 
 #[must_use]
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, run_type: RunType) -> Result<(), Error> {
-    run_type
+    let output = run_type
         .execute(&vim)
         .args(&["-N", "-u"])
         .arg(vimrc)
@@ -72,9 +75,18 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
             "-s",
             "-V1",
         ])
-        .check_run()?;
+        .output()?;
 
-    println!();
+    if let ExecutorOutput::Wet(output) = output {
+        let status = output.status;
+        if !status.success() {
+            io::stdout().write(&output.stdout).ok();
+            io::stderr().write(&output.stderr).ok();
+            Err(ErrorKind::ProcessFailed(status))?
+        } else {
+            println!("Plugins upgraded")
+        }
+    }
 
     Ok(())
 }

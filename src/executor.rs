@@ -105,24 +105,23 @@ impl Executor {
         let result = match self {
             Executor::Wet(c) => c.spawn().context(ErrorKind::ProcessExecution).map(ExecutorChild::Wet)?,
             Executor::Dry(c) => {
-                print!(
-                    "Dry running: {} {}",
-                    c.program.to_string_lossy(),
-                    c.args
-                        .iter()
-                        .map(|a| String::from(a.to_string_lossy()))
-                        .collect::<Vec<String>>()
-                        .join(" ")
-                );
-                match &c.directory {
-                    Some(dir) => println!(" in {}", dir.to_string_lossy()),
-                    None => println!(),
-                };
+                c.dry_run();
                 ExecutorChild::Dry
             }
         };
 
         Ok(result)
+    }
+
+    /// See `std::process::Command::output`
+    pub fn output(&mut self) -> Result<ExecutorOutput, Error> {
+        match self {
+            Executor::Wet(c) => Ok(ExecutorOutput::Wet(c.output().context(ErrorKind::ProcessExecution)?)),
+            Executor::Dry(c) => {
+                c.dry_run();
+                Ok(ExecutorOutput::Dry)
+            }
+        }
     }
 
     /// A convinence method for `spawn().wait().check()`.
@@ -133,12 +132,35 @@ impl Executor {
     }
 }
 
+pub enum ExecutorOutput {
+    Wet(std::process::Output),
+    Dry,
+}
+
 /// A struct represending a command. Trying to execute it will just print its arguments.
 #[derive(Default)]
 pub struct DryCommand {
     program: OsString,
     args: Vec<OsString>,
     directory: Option<OsString>,
+}
+
+impl DryCommand {
+    fn dry_run(&self) {
+        print!(
+            "Dry running: {} {}",
+            self.program.to_string_lossy(),
+            self.args
+                .iter()
+                .map(|a| String::from(a.to_string_lossy()))
+                .collect::<Vec<String>>()
+                .join(" ")
+        );
+        match &self.directory {
+            Some(dir) => println!(" in {}", dir.to_string_lossy()),
+            None => println!(),
+        };
+    }
 }
 
 /// The Result of spawn. Contains an actual `std::process::Child` if executed by a wet command.
