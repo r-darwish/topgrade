@@ -18,10 +18,9 @@ Topgrade knows that platform and can utilize its unique features, such as the op
 package manager. Topgrade is tested on and knows the following platforms:
 
 * Linux
-  * Arch (Antergos, Manjaro)
-  * CentOS/RHEL
-  * Fedora
-  * Debian/Ubuntu
+  * Arch based
+  * Red Hat based
+  * Debian based
   * Gentoo
   * openSUSE
   * Void
@@ -47,10 +46,9 @@ Just run `topgrade`. It will run the following steps:
 * Try to self-upgrade if compiled with this feature. On Unix systems Topgrade will also respawn
   itself if it was upgraded
 * **Linux**: Run the system package manager:
-  * **Arch (based)**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
-  * **CentOS/RHEL**: Run `yum upgrade`
-  * **Fedora**: Run `dnf upgrade`
-  * **Debian/Ubuntu**: Run `apt update && apt dist-upgrade`
+  * **Arch based**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
+  * **Redhat based**: Run `yum upgrade` (or `dnf` if present)
+  * **Debian based**: Run `apt update && apt dist-upgrade`
   * **Gentoo**: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
   * **openSUSE**: Run `zypper refresh && zypper dist-upgrade`
   * **Void**: Run `xbps-install -Su`
