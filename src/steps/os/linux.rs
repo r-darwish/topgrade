@@ -31,7 +31,7 @@ pub enum Distribution {
 
 impl Distribution {
     fn parse_os_release(os_release: &ini::Ini) -> Result<Self, Error> {
-        let section = os_release.section::<&str>(None).unwrap();
+        let section = os_release.general_section();
         let id = section.get("ID").map(String::as_str);
         let id_like = section.get("ID_LIKE").map(String::as_str);
         Ok(match (id, id_like) {
