@@ -1576,7 +1576,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "1.12.0"
+version = "1.13.0"
 dependencies = [
  "console 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "directories 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
