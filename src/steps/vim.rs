@@ -1,5 +1,5 @@
 use crate::error::{Error, ErrorKind};
-use crate::executor::{ExecutorOutput, RunType};
+use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use directories::BaseDirs;
@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::{
     fs,
     io::{self, Write},
+    process::Command,
 };
 
 #[derive(Debug, Clone, Copy)]
@@ -94,6 +95,12 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
 #[must_use]
 pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let vim = require("vim")?;
+
+    let output = Command::new(&vim).arg("--version").check_output()?;
+    if !output.starts_with("VIM") {
+        Err(ErrorKind::SkipStep)?;
+    }
+
     let vimrc = require_option(vimrc(&base_dirs))?;
     let plugin_framework = require_option(PluginFramework::detect(&vimrc))?;
 
