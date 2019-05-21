@@ -26,6 +26,7 @@ console = "0.7.5"
 self_update_crate = { version = "0.5.1", optional = true, package =  "self_update" }
 lazy_static = "1.2.0"
 rust-ini = "0.13.0"
+chrono = "0.4.6"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.13.0"

@@ -1,3 +1,4 @@
+use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
 use std::cmp::{max, min};
@@ -23,7 +24,14 @@ impl Terminal {
     }
 
     fn print_separator<P: AsRef<str>>(&mut self, message: P) {
-        let message = message.as_ref();
+        let now = Local::now();
+        let message = format!(
+            "{:02}:{:02}:{:02} - {}",
+            now.hour(),
+            now.minute(),
+            now.second(),
+            message.as_ref()
+        );
         match self.width {
             Some(width) => {
                 self.term
