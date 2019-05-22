@@ -199,14 +199,12 @@ fn run() -> Result<(), Error> {
             }
         }
     }
-    for repo in git_repos.repositories() {
-        execute(
-            &mut report,
-            format!("git: {}", utils::HumanizedPath::from(std::path::Path::new(&repo))),
-            || git.pull(&repo, run_type),
-            config.no_retry(),
-        )?;
-    }
+    execute(
+        &mut report,
+        "Git repositories",
+        || git.multi_pull(&git_repos, run_type),
+        config.no_retry(),
+    )?;
 
     #[cfg(windows)]
     {

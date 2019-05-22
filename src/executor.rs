@@ -88,6 +88,7 @@ impl Executor {
         self
     }
 
+    #[allow(dead_code)]
     /// See `std::process::Command::current_dir`
     pub fn current_dir<P: AsRef<Path>>(&mut self, dir: P) -> &mut Executor {
         match self {
