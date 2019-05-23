@@ -3,10 +3,22 @@ use console::{style, Term};
 use lazy_static::lazy_static;
 use std::cmp::{max, min};
 use std::io::{self, Write};
+use std::process::Command;
 use std::sync::Mutex;
 
 lazy_static! {
     static ref TERMINAL: Mutex<Terminal> = Mutex::new(Terminal::new());
+}
+
+#[cfg(unix)]
+fn shell() -> String {
+    use std::env;
+    env::var("SHELL").unwrap_or_else(|_| "sh".to_string())
+}
+
+#[cfg(windows)]
+fn shell() -> &'static str {
+    "powershell"
 }
 
 struct Terminal {
@@ -92,7 +104,7 @@ impl Terminal {
             .write_fmt(format_args!(
                 "\n{}",
                 style(format!(
-                    "Retry? [y/N] {}",
+                    "Retry? (Y)es/(N)o/(S)hell {}",
                     if interrupted {
                         "(Press Ctrl+C again to stop Topgrade) "
                     } else {
@@ -107,7 +119,12 @@ impl Terminal {
         let answer = loop {
             match self.term.read_char()? {
                 'y' | 'Y' => break Ok(true),
-                'n' | 'N' | '\r' | '\n' => break Ok(false),
+                's' | 'S' => {
+                    println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
+                    Command::new(shell()).spawn().unwrap().wait().unwrap();
+                    break Ok(true);
+                }
+                'n' | 'N' => break Ok(false),
                 _ => (),
             }
         };
