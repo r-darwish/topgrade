@@ -1,7 +1,7 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
-use crate::utils::{require, require_option, which};
+use crate::utils::{require, require_option, which, PathExt};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -39,6 +39,7 @@ impl Powershell {
                 .args(&["-Command", "echo $profile"])
                 .check_output()
                 .map(|output| PathBuf::from(output.trim()))
+                .and_then(|p| p.require())
                 .ok()
         });
 
