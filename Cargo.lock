@@ -1750,7 +1750,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "1.13.0"
+version = "2.0.0"
 dependencies = [
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "console 0.7.5 (registry+https://github.com/rust-lang/crates.io-index)",
