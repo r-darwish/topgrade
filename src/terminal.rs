@@ -104,7 +104,7 @@ impl Terminal {
             .write_fmt(format_args!(
                 "\n{}",
                 style(format!(
-                    "Retry? (Y)es/(N)o/(S)hell {}",
+                    "Retry? (y)es/(N)o/(s)hell {}",
                     if interrupted {
                         "(Press Ctrl+C again to stop Topgrade) "
                     } else {
@@ -124,7 +124,7 @@ impl Terminal {
                     Command::new(shell()).spawn().unwrap().wait().unwrap();
                     break Ok(true);
                 }
-                'n' | 'N' => break Ok(false),
+                'n' | 'N' | '\r' | '\n' => break Ok(false),
                 _ => (),
             }
         };
