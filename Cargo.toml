@@ -30,6 +30,7 @@ chrono = "0.4.6"
 tokio = "0.1.21"
 tokio-process = "0.2.3"
 futures = "0.1.27"
+openssl-probe = { version = "0.1.2", optional = true }
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.14.0"
@@ -40,4 +41,4 @@ lto = true
 [features]
 default = []
 
-self-update = ["self_update_crate"]
+self-update = ["self_update_crate", "openssl-probe"]

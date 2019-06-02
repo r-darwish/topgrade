@@ -16,6 +16,8 @@ use self::steps::*;
 use self::terminal::*;
 use failure::{Fail, ResultExt};
 use log::debug;
+#[cfg(feature = "self-update")]
+use openssl_probe;
 use std::borrow::Cow;
 use std::env;
 use std::fmt::Debug;
@@ -84,6 +86,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(feature = "self-update")]
     {
+        openssl_probe::init_ssl_cert_env_vars();
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             if let Err(e) = self_update::self_update() {
                 print_warning(format!("Self update error: {}", e));
