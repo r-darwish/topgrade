@@ -321,7 +321,7 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
 #[must_use]
 pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
     let sudo = require_option(sudo)?;
-    let etc_update = require("etc_update")?;
+    let etc_update = require("etc-update")?;
     print_separator("etc-update");
 
     run_type.execute(sudo).arg(etc_update).check_run()
