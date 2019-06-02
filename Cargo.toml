@@ -11,28 +11,28 @@ exclude = ["doc/screenshot.gif"]
 edition = "2018"
 
 [dependencies]
-directories = "1.0.2"
+directories = "2.0.1"
 failure = "0.1.5"
 failure_derive = "0.1.5"
-serde = { version = "1.0.88", features = ["derive"] }
-toml = "0.4.10"
+serde = { version = "1.0.92", features = ["derive"] }
+toml = "0.5.1"
 which_crate = { version = "2.0.1", package =  "which" }
 shellexpand = "1.0.0"
-structopt = "0.2.14"
+structopt = "0.2.17"
 log = "0.4.6"
-env_logger = "0.6.0"
+env_logger = "0.6.1"
 walkdir = "2.2.7"
 console = "0.7.5"
 self_update_crate = { version = "0.5.1", optional = true, package =  "self_update" }
-lazy_static = "1.2.0"
+lazy_static = "1.3.0"
 rust-ini = "0.13.0"
 chrono = "0.4.6"
-tokio = "0.1.20"
+tokio = "0.1.21"
 tokio-process = "0.2.3"
 futures = "0.1.27"
 
 [target.'cfg(unix)'.dependencies]
-nix = "0.13.0"
+nix = "0.14.0"
 
 [profile.release]
 lto = true
