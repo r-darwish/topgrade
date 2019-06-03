@@ -88,7 +88,20 @@ fn run() -> Result<(), Error> {
     {
         openssl_probe::init_ssl_cert_env_vars();
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
-            if let Err(e) = self_update::self_update() {
+            let result = self_update::self_update();
+
+            #[cfg(windows)]
+            {
+                let upgraded = match &result {
+                    Ok(()) => false,
+                    Err(e) => e.upgraded(),
+                };
+                if upgraded {
+                    return result;
+                }
+            }
+
+            if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
                 if let Some(cause) = e.cause() {
                     print_warning(format!("Caused by: {}", cause));
@@ -466,6 +479,13 @@ fn main() {
             exit(0);
         }
         Err(error) => {
+            #[cfg(all(windows, feature = "self-update"))]
+            {
+                if let ErrorKind::Upgraded(status) = error.kind() {
+                    exit(status.code().unwrap());
+                }
+            }
+
             let should_print = match error.kind() {
                 ErrorKind::StepFailed => false,
                 ErrorKind::Retry => error

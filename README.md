@@ -43,8 +43,7 @@ distribution which ships the latest version of Rust, such as Arch Linux.
 ## Usage
 Just run `topgrade`. It will run the following steps:
 
-* Try to self-upgrade if compiled with this feature. On Unix systems Topgrade will also respawn
-  itself if it was upgraded
+* Try to self-upgrade if compiled with this feature. Topgrade will respawn itself if it was upgraded.
 * **Linux**: Run the system package manager:
   * **Arch based**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
   * **Redhat based**: Run `yum upgrade` (or `dnf` if present)

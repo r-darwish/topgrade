@@ -44,6 +44,10 @@ pub enum ErrorKind {
 
     #[fail(display = "A step should be skipped")]
     SkipStep,
+
+    #[cfg(all(windows, feature = "self-update"))]
+    #[fail(display = "Topgrade Upgraded")]
+    Upgraded(ExitStatus),
 }
 
 impl Fail for Error {
@@ -65,6 +69,15 @@ impl Display for Error {
 impl Error {
     pub fn kind(&self) -> ErrorKind {
         *self.inner.get_context()
+    }
+
+    #[cfg(all(windows, feature = "self-update"))]
+    pub fn upgraded(&self) -> bool {
+        if let ErrorKind::Upgraded(_) = self.kind() {
+            true
+        } else {
+            false
+        }
     }
 }
 
