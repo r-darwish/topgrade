@@ -122,6 +122,9 @@ fn run() -> Result<(), Error> {
     #[cfg(windows)]
     let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
 
+    #[cfg(windows)]
+    execute(&mut report, "WSL", || windows::run_wsl_topgrade(run_type), true)?;
+
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();
 

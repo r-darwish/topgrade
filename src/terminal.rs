@@ -2,6 +2,7 @@ use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
 use std::cmp::{max, min};
+use std::env;
 use std::io::{self, Write};
 use std::process::Command;
 use std::sync::Mutex;
@@ -12,7 +13,6 @@ lazy_static! {
 
 #[cfg(unix)]
 fn shell() -> String {
-    use std::env;
     env::var("SHELL").unwrap_or_else(|_| "sh".to_string())
 }
 
@@ -23,6 +23,7 @@ fn shell() -> &'static str {
 
 struct Terminal {
     width: Option<u16>,
+    prefix: String,
     term: Term,
 }
 
@@ -32,13 +33,17 @@ impl Terminal {
         Self {
             width: term.size_checked().map(|(_, w)| w),
             term,
+            prefix: env::var("TOPGRADE_PREFIX")
+                .map(|prefix| format!("({}) ", prefix))
+                .unwrap_or_else(|_| String::new()),
         }
     }
 
     fn print_separator<P: AsRef<str>>(&mut self, message: P) {
         let now = Local::now();
         let message = format!(
-            "{:02}:{:02}:{:02} - {}",
+            "{}{:02}:{:02}:{:02} - {}",
+            self.prefix,
             now.hour(),
             now.minute(),
             now.second(),
@@ -104,7 +109,8 @@ impl Terminal {
             .write_fmt(format_args!(
                 "\n{}",
                 style(format!(
-                    "Retry? (y)es/(N)o/(s)hell {}",
+                    "{}Retry? (y)es/(N)o/(s)hell {}",
+                    self.prefix,
                     if interrupted {
                         "(Press Ctrl+C again to stop Topgrade) "
                     } else {

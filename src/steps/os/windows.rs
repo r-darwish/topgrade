@@ -81,3 +81,19 @@ impl Powershell {
             .check_run()
     }
 }
+
+pub fn run_wsl_topgrade(run_type: RunType) -> Result<(), Error> {
+    let wsl = require("wsl")?;
+    let topgrade = Command::new(&wsl)
+        .args(&["bash", "-l", "which", "topgrade"])
+        .check_output()
+        .map_err(|_| ErrorKind::SkipStep)?;
+
+    print_separator("WSL");
+
+    run_type
+        .execute(&wsl)
+        .args(&["bash", "-c"])
+        .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade))
+        .check_run()
+}

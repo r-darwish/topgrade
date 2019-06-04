@@ -56,6 +56,7 @@ Just run `topgrade`. It will run the following steps:
 * **Unix**: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * **Unix**: Run `nix upgrade-nix && nix --upgrade`.
 * **Unix**: Run [Pearl](https://github.com/pearl-core/pearl) `pearl update`.
+* **Windows**: Run Topgrade inside WSL.
 * **Windows**: Upgrade Powershell modules
 * **Windows**: Upgrade all [Chocolatey](https://chocolatey.org/) packages
 * **Windows**: Upgrade all [Scoop](https://scoop.sh) packages
