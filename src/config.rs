@@ -117,6 +117,10 @@ pub struct CommandLineArgs {
     /// Do not perform upgrades for the given steps
     #[structopt(long = "disable", raw(possible_values = "&Step::possible_values()"))]
     disable: Vec<Step>,
+
+    /// Output logs
+    #[structopt(short = "v", long = "verbose")]
+    verbose: bool,
 }
 
 /// Represents the application configuration
@@ -188,5 +192,10 @@ impl Config {
     /// Tell whether we should not attempt to retry anything.
     pub fn no_retry(&self) -> bool {
         self.opt.no_retry
+    }
+
+    /// Tell whether we should print log.
+    pub fn verbose(&self) -> bool {
+        self.opt.verbose
     }
 }

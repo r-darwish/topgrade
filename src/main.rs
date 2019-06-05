@@ -1,3 +1,5 @@
+#![allow(clippy::cognitive_complexity)]
+
 mod config;
 mod ctrlc;
 mod error;
@@ -14,6 +16,7 @@ use self::error::{Error, ErrorKind};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
+use env_logger::Env;
 use failure::{Fail, ResultExt};
 use log::debug;
 #[cfg(feature = "self-update")]
@@ -73,7 +76,11 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    env_logger::init();
+    let mut env = Env::default();
+    if config.verbose() {
+        env = env.filter_or("LOG_LEVEL", "info");
+    }
+    env_logger::init_from_env(env);
 
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);
