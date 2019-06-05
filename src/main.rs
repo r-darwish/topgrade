@@ -1,5 +1,4 @@
 #![allow(clippy::cognitive_complexity)]
-
 mod config;
 mod ctrlc;
 mod error;
@@ -131,6 +130,17 @@ fn run() -> Result<(), Error> {
 
     #[cfg(windows)]
     execute(&mut report, "WSL", || windows::run_wsl_topgrade(run_type), true)?;
+
+    if let Some(topgrades) = config.remote_topgrades() {
+        for remote_topgrade in topgrades {
+            execute(
+                &mut report,
+                remote_topgrade,
+                || generic::run_remote_topgrade(run_type, remote_topgrade),
+                config.no_retry(),
+            )?;
+        }
+    }
 
     #[cfg(target_os = "linux")]
     let distribution = linux::Distribution::detect();

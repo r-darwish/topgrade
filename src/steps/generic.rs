@@ -136,3 +136,18 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
 
     Ok(())
 }
+
+pub fn run_remote_topgrade(run_type: RunType, hostname: &str) -> Result<(), Error> {
+    let ssh = utils::require("ssh")?;
+
+    run_type
+        .execute(&ssh)
+        .args(&[
+            "-t",
+            hostname,
+            "env",
+            &format!("TOPGRADE_PREFIX={}", hostname),
+            "topgrade",
+        ])
+        .check_run()
+}

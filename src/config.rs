@@ -69,6 +69,7 @@ pub struct ConfigFile {
     commands: Option<Commands>,
     git_repos: Option<Vec<String>>,
     disable: Option<Vec<Step>>,
+    remote_topgrades: Option<Vec<String>>,
 }
 
 impl ConfigFile {
@@ -197,5 +198,10 @@ impl Config {
     /// Tell whether we should print log.
     pub fn verbose(&self) -> bool {
         self.opt.verbose
+    }
+
+    /// List of remote hosts to run Topgrade in
+    pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
+        &self.config_file.remote_topgrades
     }
 }

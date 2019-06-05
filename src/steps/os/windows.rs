@@ -89,8 +89,6 @@ pub fn run_wsl_topgrade(run_type: RunType) -> Result<(), Error> {
         .check_output()
         .map_err(|_| ErrorKind::SkipStep)?;
 
-    print_separator("WSL");
-
     run_type
         .execute(&wsl)
         .args(&["bash", "-c"])
