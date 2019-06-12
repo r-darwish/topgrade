@@ -468,6 +468,14 @@ fn run() -> Result<(), Error> {
         }
     }
 
+    #[cfg(unix)]
+    execute(
+        &mut report,
+        "SDKMAN!",
+        || generic::run_sdkman(&base_dirs, run_type),
+        config.no_retry(),
+    )?;
+
     if !report.data().is_empty() {
         print_separator("Summary");
 
