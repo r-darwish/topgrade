@@ -161,7 +161,7 @@ pub fn run_sdkman(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> 
         .join("sdkman-init.sh")
         .require()?;
 
-    let shell = env::var("SHELL").unwrap_or(String::from("sh"));
+    let shell = env::var("SHELL").unwrap_or_else(|_| String::from("sh"));
 
     let cmd = format!(
         "source {} && sdk selfupdate && sdk update && sdk upgrade",
