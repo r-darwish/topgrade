@@ -153,6 +153,7 @@ pub fn run_remote_topgrade(run_type: RunType, hostname: &str) -> Result<(), Erro
         .check_run()
 }
 
+#[allow(dead_code)]
 pub fn run_sdkman(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let sdkman_init_path = env::var("SDKMAN_DIR")
         .map(PathBuf::from)
