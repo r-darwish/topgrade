@@ -22,6 +22,7 @@ lazy_static! {
         m.insert("vim", Step::Vim);
         m.insert("emacs", Step::Emacs);
         m.insert("gem", Step::Gem);
+        m.insert("sdkman", Step::Sdkman);
 
         #[cfg(windows)]
         m.insert("powershell", Step::Powershell);
@@ -43,6 +44,8 @@ pub enum Step {
     Emacs,
     /// Don't upgrade ruby gems
     Gem,
+    /// Don't upgrade SDKMAN! and it's packages
+    Sdkman,
 
     #[cfg(windows)]
     /// Don't update Powershell modules
