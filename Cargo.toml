@@ -18,7 +18,7 @@ serde = { version = "1.0.92", features = ["derive"] }
 toml = "0.5.1"
 which_crate = { version = "2.0.1", package =  "which" }
 shellexpand = "1.0.0"
-structopt = "0.2.17"
+structopt = "0.2.16"
 log = "0.4.6"
 env_logger = "0.6.1"
 walkdir = "2.2.7"
