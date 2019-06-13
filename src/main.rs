@@ -136,7 +136,7 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 remote_topgrade,
-                || generic::run_remote_topgrade(run_type, remote_topgrade),
+                || generic::run_remote_topgrade(run_type, remote_topgrade, config.run_in_tmux()),
                 config.no_retry(),
             )?;
         }

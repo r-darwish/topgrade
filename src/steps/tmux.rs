@@ -82,3 +82,19 @@ pub fn run_in_tmux() -> ! {
         exit(0);
     }
 }
+
+pub fn run_remote_topgrade(hostname: &str, ssh: &Path) -> Result<(), Error> {
+    let command = format!(
+        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} topgrade",
+        ssh = ssh.display(),
+        hostname = hostname
+    );
+    Command::new(which("tmux").unwrap())
+        .args(&["new-window", "-a", "-t", "topgrade:1", "-n", hostname, &command])
+        .env_remove("TMUX")
+        .spawn()
+        .context(ErrorKind::ProcessExecution)?
+        .wait()
+        .context(ErrorKind::ProcessExecution)?
+        .check()
+}

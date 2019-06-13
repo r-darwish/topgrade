@@ -37,7 +37,6 @@ impl RunType {
         }
     }
 
-    #[cfg(feature = "self-update")]
     /// Tells whether we're performing a dry run.
     pub fn dry(self) -> bool {
         match self {

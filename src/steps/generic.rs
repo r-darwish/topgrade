@@ -137,17 +137,27 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
     Ok(())
 }
 
-pub fn run_remote_topgrade(run_type: RunType, hostname: &str) -> Result<(), Error> {
+pub fn run_remote_topgrade(run_type: RunType, hostname: &str, run_in_tmux: bool) -> Result<(), Error> {
     let ssh = utils::require("ssh")?;
 
-    run_type
-        .execute(&ssh)
-        .args(&[
-            "-t",
-            hostname,
-            "env",
-            &format!("TOPGRADE_PREFIX={}", hostname),
-            "topgrade",
-        ])
-        .check_run()
+    if run_in_tmux && !run_type.dry() {
+        #[cfg(unix)]
+        {
+            crate::tmux::run_remote_topgrade(hostname, &ssh)?;
+            Err(ErrorKind::SkipStep)?
+        }
+
+        unreachable!("Tmux execution is only implemented in Unix");
+    } else {
+        run_type
+            .execute(&ssh)
+            .args(&[
+                "-t",
+                hostname,
+                "env",
+                &format!("TOPGRADE_PREFIX={}", hostname),
+                "topgrade",
+            ])
+            .check_run()
+    }
 }
