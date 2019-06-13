@@ -139,6 +139,11 @@ impl Terminal {
 
         answer
     }
+
+    fn pause(&self) -> Result<(), io::Error> {
+        self.term.read_char()?;
+        Ok(())
+    }
 }
 
 impl Default for Terminal {
@@ -168,4 +173,8 @@ pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
 /// Tells whether the terminal is dumb.
 pub fn is_dumb() -> bool {
     TERMINAL.lock().unwrap().width.is_none()
+}
+
+pub fn pause() {
+    TERMINAL.lock().unwrap().pause().unwrap();
 }

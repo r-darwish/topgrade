@@ -68,7 +68,7 @@ fn run() -> Result<(), Error> {
     let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
     let config = Config::load(&base_dirs)?;
 
-    if config.run_in_tmux() && env::var("TMUX").is_err() {
+    if config.run_in_tmux() && env::var("TOPGRADE_INSIDE_TMUX").is_err() {
         #[cfg(unix)]
         {
             tmux::run_in_tmux();
@@ -496,6 +496,11 @@ fn run() -> Result<(), Error> {
 
         #[cfg(target_os = "freebsd")]
         freebsd::audit_packages(&sudo).ok();
+    }
+
+    if env::var("TOPGRADE_KEEP_END").is_ok() {
+        println!("\nPress any key to continue");
+        pause();
     }
 
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
