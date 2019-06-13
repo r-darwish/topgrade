@@ -84,3 +84,51 @@ pub fn run_pearl(run_type: RunType) -> Result<(), Error> {
 
     run_type.execute(&pearl).arg("update").check_run()
 }
+
+pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    let bash_path = require("bash").map(|p| format!("{}", &p.display()))?;
+
+    let sdkman_init_path = env::var("SDKMAN_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".sdkman"))
+        .join("bin")
+        .join("sdkman-init.sh")
+        .require()
+        .map(|p| format!("{}", &p.display()))?;
+
+    print_separator("SDKMAN!");
+
+    let cmd_selfupdate = format!("source {} && sdk selfupdate", &sdkman_init_path);
+    run_type
+        .execute(&bash_path)
+        .args(&["-c", cmd_selfupdate.as_str()])
+        .check_run()?;
+
+    let cmd_update = format!("source {} && sdk update", &sdkman_init_path);
+    run_type
+        .execute(&bash_path)
+        .args(&["-c", cmd_update.as_str()])
+        .check_run()?;
+
+    let cmd_upgrade = format!("source {} && sdk upgrade", &sdkman_init_path);
+    run_type
+        .execute(&bash_path)
+        .args(&["-c", cmd_upgrade.as_str()])
+        .check_run()?;
+
+    if cleanup {
+        let cmd_flush_archives = format!("source {} && sdk flush archives", &sdkman_init_path);
+        run_type
+            .execute(&bash_path)
+            .args(&["-c", cmd_flush_archives.as_str()])
+            .check_run()?;
+
+        let cmd_flush_temp = format!("source {} && sdk flush temp", &sdkman_init_path);
+        run_type
+            .execute(&bash_path)
+            .args(&["-c", cmd_flush_temp.as_str()])
+            .check_run()?;
+    }
+
+    Ok(())
+}

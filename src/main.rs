@@ -468,6 +468,18 @@ fn run() -> Result<(), Error> {
         }
     }
 
+    #[cfg(unix)]
+    {
+        if config.should_run(Step::Sdkman) {
+            execute(
+                &mut report,
+                "SDKMAN!",
+                || unix::run_sdkman(&base_dirs, config.cleanup(), run_type),
+                config.no_retry(),
+            )?;
+        }
+    }
+
     if !report.data().is_empty() {
         print_separator("Summary");
 
