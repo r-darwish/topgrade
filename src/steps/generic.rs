@@ -4,7 +4,6 @@ use crate::terminal::print_separator;
 use crate::utils::{self, PathExt};
 use directories::BaseDirs;
 use failure::ResultExt;
-use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -151,44 +150,4 @@ pub fn run_remote_topgrade(run_type: RunType, hostname: &str) -> Result<(), Erro
             "topgrade",
         ])
         .check_run()
-}
-
-pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Result<(), Error> {
-    let shell_path = env::var("SHELL")
-        .map(PathBuf::from)
-        .map_err(|_| Error::from(ErrorKind::SkipStep))
-        .and_then(PathExt::require)
-        .or_else(|_| utils::require("zsh"))
-        .or_else(|_| utils::require("bash"))
-        .or_else(|_| utils::require("sh"))
-        .map(|p| format!("{}", &p.display()))?;
-
-    let sdkman_init_path = env::var("SDKMAN_DIR")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".sdkman"))
-        .join("bin")
-        .join("sdkman-init.sh")
-        .require()
-        .map(|p| format!("{}", &p.display()))?;
-
-    print_separator("SDKMAN!");
-
-    let cmd_update = format!(
-        "source {} && sdk selfupdate; sdk update; sdk upgrade",
-        &sdkman_init_path
-    );
-    run_type
-        .execute(&shell_path)
-        .args(&["-c", cmd_update.as_str()])
-        .check_run()?;
-
-    if cleanup {
-        let cmd_cleanup = format!("source {} && sdk flush archives; sdk flush temp", &sdkman_init_path);
-        run_type
-            .execute(&shell_path)
-            .args(&["-c", cmd_cleanup.as_str()])
-            .check_run()?
-    }
-
-    Ok(())
 }

@@ -468,19 +468,16 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    if config.should_run(Step::Sdkman) {
-        #[cfg(not(windows))]
-        let should_cleanup = config.cleanup();
-
-        #[cfg(windows)]
-        let should_cleanup = false;
-
-        execute(
-            &mut report,
-            "SDKMAN!",
-            || generic::run_sdkman(&base_dirs, should_cleanup, run_type),
-            config.no_retry(),
-        )?;
+    #[cfg(unix)]
+    {
+        if config.should_run(Step::Sdkman) {
+            execute(
+                &mut report,
+                "SDKMAN!",
+                || unix::run_sdkman(&base_dirs, config.cleanup(), run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     if !report.data().is_empty() {

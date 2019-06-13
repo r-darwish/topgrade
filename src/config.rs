@@ -44,7 +44,7 @@ pub enum Step {
     Emacs,
     /// Don't upgrade ruby gems
     Gem,
-    /// Don't upgrade SDKMAN! and it's packages
+    /// Don't upgrade SDKMAN! and its packages
     Sdkman,
 
     #[cfg(windows)]
