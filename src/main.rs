@@ -499,8 +499,16 @@ fn run() -> Result<(), Error> {
     }
 
     if env::var("TOPGRADE_KEEP_END").is_ok() {
-        println!("\nPress any key to continue");
-        pause();
+        print_info("\nPress R to reboot, S for shell or any other key to continue");
+        match get_char() {
+            's' | 'S' => {
+                run_shell();
+            }
+            'r' | 'R' => {
+                reboot();
+            }
+            _ => (),
+        }
     }
 
     if report.data().iter().all(|(_, succeeded)| *succeeded) {

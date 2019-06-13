@@ -8,3 +8,9 @@ pub mod macos;
 pub mod unix;
 #[cfg(target_os = "windows")]
 pub mod windows;
+
+#[cfg(windows)]
+pub use windows::reboot;
+
+#[cfg(unix)]
+pub use unix::reboot;

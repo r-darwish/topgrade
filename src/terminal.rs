@@ -21,6 +21,10 @@ fn shell() -> &'static str {
     "powershell"
 }
 
+pub fn run_shell() {
+    Command::new(shell()).spawn().unwrap().wait().unwrap();
+}
+
 struct Terminal {
     width: Option<u16>,
     prefix: String,
@@ -84,6 +88,14 @@ impl Terminal {
             .ok();
     }
 
+    #[allow(dead_code)]
+    fn print_info<P: AsRef<str>>(&mut self, message: P) {
+        let message = message.as_ref();
+        self.term
+            .write_fmt(format_args!("{}\n", style(message).yellow().bold()))
+            .ok();
+    }
+
     fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
         let key = key.as_ref();
 
@@ -127,7 +139,7 @@ impl Terminal {
                 'y' | 'Y' => break Ok(true),
                 's' | 'S' => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
-                    Command::new(shell()).spawn().unwrap().wait().unwrap();
+                    run_shell();
                     break Ok(true);
                 }
                 'n' | 'N' | '\r' | '\n' => break Ok(false),
@@ -140,9 +152,8 @@ impl Terminal {
         answer
     }
 
-    fn pause(&self) -> Result<(), io::Error> {
-        self.term.read_char()?;
-        Ok(())
+    fn get_char(&self) -> Result<char, io::Error> {
+        self.term.read_char()
     }
 }
 
@@ -165,6 +176,11 @@ pub fn print_warning<P: AsRef<str>>(message: P) {
     TERMINAL.lock().unwrap().print_warning(message)
 }
 
+#[allow(dead_code)]
+pub fn print_info<P: AsRef<str>>(message: P) {
+    TERMINAL.lock().unwrap().print_info(message)
+}
+
 pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
     TERMINAL.lock().unwrap().print_result(key, succeeded)
 }
@@ -175,6 +191,6 @@ pub fn is_dumb() -> bool {
     TERMINAL.lock().unwrap().width.is_none()
 }
 
-pub fn pause() {
-    TERMINAL.lock().unwrap().pause().unwrap();
+pub fn get_char() -> char {
+    TERMINAL.lock().unwrap().get_char().unwrap()
 }

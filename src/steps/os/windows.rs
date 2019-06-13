@@ -95,3 +95,7 @@ pub fn run_wsl_topgrade(run_type: RunType) -> Result<(), Error> {
         .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade))
         .check_run()
 }
+
+pub fn reboot() {
+    Command::new("shutdown").args(&["/R", "/T", "0"]).spawn().ok();
+}
