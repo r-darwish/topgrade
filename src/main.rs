@@ -498,8 +498,8 @@ fn run() -> Result<(), Error> {
         freebsd::audit_packages(&sudo).ok();
     }
 
-    if env::var("TOPGRADE_KEEP_END").is_ok() {
-        print_info("\nPress R to reboot, S for shell or any other key to continue");
+    if config.keep_at_end() {
+        print_info("\n(R)eboot\n(S)hell\n\nPress any other key to continue");
         match get_char() {
             's' | 'S' => {
                 run_shell();

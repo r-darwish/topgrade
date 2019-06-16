@@ -131,5 +131,6 @@ pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Res
 }
 
 pub fn reboot() {
-    Command::new("sudo").arg("reboot").spawn().ok();
+    print!("Rebooting...");
+    Command::new("sudo").arg("reboot").spawn().unwrap().wait().unwrap();
 }

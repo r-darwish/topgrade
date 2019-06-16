@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use serde::Deserialize;
 use shellexpand;
 use std::collections::{BTreeMap, HashMap};
-use std::fs;
+use std::{env, fs};
 use structopt::StructOpt;
 use toml;
 
@@ -125,6 +125,10 @@ pub struct CommandLineArgs {
     /// Output logs
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
+
+    /// Prompt or a key before exiting
+    #[structopt(short = "k", long = "keep")]
+    keep_at_end: bool,
 }
 
 /// Represents the application configuration
@@ -206,5 +210,10 @@ impl Config {
     /// List of remote hosts to run Topgrade in
     pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
         &self.config_file.remote_topgrades
+    }
+
+    /// Prompt for a key before exiting
+    pub fn keep_at_end(&self) -> bool {
+        self.opt.keep_at_end || env::var("TOPGRADE_KEEP_END").is_ok()
     }
 }

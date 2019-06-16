@@ -92,7 +92,7 @@ impl Terminal {
     fn print_info<P: AsRef<str>>(&mut self, message: P) {
         let message = message.as_ref();
         self.term
-            .write_fmt(format_args!("{}\n", style(message).yellow().bold()))
+            .write_fmt(format_args!("{}\n", style(message).blue().bold()))
             .ok();
     }
 
