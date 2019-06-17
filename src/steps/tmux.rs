@@ -85,7 +85,7 @@ pub fn run_in_tmux() -> ! {
 
 pub fn run_remote_topgrade(hostname: &str, ssh: &Path) -> Result<(), Error> {
     let command = format!(
-        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} topgrade",
+        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 topgrade",
         ssh = ssh.display(),
         hostname = hostname
     );
