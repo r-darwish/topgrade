@@ -86,7 +86,7 @@ fn run() -> Result<(), Error> {
 
     let mut report = Report::new();
 
-    #[cfg(any(target_os = "freebsd", target_os = "linux"))]
+    #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
     let sudo = utils::which("sudo");
     let run_type = executor::RunType::new(config.dry_run());
 
@@ -186,6 +186,13 @@ fn run() -> Result<(), Error> {
         &mut report,
         "brew",
         || unix::run_homebrew(config.cleanup(), run_type),
+        config.no_retry(),
+    )?;
+    #[cfg(target_os = "dragonfly")]
+    execute(
+        &mut report,
+        "DragonFly BSD Packages",
+        || dragonfly::upgrade_packages(sudo.as_ref(), run_type),
         config.no_retry(),
     )?;
     #[cfg(target_os = "freebsd")]
@@ -496,6 +503,9 @@ fn run() -> Result<(), Error> {
 
         #[cfg(target_os = "freebsd")]
         freebsd::audit_packages(&sudo).ok();
+
+        #[cfg(target_os = "dragonfly")]
+        dragonfly::audit_packages(&sudo).ok();
     }
 
     if config.keep_at_end() {
