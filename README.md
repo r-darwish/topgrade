@@ -24,6 +24,7 @@ package manager. Topgrade is tested on and knows the following platforms:
   * Gentoo
   * openSUSE
   * Void
+* DragonFly BSD
 * FreeBSD
 * macOS
 * Windows
@@ -52,6 +53,7 @@ Just run `topgrade`. It will run the following steps:
   * **openSUSE**: Run `zypper refresh && zypper dist-upgrade`
   * **Void**: Run `xbps-install -Su`
 * **Linux**: Run [etc-update](https://dev.gentoo.org/~zmedico/portage/doc/man/etc-update.1.html):
+* **DragonFly BSD**: Upgrade and audit packages
 * **FreeBSD**: Upgrade and audit packages
 * **Unix**: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
 * **Unix**: Run `nix upgrade-nix && nix --upgrade`.
