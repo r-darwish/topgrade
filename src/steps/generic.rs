@@ -116,10 +116,10 @@ pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Resul
 pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)
-        .args(&["global", "config", "--absolute", "home"])
+        .args(&["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
         .map_err(|_| Error::from(ErrorKind::SkipStep))
-        .map(PathBuf::from)
+        .map(|s| PathBuf::from(s.trim()))
         .and_then(PathExt::require)?;
 
     if !composer_home.is_descendant_of(base_dirs.home_dir()) {
