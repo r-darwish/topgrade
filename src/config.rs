@@ -23,6 +23,7 @@ lazy_static! {
         m.insert("emacs", Step::Emacs);
         m.insert("gem", Step::Gem);
         m.insert("sdkman", Step::Sdkman);
+        m.insert("remotes", Step::Remotes);
 
         #[cfg(windows)]
         m.insert("powershell", Step::Powershell);
@@ -46,6 +47,8 @@ pub enum Step {
     Gem,
     /// Don't upgrade SDKMAN! and its packages
     Sdkman,
+    /// Don't run remote Togprades
+    Remotes,
 
     #[cfg(windows)]
     /// Don't update Powershell modules
