@@ -37,7 +37,7 @@ lazy_static! {
 pub enum Step {
     /// Don't perform system upgrade
     System,
-    /// Don't perform updates on configured git repos
+    /// Don't pull git repositories
     GitRepos,
     /// Don't upgrade Vim packages or configuration files
     Vim,

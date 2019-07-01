@@ -243,13 +243,13 @@ fn run() -> Result<(), Error> {
                 git_repos.insert(git_repo);
             }
         }
+        execute(
+            &mut report,
+            "Git repositories",
+            || git.multi_pull(&git_repos, run_type),
+            config.no_retry(),
+        )?;
     }
-    execute(
-        &mut report,
-        "Git repositories",
-        || git.multi_pull(&git_repos, run_type),
-        config.no_retry(),
-    )?;
 
     #[cfg(windows)]
     {
