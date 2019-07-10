@@ -37,7 +37,7 @@ impl Distribution {
         Ok(match (id, id_like) {
             (Some("debian"), _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
             (_, Some("suse")) => Distribution::Suse,
-            (Some("arch"), _) | (_, Some("archlinux")) | (_, Some("arch")) => Distribution::Arch,
+            (Some("arch"), _) | (_, Some("archlinux")) | (_, Some("arch")) | (_, Some("anarchylinux")) => Distribution::Arch,
             (Some("centos"), _) | (Some("ol"), _) => Distribution::CentOS,
             (Some("fedora"), _) => Distribution::Fedora,
             (Some("void"), _) => Distribution::Void,
@@ -384,4 +384,8 @@ mod tests {
         test_template(&include_str!("os_release/manjaro"), Distribution::Arch);
     }
 
+    #[test]
+    fn test_anarchy() {
+        test_template(&include_str!("os_release/anarchy"), Distribution::Arch);
+    }
 }
