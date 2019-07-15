@@ -107,7 +107,7 @@ pub fn show_pacnew() {
 }
 
 fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
-    let pacman = which("powerpill").unwrap_or(PathBuf::from("/usr/bin/pacman"));
+    let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
