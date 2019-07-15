@@ -107,6 +107,8 @@ pub fn show_pacnew() {
 }
 
 fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    let pacman = which("powerpill").unwrap_or(PathBuf::from("/usr/bin/pacman"));
+
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
             if python != PathBuf::from("/usr/bin/python") {
@@ -118,9 +120,14 @@ It's dangerous to run yay since Python based AUR packages will be installed in t
                 return Err(ErrorKind::NotSystemPython)?;
             }
         }
-        run_type.execute(yay).check_run()?;
+        run_type
+            .execute(yay)
+            .arg("--pacman")
+            .arg(pacman)
+            .arg("-Syu")
+            .check_run()?;
     } else if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).args(&["/usr/bin/pacman", "-Syu"]).check_run()?;
+        run_type.execute(&sudo).arg(pacman).arg("-Syu").check_run()?;
     } else {
         print_warning("No sudo or yay detected. Skipping system upgrade");
     }
