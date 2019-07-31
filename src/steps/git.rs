@@ -23,6 +23,20 @@ pub struct Repositories<'a> {
     repositories: HashSet<String>,
 }
 
+fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
+    Command::new(git)
+        .args(&["rev-parse", "HEAD"])
+        .current_dir(repo)
+        .check_output()
+        .map(|output| output.trim().to_string())
+        .map_err(|e| {
+            error!("Error getting revision for {}: {}", repo, e);
+
+            e
+        })
+        .ok()
+}
+
 impl Git {
     pub fn new() -> Self {
         Self { git: which("git") }
@@ -83,7 +97,11 @@ impl Git {
             .map(|repo| {
                 let repo = repo.clone();
                 let path = format!("{}", HumanizedPath::from(std::path::Path::new(&repo)));
-                println!("{} {}", style("Pulling").cyan(), path);
+                let before_revision = get_head_revision(git, &repo);
+                let cloned_git = git.to_owned();
+
+                println!("{} {}", style("Pulling").cyan().bold(), path);
+
                 Command::new(git)
                     .args(&["pull", "--rebase", "--autostash"])
                     .current_dir(&repo)
@@ -91,10 +109,33 @@ impl Git {
                     .then(move |result| match result {
                         Ok(output) => {
                             if output.status.success() {
-                                println!("{} {}", style("Pulled").green(), path);
+                                let after_revision = get_head_revision(&cloned_git, &repo);
+
+                                if before_revision != after_revision
+                                    && after_revision.is_some()
+                                    && before_revision.is_some()
+                                {
+                                    println!("{} {}:", style("Changed").yellow().bold(), path);
+                                    Command::new(&cloned_git)
+                                        .current_dir(&repo)
+                                        .args(&[
+                                            "log",
+                                            "--no-decorate",
+                                            "--oneline",
+                                            &format!("{}..{}", before_revision.unwrap(), after_revision.unwrap()),
+                                        ])
+                                        .spawn()
+                                        .unwrap()
+                                        .wait()
+                                        .unwrap();
+                                    println!();
+                                } else {
+                                    println!("{} {}", style("Up-to-date").green().bold(), path);
+                                }
+
                                 Ok(true) as Result<bool, Error>
                             } else {
-                                println!("{} pulling {}", style("Failed").red(), path);
+                                println!("{} pulling {}", style("Failed").red().bold(), path);
                                 if let Ok(text) = std::str::from_utf8(&output.stderr) {
                                     print!("{}", text);
                                 }
@@ -102,7 +143,7 @@ impl Git {
                             }
                         }
                         Err(e) => {
-                            println!("{} pulling {}: {}", style("Failed").red(), path, e);
+                            println!("{} pulling {}: {}", style("Failed").red().bold(), path, e);
                             Ok(false)
                         }
                     })
