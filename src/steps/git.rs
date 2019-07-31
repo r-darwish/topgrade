@@ -23,22 +23,18 @@ pub struct Repositories<'a> {
     repositories: HashSet<String>,
 }
 
-/// Checks whether the latest pull command actually pulled something
-fn did_pull_change(git: &Path, repo: &str) -> bool {
+fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
     Command::new(git)
-        .args(&["rev-parse", "HEAD", "ORIG_HEAD"])
+        .args(&["rev-parse", "HEAD"])
         .current_dir(repo)
         .check_output()
-        .map(|output| {
-            let mut lines = output.trim().split('\n');
-            lines.next().unwrap() != lines.next().unwrap()
-        })
+        .map(|output| output.trim().to_string())
         .map_err(|e| {
             error!("Error getting revision for {}: {}", repo, e);
 
             e
         })
-        .unwrap_or(false)
+        .ok()
 }
 
 impl Git {
@@ -101,6 +97,7 @@ impl Git {
             .map(|repo| {
                 let repo = repo.clone();
                 let path = format!("{}", HumanizedPath::from(std::path::Path::new(&repo)));
+                let before_revision = get_head_revision(git, &repo);
                 let cloned_git = git.to_owned();
 
                 println!("{} {}", style("Pulling").cyan().bold(), path);
@@ -112,11 +109,21 @@ impl Git {
                     .then(move |result| match result {
                         Ok(output) => {
                             if output.status.success() {
-                                if did_pull_change(&cloned_git, &repo) {
+                                let after_revision = get_head_revision(&cloned_git, &repo);
+
+                                if before_revision != after_revision
+                                    && after_revision.is_some()
+                                    && before_revision.is_some()
+                                {
                                     println!("{} {}:", style("Changed").yellow().bold(), path);
                                     Command::new(&cloned_git)
                                         .current_dir(&repo)
-                                        .args(&["log", "--no-decorate", "--oneline", "ORIG_HEAD.."])
+                                        .args(&[
+                                            "log",
+                                            "--no-decorate",
+                                            "--oneline",
+                                            &format!("{}..{}", before_revision.unwrap(), after_revision.unwrap()),
+                                        ])
                                         .spawn()
                                         .unwrap()
                                         .wait()
