@@ -35,6 +35,9 @@ openssl-probe = { version = "0.1.2", optional = true }
 [target.'cfg(unix)'.dependencies]
 nix = "0.14.0"
 
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["wincon"] }
+
 [profile.release]
 lto = true
 
