@@ -77,7 +77,7 @@ fn run() -> Result<(), Error> {
 
     let mut env = Env::default();
     if config.verbose() {
-        env = env.filter_or("LOG_LEVEL", "info");
+        env = env.filter_or("LOG_LEVEL", "topgrade=debug");
     }
     env_logger::init_from_env(env);
 
