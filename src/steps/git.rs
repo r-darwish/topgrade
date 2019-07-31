@@ -23,6 +23,24 @@ pub struct Repositories<'a> {
     repositories: HashSet<String>,
 }
 
+/// Checks whether the latest pull command actually pulled something
+fn did_pull_change(git: &Path, repo: &str) -> bool {
+    Command::new(git)
+        .args(&["rev-parse", "HEAD", "ORIG_HEAD"])
+        .current_dir(repo)
+        .check_output()
+        .map(|output| {
+            let mut lines = output.trim().split('\n');
+            lines.next().unwrap() != lines.next().unwrap()
+        })
+        .map_err(|e| {
+            error!("Error getting revision for {}: {}", repo, e);
+
+            e
+        })
+        .unwrap_or(false)
+}
+
 impl Git {
     pub fn new() -> Self {
         Self { git: which("git") }
@@ -83,18 +101,34 @@ impl Git {
             .map(|repo| {
                 let repo = repo.clone();
                 let path = format!("{}", HumanizedPath::from(std::path::Path::new(&repo)));
-                println!("{} {}", style("Pulling").cyan(), path);
+                let cloned_git = git.to_owned();
+
+                println!("{} {}", style("Pulling").cyan().bold(), path);
+
                 Command::new(git)
-                    .args(&["pull", "--rebase", "--autostash"])
+                    .args(&["pull", "--ff-only"])
                     .current_dir(&repo)
                     .output_async()
                     .then(move |result| match result {
                         Ok(output) => {
                             if output.status.success() {
-                                println!("{} {}", style("Pulled").green(), path);
+                                if did_pull_change(&cloned_git, &repo) {
+                                    println!("{} {}:", style("Changed").yellow().bold(), path);
+                                    Command::new(&cloned_git)
+                                        .current_dir(&repo)
+                                        .args(&["log", "--no-decorate", "--oneline", "ORIG_HEAD.."])
+                                        .spawn()
+                                        .unwrap()
+                                        .wait()
+                                        .unwrap();
+                                    println!();
+                                } else {
+                                    println!("{} {}", style("Up-to-date").green().bold(), path);
+                                }
+
                                 Ok(true) as Result<bool, Error>
                             } else {
-                                println!("{} pulling {}", style("Failed").red(), path);
+                                println!("{} pulling {}", style("Failed").red().bold(), path);
                                 if let Ok(text) = std::str::from_utf8(&output.stderr) {
                                     print!("{}", text);
                                 }
@@ -102,7 +136,7 @@ impl Git {
                             }
                         }
                         Err(e) => {
-                            println!("{} pulling {}: {}", style("Failed").red(), path, e);
+                            println!("{} pulling {}: {}", style("Failed").red().bold(), path, e);
                             Ok(false)
                         }
                     })
