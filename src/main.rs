@@ -15,11 +15,11 @@ use self::error::{Error, ErrorKind};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
-use env_logger::Env;
 use failure::{Fail, ResultExt};
-use log::debug;
+use log::{debug, LevelFilter};
 #[cfg(feature = "self-update")]
 use openssl_probe;
+use pretty_env_logger::formatted_timed_builder;
 use std::borrow::Cow;
 use std::env;
 use std::fmt::Debug;
@@ -75,11 +75,13 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    let mut env = Env::default();
+    let mut builder = formatted_timed_builder();
+
     if config.verbose() {
-        env = env.filter_or("LOG_LEVEL", "topgrade=debug");
+        builder.filter(Some("topgrade"), LevelFilter::Debug);
     }
-    env_logger::init_from_env(env);
+
+    builder.init();
 
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);
