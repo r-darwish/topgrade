@@ -41,7 +41,7 @@ fn new_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
 
 fn run_in_session(tmux: &Path, command: &str) -> Result<(), Error> {
     Command::new(tmux)
-        .args(&["new-window", "-a", "-t", "topgrade:1", "-n", "local", command])
+        .args(&["new-window", "-a", "-t", "topgrade:1", command])
         .env_remove("TMUX")
         .spawn()
         .context(ErrorKind::ProcessExecution)?
@@ -90,7 +90,7 @@ pub fn run_remote_topgrade(hostname: &str, ssh: &Path) -> Result<(), Error> {
         hostname = hostname
     );
     Command::new(which("tmux").unwrap())
-        .args(&["new-window", "-a", "-t", "topgrade:1", "-n", hostname, &command])
+        .args(&["new-window", "-a", "-t", "topgrade:1", &command])
         .env_remove("TMUX")
         .spawn()
         .context(ErrorKind::ProcessExecution)?
