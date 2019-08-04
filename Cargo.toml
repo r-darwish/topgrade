@@ -45,3 +45,6 @@ lto = true
 default = []
 
 self-update = ["self_update_crate", "openssl-probe"]
+
+[patch.crates-io]
+self_update = { git = 'https://github.com/r-darwish/self_update', branch='target' }
