@@ -511,15 +511,21 @@ fn run() -> Result<(), Error> {
     }
 
     if config.keep_at_end() {
-        print_info("\n(R)eboot\n(S)hell\n\nPress any other key to continue");
-        match get_char() {
-            's' | 'S' => {
-                run_shell();
+        print_info("\n(R)eboot\n(S)hell\n(Q)uit");
+        loop {
+            match get_char() {
+                's' | 'S' => {
+                    run_shell();
+                }
+                'r' | 'R' => {
+                    reboot();
+                }
+                'q' | 'Q' => (),
+                _ => {
+                    continue;
+                }
             }
-            'r' | 'R' => {
-                reboot();
-            }
-            _ => (),
+            break;
         }
     }
 
