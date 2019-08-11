@@ -1,4 +1,4 @@
-puse crate::error::{Error, ErrorKind};
+use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, HumanizedPath};
