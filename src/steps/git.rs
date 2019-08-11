@@ -1,9 +1,10 @@
-use crate::error::{Error, ErrorKind};
+puse crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, HumanizedPath};
 use console::style;
 use futures::future::{join_all, Future};
+use glob::{glob_with, MatchOptions};
 use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
@@ -17,10 +18,10 @@ pub struct Git {
     git: Option<PathBuf>,
 }
 
-#[derive(Debug)]
 pub struct Repositories<'a> {
     git: &'a Git,
     repositories: HashSet<String>,
+    glob_match_options: MatchOptions,
 }
 
 fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
@@ -162,15 +163,37 @@ impl Git {
 
 impl<'a> Repositories<'a> {
     pub fn new(git: &'a Git) -> Self {
+        let mut glob_match_options = MatchOptions::new();
+
+        if cfg!(windows) {
+            glob_match_options.case_sensitive = false;
+        }
+
         Self {
             git,
             repositories: HashSet::new(),
+            glob_match_options,
         }
     }
 
     pub fn insert<P: AsRef<Path>>(&mut self, path: P) {
         if let Some(repo) = self.git.get_repo_root(path) {
             self.repositories.insert(repo);
+        }
+    }
+
+    pub fn glob_insert(&mut self, pattern: &str) {
+        if let Ok(glob) = glob_with(pattern, self.glob_match_options) {
+            for entry in glob {
+                match entry {
+                    Ok(path) => self.insert(path),
+                    Err(e) => {
+                        error!("Error in path {}", e);
+                    }
+                }
+            }
+        } else {
+            error!("Bad glob pattern: {}", pattern);
         }
     }
 }

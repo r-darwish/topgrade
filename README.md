@@ -118,7 +118,8 @@ Here's an example for a configuration file:
 
 ``` toml
 git_repos = [
-    "~/dev/topgrade",
+    "~/src/*/",
+    "~/.config/something"
 ]
 
 # Same options as the command line flag

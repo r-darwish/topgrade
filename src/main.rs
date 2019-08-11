@@ -242,7 +242,7 @@ fn run() -> Result<(), Error> {
     if config.should_run(Step::GitRepos) {
         if let Some(custom_git_repos) = config.git_repos() {
             for git_repo in custom_git_repos {
-                git_repos.insert(git_repo);
+                git_repos.glob_insert(git_repo);
             }
         }
         execute(
