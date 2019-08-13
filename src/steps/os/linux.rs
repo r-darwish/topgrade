@@ -394,4 +394,9 @@ mod tests {
     fn test_anarchy() {
         test_template(&include_str!("os_release/anarchy"), Distribution::Arch);
     }
+
+    #[test]
+    fn test_gentoo() {
+        test_template(&include_str!("os_release/gentoo"), Distribution::Gentoo);
+    }
 }
