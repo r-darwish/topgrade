@@ -12,19 +12,17 @@ pub fn self_update() -> Result<(), Error> {
     print_separator("Self update");
     let current_exe = env::current_exe();
 
-    let target = self_update_crate::get_target().context(ErrorKind::SelfUpdate)?;
+    let target = self_update_crate::get_target();
     let result = Update::configure()
-        .and_then(|mut u| {
-            u.repo_owner("r-darwish")
-                .repo_name("topgrade")
-                .target(&target)
-                .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
-                .show_output(false)
-                .show_download_progress(true)
-                .current_version(self_update_crate::cargo_crate_version!())
-                .no_confirm(true)
-                .build()
-        })
+        .repo_owner("r-darwish")
+        .repo_name("topgrade")
+        .target(&target)
+        .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
+        .show_output(false)
+        .show_download_progress(true)
+        .current_version(self_update_crate::cargo_crate_version!())
+        .no_confirm(true)
+        .build()
         .and_then(Update::update_extended)
         .context(ErrorKind::SelfUpdate)?;
 
