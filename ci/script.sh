@@ -7,9 +7,9 @@ main() {
     cargo fmt --all -- --check
     cross clippy --all-targets -- -D warnings
     cross clippy --all-targets --all-features -- -D warnings
-    cross check --target $TARGET --release --all-features
+    cross check --target "$TARGET" --release --all-features
 
-    if [ ! -z $DISABLE_TESTS ]; then
+    if [ -n "$DISABLE_TESTS" ]; then
         return
     fi
 
@@ -17,6 +17,6 @@ main() {
 }
 
 # we don't run the "test phase" when doing deploys
-if [ -z $TRAVIS_TAG ]; then
+if [ -z "$TRAVIS_TAG" ]; then
     main
 fi
