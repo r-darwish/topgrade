@@ -78,7 +78,7 @@ fn run() -> Result<(), Error> {
     let mut builder = formatted_timed_builder();
 
     if config.verbose() {
-        builder.filter(Some("topgrade"), LevelFilter::Debug);
+        builder.filter(Some("topgrade"), LevelFilter::Trace);
     }
 
     builder.init();

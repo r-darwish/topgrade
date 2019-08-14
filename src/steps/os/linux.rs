@@ -4,8 +4,11 @@ use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which};
 use failure::ResultExt;
 use ini::Ini;
+use log::{debug, error};
 use serde::Deserialize;
-use std::path::PathBuf;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
 use walkdir::WalkDir;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
@@ -27,6 +30,16 @@ pub enum Distribution {
     Suse,
     Void,
     Solus,
+}
+
+/// Returns whether the given Python path is the system Python in Arch Linux
+fn arch_system_python(path: &Path) -> Result<bool, io::Error> {
+    debug!("Python is in {}", path.display());
+    Command::new("pacman").arg("-Qqo").arg(&path).output().map(|output| {
+        debug!("Pacman output: {:?}", output);
+        let Output { status, stdout, .. } = output;
+        status.success() && String::from_utf8(stdout).unwrap() == "python\n"
+    })
 }
 
 impl Distribution {
@@ -111,7 +124,12 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
 
     if let Some(yay) = which("yay") {
         if let Some(python) = which("python") {
-            if python != PathBuf::from("/usr/bin/python") {
+            let is_system_python = arch_system_python(&python).unwrap_or_else(|e| {
+                error!("Error detecting system Python: {}", e);
+                false
+            });
+
+            if !is_system_python {
                 print_warning(format!(
                     "Python detected at {:?}, which is probably not the system Python.
 It's dangerous to run yay since Python based AUR packages will be installed in the wrong location",
