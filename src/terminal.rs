@@ -14,6 +14,8 @@ use std::os::windows::ffi::OsStrExt;
 use std::process::Command;
 use std::sync::Mutex;
 #[cfg(windows)]
+use which_crate::which;
+#[cfg(windows)]
 use winapi::um::wincon::SetConsoleTitleW;
 
 lazy_static! {
@@ -27,7 +29,7 @@ fn shell() -> String {
 
 #[cfg(windows)]
 fn shell() -> &'static str {
-    "powershell"
+    which("pwsh").map(|_| "pwsh").unwrap_or("powershell")
 }
 
 pub fn run_shell() {
@@ -196,7 +198,6 @@ pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
     TERMINAL.lock().unwrap().print_result(key, succeeded)
 }
 
-#[cfg(windows)]
 /// Tells whether the terminal is dumb.
 pub fn is_dumb() -> bool {
     TERMINAL.lock().unwrap().width.is_none()

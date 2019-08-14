@@ -124,10 +124,7 @@ fn run() -> Result<(), Error> {
         }
     }
 
-    #[cfg(windows)]
-    let powershell = windows::Powershell::new();
-
-    #[cfg(windows)]
+    let powershell = powershell::Powershell::new();
     let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
 
     #[cfg(windows)]
@@ -232,11 +229,8 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.config_dir().join("i3"));
     }
 
-    #[cfg(windows)]
-    {
-        if let Some(profile) = powershell.profile() {
-            git_repos.insert(profile);
-        }
+    if let Some(profile) = powershell.profile() {
+        git_repos.insert(profile);
     }
 
     if config.should_run(Step::GitRepos) {
@@ -253,16 +247,13 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
-    #[cfg(windows)]
-    {
-        if should_run_powershell {
-            execute(
-                &mut report,
-                "Powershell Modules Update",
-                || powershell.update_modules(run_type),
-                config.no_retry(),
-            )?;
-        }
+    if should_run_powershell {
+        execute(
+            &mut report,
+            "Powershell Modules Update",
+            || powershell.update_modules(run_type),
+            config.no_retry(),
+        )?;
     }
 
     #[cfg(unix)]
