@@ -57,6 +57,7 @@ impl Distribution {
             (Some("fedora"), _) => Distribution::Fedora,
             (Some("void"), _) => Distribution::Void,
             (Some("solus"), _) => Distribution::Solus,
+            (Some("gentoo"), _) => Distribution::Gentoo,
             _ => Err(ErrorKind::UnknownLinuxDistribution)?,
         })
     }
@@ -66,10 +67,6 @@ impl Distribution {
             let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?;
 
             return Self::parse_os_release(&os_release);
-        }
-
-        if PathBuf::from("/etc/gentoo-release").exists() {
-            return Ok(Distribution::Gentoo);
         }
 
         Err(ErrorKind::UnknownLinuxDistribution)?
@@ -414,5 +411,10 @@ mod tests {
     #[test]
     fn test_anarchy() {
         test_template(&include_str!("os_release/anarchy"), Distribution::Arch);
+    }
+
+    #[test]
+    fn test_gentoo() {
+        test_template(&include_str!("os_release/gentoo"), Distribution::Gentoo);
     }
 }
