@@ -9,6 +9,7 @@ version = "2.7.2"
 authors = ["Roey Darwish Dror <roey.ghost@gmail.com>"]
 exclude = ["doc/screenshot.gif"]
 edition = "2018"
+readme = "README.md"
 
 [dependencies]
 directories = "2.0.1"
