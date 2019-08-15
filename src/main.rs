@@ -31,7 +31,7 @@ where
     F: Fn() -> Result<(), Error>,
     M: Into<Cow<'a, str>> + Debug,
 {
-    debug!("Executing {:?}", key);
+    debug!("Step {:?}", key);
 
     loop {
         match func() {
