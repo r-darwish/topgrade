@@ -2,6 +2,7 @@
 use super::error::{Error, ErrorKind};
 use super::utils::Check;
 use failure::ResultExt;
+use log::trace;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
@@ -208,6 +209,7 @@ pub trait CommandExt {
 impl CommandExt for Command {
     fn check_output(&mut self) -> Result<String, Error> {
         let output = self.output().context(ErrorKind::ProcessExecution)?;
+        trace!("Output of {:?}: {:?}", self, output);
         let status = output.status;
         if !status.success() {
             Err(ErrorKind::ProcessFailed(status))?

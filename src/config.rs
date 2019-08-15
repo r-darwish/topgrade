@@ -49,8 +49,6 @@ pub enum Step {
     Sdkman,
     /// Don't run remote Togprades
     Remotes,
-
-    #[cfg(windows)]
     /// Don't update Powershell modules
     Powershell,
 }
