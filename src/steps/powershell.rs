@@ -34,13 +34,11 @@ impl Powershell {
 
     #[cfg(windows)]
     pub fn has_module(powershell: &PathBuf, command: &str) -> bool {
-        || -> Result<(), Error> {
-            Command::new(&powershell)
-                .args(&["-Command", &format!("Get-Module -ListAvailable {}", command)])
-                .check_output()?;
-            Ok(())
-        }()
-        .is_ok()
+        Command::new(&powershell)
+            .args(&["-Command", &format!("Get-Module -ListAvailable {}", command)])
+            .check_output()
+            .map(|result| !result.is_empty())
+            .unwrap_or(false)
     }
 
     pub fn profile(&self) -> Option<&PathBuf> {
