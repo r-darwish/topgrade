@@ -31,10 +31,6 @@ pub enum ErrorKind {
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
 
-    #[fail(display = "Detected Python is not the system Python")]
-    #[cfg(target_os = "linux")]
-    NotSystemPython,
-
     #[fail(display = "Process execution failure")]
     ProcessExecution,
 

@@ -4,11 +4,11 @@ use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which};
 use failure::ResultExt;
 use ini::Ini;
-use log::{debug, error};
+use log::debug;
 use serde::Deserialize;
-use std::io;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::env::var_os;
+use std::ffi::OsString;
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
@@ -30,16 +30,6 @@ pub enum Distribution {
     Suse,
     Void,
     Solus,
-}
-
-/// Returns whether the given Python path is the system Python in Arch Linux
-fn arch_system_python(path: &Path) -> Result<bool, io::Error> {
-    debug!("Python is in {}", path.display());
-    Command::new("pacman").arg("-Qqo").arg(&path).output().map(|output| {
-        debug!("Pacman output: {:?}", output);
-        let Output { status, stdout, .. } = output;
-        status.success() && String::from_utf8(stdout).unwrap() == "python\n"
-    })
 }
 
 impl Distribution {
@@ -119,30 +109,28 @@ pub fn show_pacnew() {
 fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
-    if let Some(yay) = which("yay") {
-        if let Some(python) = which("python") {
-            let is_system_python = arch_system_python(&python).unwrap_or_else(|e| {
-                error!("Error detecting system Python: {}", e);
-                false
-            });
+    let path = {
+        let mut path = OsString::from("/usr/bin:");
+        path.push(var_os("PATH").unwrap());
+        path
+    };
+    debug!("Running Arch update with path: {:?}", path);
 
-            if !is_system_python {
-                print_warning(format!(
-                    "Python detected at {:?}, which is probably not the system Python.
-It's dangerous to run yay since Python based AUR packages will be installed in the wrong location",
-                    python
-                ));
-                return Err(ErrorKind::NotSystemPython)?;
-            }
-        }
+    if let Some(yay) = which("yay") {
         run_type
             .execute(yay)
             .arg("--pacman")
             .arg(pacman)
             .arg("-Syu")
+            .env("PATH", path)
             .check_run()?;
     } else if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).arg(pacman).arg("-Syu").check_run()?;
+        run_type
+            .execute(&sudo)
+            .arg(pacman)
+            .arg("-Syu")
+            .env("PATH", path)
+            .check_run()?;
     } else {
         print_warning("No sudo or yay detected. Skipping system upgrade");
     }

@@ -101,6 +101,23 @@ impl Executor {
         self
     }
 
+    #[allow(dead_code)]
+    /// See `std::process::Command::env`
+    pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Executor
+    where
+        K: AsRef<OsStr>,
+        V: AsRef<OsStr>,
+    {
+        match self {
+            Executor::Wet(c) => {
+                c.env(key, val);
+            }
+            Executor::Dry(_) => (),
+        }
+
+        self
+    }
+
     /// See `std::process::Command::spawn`
     pub fn spawn(&mut self) -> Result<ExecutorChild, Error> {
         let result = match self {
