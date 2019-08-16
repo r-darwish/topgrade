@@ -122,6 +122,7 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
             .arg("--pacman")
             .arg(pacman)
             .arg("-Syu")
+            .arg("--devel")
             .env("PATH", path)
             .check_run()?;
     } else if let Some(sudo) = &sudo {
