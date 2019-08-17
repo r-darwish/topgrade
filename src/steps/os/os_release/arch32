@@ -1,0 +1,11 @@
+NAME="Arch Linux 32"
+PRETTY_NAME="Arch Linux 32"
+ID=arch32
+ID_LIKE="arch archlinux"
+BUILD_ID=rolling
+ANSI_COLOR="0;36"
+HOME_URL="https://www.archlinux32.org/"
+DOCUMENTATION_URL="https://wiki.archlinux.org/"
+SUPPORT_URL="https://bbs.archlinux32.org/"
+BUG_REPORT_URL="https://bugs.archlinux32.org/"
+LOGO=archlinux
