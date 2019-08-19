@@ -278,18 +278,23 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
-    execute(
-        &mut report,
-        "rustup",
-        || generic::run_rustup(&base_dirs, run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "cargo",
-        || generic::run_cargo_update(run_type),
-        config.no_retry(),
-    )?;
+    if config.should_run(Step::Rustup) {
+        execute(
+            &mut report,
+            "rustup",
+            || generic::run_rustup(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Cargo) {
+        execute(
+            &mut report,
+            "cargo",
+            || generic::run_cargo_update(run_type),
+            config.no_retry(),
+        )?;
+    }
 
     if config.should_run(Step::Emacs) {
         execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;

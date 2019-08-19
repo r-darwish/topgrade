@@ -24,6 +24,8 @@ lazy_static! {
         m.insert("gem", Step::Gem);
         m.insert("sdkman", Step::Sdkman);
         m.insert("remotes", Step::Remotes);
+        m.insert("rustup", Step::Rustup);
+        m.insert("cargo", Step::Cargo);
 
         #[cfg(windows)]
         m.insert("powershell", Step::Powershell);
@@ -49,6 +51,10 @@ pub enum Step {
     Sdkman,
     /// Don't run remote Togprades
     Remotes,
+    /// Don't run Rustup
+    Rustup,
+    /// Don't run Cargo
+    Cargo,
     /// Don't update Powershell modules
     Powershell,
 }
