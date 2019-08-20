@@ -89,7 +89,7 @@ fn run() -> Result<(), Error> {
     let mut report = Report::new();
 
     #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
-    let sudo = utils::which("sudo");
+    let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
 
     #[cfg(feature = "self-update")]
