@@ -80,6 +80,11 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
     }
 }
 
+#[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
+pub fn sudo() -> Option<PathBuf> {
+    which("sudo").or_else(|| which("pkexec"))
+}
+
 /// `std::fmt::Display` implementation for `std::path::Path`.
 ///
 /// This struct differs from `std::path::Display` in that in Windows it takes care of printing backslashes
