@@ -16,10 +16,9 @@ use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
 use failure::{Fail, ResultExt};
-use log::{debug, LevelFilter};
+use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
-use pretty_env_logger::formatted_timed_builder;
 use std::borrow::Cow;
 use std::env;
 use std::fmt::Debug;
@@ -74,14 +73,6 @@ fn run() -> Result<(), Error> {
             tmux::run_in_tmux();
         }
     }
-
-    let mut builder = formatted_timed_builder();
-
-    if config.verbose() {
-        builder.filter(Some("topgrade"), LevelFilter::Trace);
-    }
-
-    builder.init();
 
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);

@@ -2,9 +2,12 @@ use super::error::{Error, ErrorKind};
 use directories::BaseDirs;
 use failure::ResultExt;
 use lazy_static::lazy_static;
+use log::{debug, error, LevelFilter};
+use pretty_env_logger::formatted_timed_builder;
 use serde::Deserialize;
 use shellexpand;
 use std::collections::{BTreeMap, HashMap};
+use std::fs::write;
 use std::{env, fs};
 use structopt::StructOpt;
 use toml;
@@ -72,7 +75,7 @@ impl std::str::FromStr for Step {
     }
 }
 
-#[derive(Deserialize, Default)]
+#[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 /// Configuration file
 pub struct ConfigFile {
@@ -90,6 +93,16 @@ impl ConfigFile {
     fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
+            write(&config_path, include_str!("../config.example.toml"))
+                .map_err(|e| {
+                    error!(
+                        "Unable to write the example configuration file to {}: {}",
+                        config_path.display(),
+                        e
+                    );
+                })
+                .ok();
+            debug!("No configuration exists");
             return Ok(Default::default());
         }
 
@@ -101,6 +114,8 @@ impl ConfigFile {
                 *path = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
             }
         }
+
+        debug!("Loaded configuration: {:?}", result);
 
         Ok(result)
     }
@@ -154,8 +169,18 @@ impl Config {
     ///
     /// The function parses the command line arguments and reading the configuration file.
     pub fn load(base_dirs: &BaseDirs) -> Result<Self, Error> {
+        let opt = CommandLineArgs::from_args();
+
+        let mut builder = formatted_timed_builder();
+
+        if opt.verbose {
+            builder.filter(Some("topgrade"), LevelFilter::Trace);
+        }
+
+        builder.init();
+
         Ok(Self {
-            opt: CommandLineArgs::from_args(),
+            opt,
             config_file: ConfigFile::read(base_dirs)?,
         })
     }
@@ -208,11 +233,6 @@ impl Config {
     /// Tell whether we should not attempt to retry anything.
     pub fn no_retry(&self) -> bool {
         self.opt.no_retry
-    }
-
-    /// Tell whether we should print log.
-    pub fn verbose(&self) -> bool {
-        self.opt.verbose
     }
 
     /// List of remote hosts to run Topgrade in

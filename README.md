@@ -113,29 +113,7 @@ Just run `topgrade`. It will run the following steps:
   * **FreeBSD**: Run `freebsd-upgrade`
 
 ## Customization
-Here's an example for a configuration file:
-
-
-``` toml
-git_repos = [
-    "~/src/*/",
-    "~/.config/something"
-]
-
-# Same options as the command line flag
-disable = ["system", "emacs"]
-
-[pre_commands]
-"Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
-
-[commands]
-"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
-```
-* `git_repos` - A list of custom Git repositories to pull
-* `pre_commands` - Commands to execute before starting any action. If any command fails, Topgrade
-  will not proceed
-* `commands` - Custom upgrade steps. If any command fails it will be reported in the summary as all
-  upgrade steps are reported, but it will not cause Topgrade to stop.
+See `config.example.toml` for an example configuration file.
 
 ### Configuration path
 
