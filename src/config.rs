@@ -73,6 +73,7 @@ impl std::str::FromStr for Step {
 }
 
 #[derive(Deserialize, Default)]
+#[serde(deny_unknown_fields)]
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
