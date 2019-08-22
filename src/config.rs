@@ -1,4 +1,5 @@
 use super::error::{Error, ErrorKind};
+use super::utils::editor;
 use directories::BaseDirs;
 use failure::ResultExt;
 use lazy_static::lazy_static;
@@ -8,6 +9,8 @@ use serde::Deserialize;
 use shellexpand;
 use std::collections::{BTreeMap, HashMap};
 use std::fs::write;
+use std::path::PathBuf;
+use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
 use toml;
@@ -87,10 +90,7 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    /// Read the configuration file.
-    ///
-    /// If the configuration file does not exist the function returns the default ConfigFile.
-    fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
+    fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf, Error> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
             write(&config_path, include_str!("../config.example.toml"))
@@ -100,12 +100,20 @@ impl ConfigFile {
                         config_path.display(),
                         e
                     );
+                    e
                 })
-                .ok();
+                .context(ErrorKind::Configuration)?;
             debug!("No configuration exists");
-            return Ok(Default::default());
         }
 
+        Ok(config_path)
+    }
+
+    /// Read the configuration file.
+    ///
+    /// If the configuration file does not exist the function returns the default ConfigFile.
+    fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
+        let config_path = Self::ensure(base_dirs)?;
         let mut result: Self = toml::from_str(&fs::read_to_string(config_path).context(ErrorKind::Configuration)?)
             .context(ErrorKind::Configuration)?;
 
@@ -119,12 +127,29 @@ impl ConfigFile {
 
         Ok(result)
     }
+
+    fn edit(base_dirs: &BaseDirs) -> Result<(), Error> {
+        let config_path = Self::ensure(base_dirs)?;
+        let editor = editor();
+
+        debug!("Editing {} with {}", config_path.display(), editor);
+        Command::new(editor)
+            .arg(config_path)
+            .spawn()
+            .and_then(|mut p| p.wait())
+            .context(ErrorKind::Configuration)?;
+        Ok(())
+    }
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Topgrade")]
+#[structopt(name = "Topgrade", raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
 /// Command line arguments
 pub struct CommandLineArgs {
+    /// Edit the configuration file
+    #[structopt(long = "edit-config")]
+    edit_config: bool,
+
     /// Run inside tmux
     #[structopt(short = "t", long = "tmux")]
     run_in_tmux: bool,
@@ -185,6 +210,11 @@ impl Config {
         })
     }
 
+    /// Launch an editor to edit the configuration
+    pub fn edit(base_dirs: &BaseDirs) -> Result<(), Error> {
+        ConfigFile::edit(base_dirs)
+    }
+
     /// The list of commands to run before performing any step.
     pub fn pre_commands(&self) -> &Option<Commands> {
         &self.config_file.pre_commands
@@ -243,5 +273,10 @@ impl Config {
     /// Prompt for a key before exiting
     pub fn keep_at_end(&self) -> bool {
         self.opt.keep_at_end || env::var("TOPGRADE_KEEP_END").is_ok()
+    }
+
+    /// Whether to edit the configuration file
+    pub fn edit_config(&self) -> bool {
+        self.opt.edit_config
     }
 }

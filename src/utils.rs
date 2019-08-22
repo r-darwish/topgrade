@@ -1,5 +1,6 @@
 use super::error::{Error, ErrorKind};
 use log::{debug, error};
+use std::env;
 use std::ffi::OsStr;
 use std::fmt::{self, Debug};
 use std::path::{Component, Path, PathBuf};
@@ -136,6 +137,10 @@ impl<'a> fmt::Display for HumanizedPath<'a> {
 
         Ok(())
     }
+}
+
+pub fn editor() -> String {
+    env::var("EDITOR").unwrap_or_else(|_| String::from(if cfg!(windows) { "notepad" } else { "vi" }))
 }
 
 #[cfg(test)]

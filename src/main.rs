@@ -67,6 +67,11 @@ fn run() -> Result<(), Error> {
     let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
     let config = Config::load(&base_dirs)?;
 
+    if config.edit_config() {
+        Config::edit(&base_dirs)?;
+        return Ok(());
+    };
+
     if config.run_in_tmux() && env::var("TOPGRADE_INSIDE_TMUX").is_err() {
         #[cfg(unix)]
         {
