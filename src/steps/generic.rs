@@ -1,6 +1,6 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
-use crate::terminal::print_separator;
+use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use directories::BaseDirs;
 use failure::ResultExt;
@@ -110,7 +110,7 @@ pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(),
 
 pub fn run_custom_command(name: &str, command: &str, run_type: RunType) -> Result<(), Error> {
     print_separator(name);
-    run_type.execute("sh").arg("-c").arg(command).check_run()
+    run_type.execute(shell()).arg("-c").arg(command).check_run()
 }
 
 pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {

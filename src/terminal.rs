@@ -23,12 +23,12 @@ lazy_static! {
 }
 
 #[cfg(unix)]
-fn shell() -> String {
+pub fn shell() -> String {
     env::var("SHELL").unwrap_or_else(|_| "sh".to_string())
 }
 
 #[cfg(windows)]
-fn shell() -> &'static str {
+pub fn shell() -> &'static str {
     which("pwsh").map(|_| "pwsh").unwrap_or("powershell")
 }
 
