@@ -1,11 +1,11 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which};
-use failure::ResultExt;
 use ini::Ini;
 use log::debug;
 use serde::Deserialize;
+use snafu::ResultExt;
 use std::env::var_os;
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -52,18 +52,18 @@ impl Distribution {
             (Some("solus"), _) => Distribution::Solus,
             (Some("gentoo"), _) => Distribution::Gentoo,
             (Some("exherbo"), _) => Distribution::Exherbo,
-            _ => Err(ErrorKind::UnknownLinuxDistribution)?,
+            _ => Err(Error::UnknownLinuxDistribution)?,
         })
     }
 
     pub fn detect() -> Result<Self, Error> {
         if PathBuf::from(OS_RELEASE_PATH).exists() {
-            let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?;
+            let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(Error::UnknownLinuxDistribution)?;
 
             return Self::parse_os_release(&os_release);
         }
 
-        Err(ErrorKind::UnknownLinuxDistribution)?
+        Err(Error::UnknownLinuxDistribution)?
     }
 
     #[must_use]
@@ -337,7 +337,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
     let snap = require("snap")?;
 
     if !PathBuf::from("/var/snapd.socket").exists() {
-        Err(ErrorKind::SkipStep)?;
+        Err(Error::SkipStep)?;
     }
     print_separator("snap");
 

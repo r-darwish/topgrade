@@ -1,9 +1,9 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use directories::BaseDirs;
-use failure::ResultExt;
+use snafu::ResultExt;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -48,7 +48,7 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> 
 
     if rustup
         .canonicalize()
-        .context(ErrorKind::StepFailed)?
+        .context(Error::StepFailed)?
         .is_descendant_of(base_dirs.home_dir())
     {
         run_type.execute(&rustup).args(&["self", "update"]).check_run()?;
@@ -118,12 +118,12 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
     let composer_home = Command::new(&composer)
         .args(&["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
-        .map_err(|_| Error::from(ErrorKind::SkipStep))
+        .map_err(|_| Error::SkipStep)
         .map(|s| PathBuf::from(s.trim()))
         .and_then(PathExt::require)?;
 
     if !composer_home.is_descendant_of(base_dirs.home_dir()) {
-        Err(ErrorKind::SkipStep)?;
+        Err(Error::SkipStep)?;
     }
 
     print_separator("Composer");
@@ -144,7 +144,7 @@ pub fn run_remote_topgrade(run_type: RunType, hostname: &str, run_in_tmux: bool)
         #[cfg(unix)]
         {
             crate::tmux::run_remote_topgrade(hostname, &ssh)?;
-            Err(ErrorKind::SkipStep)?
+            Err(Error::SkipStep)?
         }
 
         unreachable!("Tmux execution is only implemented in Unix");

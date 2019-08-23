@@ -1,9 +1,9 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
 use directories::BaseDirs;
-use failure::ResultExt;
+use snafu::ResultExt;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
@@ -44,9 +44,9 @@ fn run_in_session(tmux: &Path, command: &str) -> Result<(), Error> {
         .args(&["new-window", "-a", "-t", "topgrade:1", command])
         .env_remove("TMUX")
         .spawn()
-        .context(ErrorKind::ProcessExecution)?
+        .context(Error::ProcessExecution)?
         .wait()
-        .context(ErrorKind::ProcessExecution)?
+        .context(Error::ProcessExecution)?
         .check()?;
 
     Ok(())
@@ -93,8 +93,8 @@ pub fn run_remote_topgrade(hostname: &str, ssh: &Path) -> Result<(), Error> {
         .args(&["new-window", "-a", "-t", "topgrade:1", &command])
         .env_remove("TMUX")
         .spawn()
-        .context(ErrorKind::ProcessExecution)?
+        .context(Error::ProcessExecution)?
         .wait()
-        .context(ErrorKind::ProcessExecution)?
+        .context(Error::ProcessExecution)?
         .check()
 }

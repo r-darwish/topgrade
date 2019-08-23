@@ -1,12 +1,12 @@
-use super::error::{Error, ErrorKind};
+use super::error::Error;
 use super::utils::editor;
 use directories::BaseDirs;
-use failure::ResultExt;
 use lazy_static::lazy_static;
 use log::{debug, error, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use serde::Deserialize;
 use shellexpand;
+use snafu::ResultExt;
 use std::collections::{BTreeMap, HashMap};
 use std::fs::write;
 use std::path::PathBuf;
@@ -102,7 +102,7 @@ impl ConfigFile {
                     );
                     e
                 })
-                .context(ErrorKind::Configuration)?;
+                .context(Error::Configuration { config_path })?;
             debug!("No configuration exists");
         }
 
@@ -114,8 +114,9 @@ impl ConfigFile {
     /// If the configuration file does not exist the function returns the default ConfigFile.
     fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
         let config_path = Self::ensure(base_dirs)?;
-        let mut result: Self = toml::from_str(&fs::read_to_string(config_path).context(ErrorKind::Configuration)?)
-            .context(ErrorKind::Configuration)?;
+        let mut result: Self =
+            toml::from_str(&fs::read_to_string(config_path).context(Error::Configuration { config_path })?)
+                .context(Error::Configuration { config_path })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
             for path in paths.iter_mut() {
@@ -137,7 +138,7 @@ impl ConfigFile {
             .arg(config_path)
             .spawn()
             .and_then(|mut p| p.wait())
-            .context(ErrorKind::Configuration)?;
+            .context(Error::Configuration { config_path })?;
         Ok(())
     }
 }

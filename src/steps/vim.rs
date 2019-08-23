@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
@@ -83,7 +83,7 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
         if !status.success() {
             io::stdout().write(&output.stdout).ok();
             io::stderr().write(&output.stderr).ok();
-            Err(ErrorKind::ProcessFailed(status))?
+            Err(Error::ProcessFailed { status })?
         } else {
             println!("Plugins upgraded")
         }
@@ -98,7 +98,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error>
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        Err(ErrorKind::SkipStep)?;
+        Err(Error::SkipStep)?;
     }
 
     let vimrc = require_option(vimrc(&base_dirs))?;

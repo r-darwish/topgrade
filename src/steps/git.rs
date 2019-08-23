@@ -1,4 +1,4 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, HumanizedPath};
@@ -154,7 +154,7 @@ impl Git {
         let mut runtime = Runtime::new().unwrap();
         let results: Vec<bool> = runtime.block_on(join_all(futures))?;
         if results.into_iter().any(|success| !success) {
-            Err(ErrorKind::StepFailed.into())
+            Err(Error::StepFailed)
         } else {
             Ok(())
         }

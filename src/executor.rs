@@ -1,8 +1,8 @@
 //! Utilities for command execution
-use super::error::{Error, ErrorKind};
+use super::error::Error;
 use super::utils::Check;
-use failure::ResultExt;
 use log::trace;
+use snafu::ResultExt;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
@@ -121,7 +121,7 @@ impl Executor {
     /// See `std::process::Command::spawn`
     pub fn spawn(&mut self) -> Result<ExecutorChild, Error> {
         let result = match self {
-            Executor::Wet(c) => c.spawn().context(ErrorKind::ProcessExecution).map(ExecutorChild::Wet)?,
+            Executor::Wet(c) => c.spawn().context(Error::ProcessExecution).map(ExecutorChild::Wet)?,
             Executor::Dry(c) => {
                 c.dry_run();
                 ExecutorChild::Dry
@@ -134,7 +134,7 @@ impl Executor {
     /// See `std::process::Command::output`
     pub fn output(&mut self) -> Result<ExecutorOutput, Error> {
         match self {
-            Executor::Wet(c) => Ok(ExecutorOutput::Wet(c.output().context(ErrorKind::ProcessExecution)?)),
+            Executor::Wet(c) => Ok(ExecutorOutput::Wet(c.output().context(Error::ProcessExecution)?)),
             Executor::Dry(c) => {
                 c.dry_run();
                 Ok(ExecutorOutput::Dry)
@@ -191,10 +191,7 @@ impl ExecutorChild {
     /// See `std::process::Child::wait`
     pub fn wait(&mut self) -> Result<ExecutorExitStatus, Error> {
         let result = match self {
-            ExecutorChild::Wet(c) => c
-                .wait()
-                .context(ErrorKind::ProcessExecution)
-                .map(ExecutorExitStatus::Wet)?,
+            ExecutorChild::Wet(c) => c.wait().context(Error::ProcessExecution).map(ExecutorExitStatus::Wet)?,
             ExecutorChild::Dry => ExecutorExitStatus::Dry,
         };
 
@@ -225,12 +222,12 @@ pub trait CommandExt {
 
 impl CommandExt for Command {
     fn check_output(&mut self) -> Result<String, Error> {
-        let output = self.output().context(ErrorKind::ProcessExecution)?;
+        let output = self.output().context(Error::ProcessExecution)?;
         trace!("Output of {:?}: {:?}", self, output);
         let status = output.status;
         if !status.success() {
-            Err(ErrorKind::ProcessFailed(status))?
+            Err(Error::ProcessFailed { status })?
         }
-        Ok(String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?)
+        Ok(String::from_utf8(output.stdout).context(Error::ProcessExecution)?)
     }
 }

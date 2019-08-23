@@ -13,8 +13,6 @@ readme = "README.md"
 
 [dependencies]
 directories = "2.0.1"
-failure = "0.1.5"
-failure_derive = "0.1.5"
 serde = { version = "1.0.92", features = ["derive"] }
 toml = "0.5.1"
 which_crate = { version = "2.0.1", package =  "which" }
@@ -33,6 +31,7 @@ futures = "0.1.27"
 openssl-probe = { version = "0.1.2", optional = true }
 pretty_env_logger = "0.3.0"
 glob = "0.3.0"
+snafu = "0.4.4"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.15.0"

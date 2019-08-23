@@ -11,14 +11,14 @@ mod terminal;
 mod utils;
 
 use self::config::{Config, Step};
-use self::error::{Error, ErrorKind};
+use self::error::Error;
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
-use failure::{Fail, ResultExt};
 use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
+use snafu::ResultExt;
 use std::borrow::Cow;
 use std::env;
 use std::fmt::Debug;
@@ -38,23 +38,23 @@ where
                 report.push_result(Some((key, true)));
                 break;
             }
-            Err(ref e) if e.kind() == ErrorKind::SkipStep => {
-                break;
-            }
-            Err(_) => {
-                let interrupted = ctrlc::interrupted();
-                if interrupted {
-                    ctrlc::unset_interrupted();
-                }
+            Err(e) => match e {
+                Error::SkipStep => break,
+                _ => {
+                    let interrupted = ctrlc::interrupted();
+                    if interrupted {
+                        ctrlc::unset_interrupted();
+                    }
 
-                let should_ask = interrupted || !no_retry;
-                let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
+                    let should_ask = interrupted || !no_retry;
+                    let should_retry = should_ask && should_retry(interrupted).context(Error::Retry)?;
 
-                if !should_retry {
-                    report.push_result(Some((key, false)));
-                    break;
+                    if !should_retry {
+                        report.push_result(Some((key, false)));
+                        break;
+                    }
                 }
-            }
+            },
         }
     }
 
@@ -64,7 +64,7 @@ where
 fn run() -> Result<(), Error> {
     ctrlc::set_handler();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
+    let base_dirs = directories::BaseDirs::new().ok_or(Error::NoBaseDirectories)?;
     let config = Config::load(&base_dirs)?;
 
     if config.edit_config() {
@@ -116,7 +116,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, run_type).context(ErrorKind::PreCommand)?;
+            generic::run_custom_command(&name, &command, run_type).context(Error::PreCommand)?;
         }
     }
 
@@ -526,7 +526,7 @@ fn run() -> Result<(), Error> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(ErrorKind::StepFailed)?
+        Err(Error::StepFailed)?
     }
 }
 
@@ -543,9 +543,9 @@ fn main() {
                 }
             }
 
-            let should_print = match error.kind() {
-                ErrorKind::StepFailed => false,
-                ErrorKind::Retry => error
+            let should_print = match error {
+                Error::StepFailed => false,
+                Error::Retry => error
                     .cause()
                     .and_then(|cause| cause.downcast_ref::<io::Error>())
                     .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
@@ -555,10 +555,8 @@ fn main() {
 
             if should_print {
                 println!("Error: {}", error);
-                if let Some(cause) = error.cause() {
-                    println!("Caused by: {}", cause);
-                }
             }
+
             exit(1);
         }
     }

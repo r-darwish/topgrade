@@ -1,8 +1,8 @@
-use super::error::{Error, ErrorKind};
+use super::error::Error;
 use super::terminal::*;
-use failure::ResultExt;
 use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
+use snafu::ResultExt;
 use std::env;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
@@ -24,7 +24,7 @@ pub fn self_update() -> Result<(), Error> {
         .no_confirm(true)
         .build()
         .and_then(Update::update_extended)
-        .context(ErrorKind::SelfUpdate)?;
+        .context(Error::SelfUpdate)?;
 
     if let GitHubUpdateStatus::Updated(release) = &result {
         println!("\nTopgrade upgraded to {}:\n", release.version());
@@ -42,15 +42,12 @@ pub fn self_update() -> Result<(), Error> {
             #[cfg(unix)]
             {
                 let err = command.exec();
-                Err(err).context(ErrorKind::SelfUpdate)?
+                Err(err).context(Error::SelfUpdate)?
             }
 
             #[cfg(windows)]
             {
-                let status = command
-                    .spawn()
-                    .and_then(|mut c| c.wait())
-                    .context(ErrorKind::SelfUpdate)?;
+                let status = command.spawn().and_then(|mut c| c.wait()).context(Error::SelfUpdate)?;
                 Err(ErrorKind::Upgraded(status))?
             }
         }
