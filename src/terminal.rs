@@ -3,20 +3,11 @@ use console::{style, Term};
 use lazy_static::lazy_static;
 use std::cmp::{max, min};
 use std::env;
-#[cfg(windows)]
-use std::ffi::OsStr;
-use std::fmt::Display;
 use std::io::{self, Write};
-#[cfg(windows)]
-use std::iter::once;
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 use std::process::Command;
 use std::sync::Mutex;
 #[cfg(windows)]
 use which_crate::which;
-#[cfg(windows)]
-use winapi::um::wincon::SetConsoleTitleW;
 
 lazy_static! {
     static ref TERMINAL: Mutex<Terminal> = Mutex::new(Terminal::new());
@@ -55,7 +46,8 @@ impl Terminal {
     }
 
     fn print_separator<P: AsRef<str>>(&mut self, message: P) {
-        set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
+        self.term
+            .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
         let now = Local::now();
         let message = format!(
             "{}{:02}:{:02}:{:02} - {}",
@@ -129,7 +121,7 @@ impl Terminal {
             return Ok(false);
         }
 
-        set_title("Topgrade - Awaiting user");
+        self.term.set_title("Topgrade - Awaiting user");
         self.term
             .write_fmt(format_args!(
                 "\n{}",
@@ -205,17 +197,4 @@ pub fn is_dumb() -> bool {
 
 pub fn get_char() -> char {
     TERMINAL.lock().unwrap().get_char().unwrap()
-}
-
-#[cfg(unix)]
-pub fn set_title<T: Display>(title: T) {
-    print!("\x1b]0;{}\x07", title);
-}
-
-#[cfg(windows)]
-pub fn set_title<T: Display>(title: T) {
-    let buffer: Vec<u16> = OsStr::new(&format!("{}", title)).encode_wide().chain(once(0)).collect();
-    unsafe {
-        SetConsoleTitleW(buffer.as_ptr());
-    }
 }
