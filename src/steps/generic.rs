@@ -137,7 +137,12 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
     Ok(())
 }
 
-pub fn run_remote_topgrade(run_type: RunType, hostname: &str, run_in_tmux: bool) -> Result<(), Error> {
+pub fn run_remote_topgrade(
+    run_type: RunType,
+    hostname: &str,
+    ssh_arguments: &Option<String>,
+    run_in_tmux: bool,
+) -> Result<(), Error> {
     let ssh = utils::require("ssh")?;
 
     if run_in_tmux && !run_type.dry() {
@@ -149,15 +154,15 @@ pub fn run_remote_topgrade(run_type: RunType, hostname: &str, run_in_tmux: bool)
 
         unreachable!("Tmux execution is only implemented in Unix");
     } else {
-        run_type
-            .execute(&ssh)
-            .args(&[
-                "-t",
-                hostname,
-                "env",
-                &format!("TOPGRADE_PREFIX={}", hostname),
-                "topgrade",
-            ])
-            .check_run()
+        let mut args = vec!["-t", hostname];
+
+        if let Some(ssh_arguments) = ssh_arguments {
+            args.extend(ssh_arguments.split_whitespace());
+        }
+
+        let env = format!("TOPGRADE_PREFIX={}", hostname);
+        args.extend(&["env", &env, "topgrade"]);
+
+        run_type.execute(&ssh).args(&args).check_run()
     }
 }
