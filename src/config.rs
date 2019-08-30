@@ -174,7 +174,7 @@ pub struct CommandLineArgs {
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
 
-    /// Prompt or a key before exiting
+    /// Prompt for a key before exiting
     #[structopt(short = "k", long = "keep")]
     keep_at_end: bool,
 }
