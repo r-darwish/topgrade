@@ -1,4 +1,4 @@
-use super::error::Error;
+use super::error::*;
 use super::utils::editor;
 use directories::BaseDirs;
 use lazy_static::lazy_static;
@@ -102,7 +102,7 @@ impl ConfigFile {
                     );
                     e
                 })
-                .context(Error::Configuration { config_path })?;
+                .context(Configuration { config_path })?;
             debug!("No configuration exists");
         }
 
@@ -114,9 +114,8 @@ impl ConfigFile {
     /// If the configuration file does not exist the function returns the default ConfigFile.
     fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
         let config_path = Self::ensure(base_dirs)?;
-        let mut result: Self =
-            toml::from_str(&fs::read_to_string(config_path).context(Error::Configuration { config_path })?)
-                .context(Error::Configuration { config_path })?;
+        let mut result: Self = toml::from_str(&fs::read_to_string(config_path).context(Configuration { config_path })?)
+            .context(Configuration { config_path })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
             for path in paths.iter_mut() {
@@ -138,7 +137,7 @@ impl ConfigFile {
             .arg(config_path)
             .spawn()
             .and_then(|mut p| p.wait())
-            .context(Error::Configuration { config_path })?;
+            .context(Configuration { config_path })?;
         Ok(())
     }
 }

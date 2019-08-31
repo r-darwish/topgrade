@@ -11,7 +11,7 @@ mod terminal;
 mod utils;
 
 use self::config::{Config, Step};
-use self::error::Error;
+use self::error::*;
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
@@ -21,6 +21,7 @@ use openssl_probe;
 use snafu::ResultExt;
 use std::borrow::Cow;
 use std::env;
+use std::error::Error as ErrorTrait;
 use std::fmt::Debug;
 use std::io;
 use std::process::exit;
@@ -47,7 +48,7 @@ where
                     }
 
                     let should_ask = interrupted || !no_retry;
-                    let should_retry = should_ask && should_retry(interrupted).context(Error::Retry)?;
+                    let should_retry = should_ask && should_retry(interrupted).context(Retry {})?;
 
                     if !should_retry {
                         report.push_result(Some((key, false)));
@@ -107,7 +108,7 @@ fn run() -> Result<(), Error> {
 
             if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
-                if let Some(cause) = e.cause() {
+                if let Some(cause) = e.source() {
                     print_warning(format!("Caused by: {}", cause));
                 }
             }
@@ -116,7 +117,7 @@ fn run() -> Result<(), Error> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, run_type).context(Error::PreCommand)?;
+            generic::run_custom_command(&name, &command, run_type)?;
         }
     }
 
@@ -545,11 +546,7 @@ fn main() {
 
             let should_print = match error {
                 Error::StepFailed => false,
-                Error::Retry => error
-                    .cause()
-                    .and_then(|cause| cause.downcast_ref::<io::Error>())
-                    .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
-                    .is_none(),
+                Error::Retry { source } => source.kind() == io::ErrorKind::Interrupted,
                 _ => true,
             };
 

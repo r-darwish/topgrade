@@ -5,6 +5,7 @@ use std::path::PathBuf;
 use std::process::ExitStatus;
 
 #[derive(Debug, Snafu)]
+#[snafu(visibility = "pub(crate)")]
 pub enum Error {
     #[snafu(display("Error asking the user for retry"))]
     Retry { source: std::io::Error },
@@ -17,7 +18,7 @@ pub enum Error {
 
     #[snafu(display("Error reading the configuration"))]
     Configuration {
-        source: std::io::Error,
+        source: Box<dyn std::error::Error>,
         config_path: PathBuf,
     },
 

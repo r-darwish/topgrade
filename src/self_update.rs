@@ -1,4 +1,4 @@
-use super::error::Error;
+use super::error::{Error, SelfUpdate};
 use super::terminal::*;
 use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
@@ -36,7 +36,7 @@ pub fn self_update() -> Result<(), Error> {
     {
         if result.updated() {
             print_warning("Respawning...");
-            let mut command = Command::new(current_exe.context(ErrorKind::SelfUpdate)?);
+            let mut command = Command::new(current_exe.context(SelfUpdate {})?);
             command.args(env::args().skip(1)).env("TOPGRADE_NO_SELF_UPGRADE", "");
 
             #[cfg(unix)]
