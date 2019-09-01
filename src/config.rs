@@ -87,6 +87,7 @@ pub struct ConfigFile {
     git_repos: Option<Vec<String>>,
     disable: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
+    ssh_arguments: Option<String>,
 }
 
 impl ConfigFile {
@@ -268,6 +269,11 @@ impl Config {
     /// List of remote hosts to run Topgrade in
     pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
         &self.config_file.remote_topgrades
+    }
+
+    /// Extra SSH arguments
+    pub fn ssh_arguments(&self) -> &Option<String> {
+        &self.config_file.ssh_arguments
     }
 
     /// Prompt for a key before exiting
