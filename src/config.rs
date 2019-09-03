@@ -28,6 +28,7 @@ lazy_static! {
         m.insert("vim", Step::Vim);
         m.insert("emacs", Step::Emacs);
         m.insert("gem", Step::Gem);
+        m.insert("node", Step::Node);
         m.insert("sdkman", Step::Sdkman);
         m.insert("remotes", Step::Remotes);
         m.insert("rustup", Step::Rustup);
@@ -53,6 +54,8 @@ pub enum Step {
     Emacs,
     /// Don't upgrade ruby gems
     Gem,
+    /// Don't upgrade npm/composer/yarn packages
+    Node,
     /// Don't upgrade SDKMAN! and its packages
     Sdkman,
     /// Don't run remote Togprades
