@@ -147,7 +147,7 @@ impl ConfigFile {
 }
 
 #[derive(StructOpt, Debug)]
-#[structopt(name = "Topgrade", raw(setting = "structopt::clap::AppSettings::ColoredHelp"))]
+#[structopt(name = "Topgrade", setting = structopt::clap::AppSettings::ColoredHelp)]
 /// Command line arguments
 pub struct CommandLineArgs {
     /// Edit the configuration file
@@ -171,7 +171,7 @@ pub struct CommandLineArgs {
     no_retry: bool,
 
     /// Do not perform upgrades for the given steps
-    #[structopt(long = "disable", raw(possible_values = "&Step::possible_values()"))]
+    #[structopt(long = "disable", possible_values = &Step::possible_values())]
     disable: Vec<Step>,
 
     /// Output logs
