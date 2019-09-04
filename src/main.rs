@@ -351,24 +351,26 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
-    execute(
-        &mut report,
-        "NPM",
-        || node::run_npm_upgrade(&base_dirs, run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "composer",
-        || generic::run_composer_update(&base_dirs, run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "yarn",
-        || node::yarn_global_update(run_type),
-        config.no_retry(),
-    )?;
+    if config.should_run(Step::Node) {
+        execute(
+            &mut report,
+            "NPM",
+            || node::run_npm_upgrade(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+        execute(
+            &mut report,
+            "composer",
+            || generic::run_composer_update(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+        execute(
+            &mut report,
+            "yarn",
+            || node::yarn_global_update(run_type),
+            config.no_retry(),
+        )?;
+    }
 
     #[cfg(not(any(
         target_os = "freebsd",
