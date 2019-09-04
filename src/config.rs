@@ -33,6 +33,7 @@ lazy_static! {
         m.insert("remotes", Step::Remotes);
         m.insert("rustup", Step::Rustup);
         m.insert("cargo", Step::Cargo);
+        m.insert("shell", Step::Shell);
 
         #[cfg(windows)]
         m.insert("powershell", Step::Powershell);
@@ -65,6 +66,8 @@ pub enum Step {
     /// Don't run Cargo
     Cargo,
     /// Don't update Powershell modules
+    Shell,
+    /// Don't run shell updates (zplug, zr, oh-my-zsh, fisher, tmux)
     Powershell,
 }
 

@@ -260,36 +260,38 @@ fn run() -> Result<(), Error> {
 
     #[cfg(unix)]
     {
-        execute(
-            &mut report,
-            "zr",
-            || unix::run_zr(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "zplug",
-            || unix::run_zplug(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "oh-my-zsh",
-            || unix::run_oh_my_zsh(run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "fisher",
-            || unix::run_fisher(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "tmux",
-            || tmux::run_tpm(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        if config.should_run(Step::Shell) {
+            execute(
+                &mut report,
+                "zr",
+                || unix::run_zr(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "zplug",
+                || unix::run_zplug(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "oh-my-zsh",
+                || unix::run_oh_my_zsh(run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "fisher",
+                || unix::run_fisher(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "tmux",
+                || tmux::run_tpm(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     if config.should_run(Step::Rustup) {
