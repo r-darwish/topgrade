@@ -91,6 +91,7 @@ pub struct ConfigFile {
     disable: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
+    git_arguments: Option<String>,
 }
 
 impl ConfigFile {
@@ -277,6 +278,11 @@ impl Config {
     /// Extra SSH arguments
     pub fn ssh_arguments(&self) -> &Option<String> {
         &self.config_file.ssh_arguments
+    }
+
+    /// Extra Git arguments
+    pub fn git_arguments(&self) -> &Option<String> {
+        &self.config_file.git_arguments
     }
 
     /// Prompt for a key before exiting

@@ -74,7 +74,12 @@ impl Git {
         None
     }
 
-    pub fn multi_pull(&self, repositories: &Repositories, run_type: RunType) -> Result<(), Error> {
+    pub fn multi_pull(
+        &self,
+        repositories: &Repositories,
+        run_type: RunType,
+        extra_arguments: &Option<String>,
+    ) -> Result<(), Error> {
         if repositories.repositories.is_empty() {
             return Ok(());
         }
@@ -103,51 +108,55 @@ impl Git {
 
                 println!("{} {}", style("Pulling").cyan().bold(), path);
 
-                Command::new(git)
-                    .args(&["pull", "--ff-only"])
-                    .current_dir(&repo)
-                    .output_async()
-                    .then(move |result| match result {
-                        Ok(output) => {
-                            if output.status.success() {
-                                let after_revision = get_head_revision(&cloned_git, &repo);
+                let mut command = Command::new(git);
 
-                                if before_revision != after_revision
-                                    && after_revision.is_some()
-                                    && before_revision.is_some()
-                                {
-                                    println!("{} {}:", style("Changed").yellow().bold(), path);
-                                    Command::new(&cloned_git)
-                                        .current_dir(&repo)
-                                        .args(&[
-                                            "log",
-                                            "--no-decorate",
-                                            "--oneline",
-                                            &format!("{}..{}", before_revision.unwrap(), after_revision.unwrap()),
-                                        ])
-                                        .spawn()
-                                        .unwrap()
-                                        .wait()
-                                        .unwrap();
-                                    println!();
-                                } else {
-                                    println!("{} {}", style("Up-to-date").green().bold(), path);
-                                }
+                command.args(&["pull", "--ff-only"]).current_dir(&repo);
 
-                                Ok(true) as Result<bool, Error>
+                if let Some(extra_arguments) = extra_arguments {
+                    command.args(extra_arguments.split_whitespace());
+                }
+
+                command.output_async().then(move |result| match result {
+                    Ok(output) => {
+                        if output.status.success() {
+                            let after_revision = get_head_revision(&cloned_git, &repo);
+
+                            if before_revision != after_revision
+                                && after_revision.is_some()
+                                && before_revision.is_some()
+                            {
+                                println!("{} {}:", style("Changed").yellow().bold(), path);
+                                Command::new(&cloned_git)
+                                    .current_dir(&repo)
+                                    .args(&[
+                                        "log",
+                                        "--no-decorate",
+                                        "--oneline",
+                                        &format!("{}..{}", before_revision.unwrap(), after_revision.unwrap()),
+                                    ])
+                                    .spawn()
+                                    .unwrap()
+                                    .wait()
+                                    .unwrap();
+                                println!();
                             } else {
-                                println!("{} pulling {}", style("Failed").red().bold(), path);
-                                if let Ok(text) = std::str::from_utf8(&output.stderr) {
-                                    print!("{}", text);
-                                }
-                                Ok(false)
+                                println!("{} {}", style("Up-to-date").green().bold(), path);
                             }
-                        }
-                        Err(e) => {
-                            println!("{} pulling {}: {}", style("Failed").red().bold(), path, e);
+
+                            Ok(true) as Result<bool, Error>
+                        } else {
+                            println!("{} pulling {}", style("Failed").red().bold(), path);
+                            if let Ok(text) = std::str::from_utf8(&output.stderr) {
+                                print!("{}", text);
+                            }
                             Ok(false)
                         }
-                    })
+                    }
+                    Err(e) => {
+                        println!("{} pulling {}: {}", style("Failed").red().bold(), path, e);
+                        Ok(false)
+                    }
+                })
             })
             .collect();
 

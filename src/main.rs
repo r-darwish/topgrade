@@ -245,7 +245,7 @@ fn run() -> Result<(), Error> {
         execute(
             &mut report,
             "Git repositories",
-            || git.multi_pull(&git_repos, run_type),
+            || git.multi_pull(&git_repos, run_type, config.git_arguments()),
             config.no_retry(),
         )?;
     }
