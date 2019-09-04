@@ -65,7 +65,6 @@ Just run `topgrade`. It will run the following steps:
 * Check if the following paths are tracked by Git. If so, pull them:
   * ~/.emacs.d (Should work whether you use [Spacemacs](http://spacemacs.org/) or a custom configuration)
   * ~/.zshrc
-  * [~/.oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh)
   * ~/.tmux
   * ~/.config/fish
   * ~/.config/nvim
@@ -76,6 +75,7 @@ Just run `topgrade`. It will run the following steps:
   * Powershell Profile
   * Custom defined paths
 * **Unix**: Run [zplug](https://github.com/zplug/zplug) update
+* **Unix**: Run [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) update
 * **Unix**: Run [fisher](https://github.com/jorgebucaran/fisher)
 * **Unix**: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm). *Note*: Do not use
   the `-b` flag in your configuration as suggested by the TPM readme.

@@ -26,6 +26,14 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
+pub fn run_oh_my_zsh(run_type: RunType) -> Result<(), Error> {
+    let upgrade = require("upgrade_oh_my_zsh")?;
+
+    print_separator("oh-my-zsh");
+
+    run_type.execute(upgrade).check_run()
+}
+
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let fish = require("fish")?;
     base_dirs
