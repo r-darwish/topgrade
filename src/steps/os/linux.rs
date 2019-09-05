@@ -37,21 +37,29 @@ impl Distribution {
     fn parse_os_release(os_release: &ini::Ini) -> Result<Self, Error> {
         let section = os_release.general_section();
         let id = section.get("ID").map(String::as_str);
-        let id_like = section.get("ID_LIKE").map(String::as_str);
-        Ok(match (id, id_like) {
-            (Some("debian"), _) | (_, Some("debian")) | (_, Some("ubuntu")) => Distribution::Debian,
-            (_, Some("suse")) => Distribution::Suse,
-            (Some("arch"), _)
-            | (Some("arch32"), _)
-            | (_, Some("archlinux"))
-            | (_, Some("arch"))
-            | (_, Some("anarchylinux")) => Distribution::Arch,
-            (Some("centos"), _) | (Some("ol"), _) => Distribution::CentOS,
-            (Some("fedora"), _) => Distribution::Fedora,
-            (Some("void"), _) => Distribution::Void,
-            (Some("solus"), _) => Distribution::Solus,
-            (Some("gentoo"), _) => Distribution::Gentoo,
-            (Some("exherbo"), _) => Distribution::Exherbo,
+        let id_like: Option<Vec<&str>> = section
+            .get("ID_LIKE")
+            .map(|s| String::as_str(s).split_whitespace().collect());
+
+        if let Some(id_like) = id_like {
+            if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
+                return Ok(Distribution::Debian);
+            } else if id_like.contains(&"suse") {
+                return Ok(Distribution::Suse);
+            } else if id_like.contains(&"arch") || id_like.contains(&"archlinux") {
+                return Ok(Distribution::Arch);
+            }
+        }
+
+        Ok(match id {
+            Some("centos") | Some("ol") => Distribution::CentOS,
+            Some("fedora") => Distribution::Fedora,
+            Some("void") => Distribution::Void,
+            Some("debian") => Distribution::Debian,
+            Some("arch") | Some("anarchy") => Distribution::Arch,
+            Some("solus") => Distribution::Solus,
+            Some("gentoo") => Distribution::Gentoo,
+            Some("exherbo") => Distribution::Exherbo,
             _ => Err(ErrorKind::UnknownLinuxDistribution)?,
         })
     }
