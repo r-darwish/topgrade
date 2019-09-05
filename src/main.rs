@@ -121,7 +121,7 @@ fn run() -> Result<(), Error> {
     }
 
     let powershell = powershell::Powershell::new();
-    let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
+    let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Shell);
 
     #[cfg(windows)]
     execute(&mut report, "WSL", || windows::run_wsl_topgrade(run_type), true)?;

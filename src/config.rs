@@ -35,9 +35,6 @@ lazy_static! {
         m.insert("cargo", Step::Cargo);
         m.insert("shell", Step::Shell);
 
-        #[cfg(windows)]
-        m.insert("powershell", Step::Powershell);
-
         m
     };
 }
@@ -67,8 +64,6 @@ pub enum Step {
     Cargo,
     /// Don't update Powershell modules
     Shell,
-    /// Don't run shell updates (zplug, zr, oh-my-zsh, fisher, tmux)
-    Powershell,
 }
 
 impl Step {
