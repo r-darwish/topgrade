@@ -7,6 +7,22 @@ use std::env;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let zsh = require("zsh")?;
+
+    env::var("ZR_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zr"))
+        .require()?;
+
+    print_separator("zr");
+
+    let zshrc = base_dirs.home_dir().join(".zshrc");
+
+    let cmd = format!("source {} && zr update", zshrc.display());
+    run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
+}
+
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let zsh = require("zsh")?;
 

@@ -262,6 +262,12 @@ fn run() -> Result<(), Error> {
     {
         execute(
             &mut report,
+            "zr",
+            || unix::run_zr(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+        execute(
+            &mut report,
             "zplug",
             || unix::run_zplug(&base_dirs, run_type),
             config.no_retry(),

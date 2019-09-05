@@ -74,6 +74,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/i3
   * Powershell Profile
   * Custom defined paths
+* **Unix**: Run [zr](https://github.com/jedahan/zr) update
 * **Unix**: Run [zplug](https://github.com/zplug/zplug) update
 * **Unix**: Run [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) update
 * **Unix**: Run [fisher](https://github.com/jorgebucaran/fisher)
