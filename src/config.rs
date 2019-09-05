@@ -91,6 +91,7 @@ pub struct ConfigFile {
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
     set_title: Option<bool>,
+    assume_yes: Option<bool>,
 }
 
 impl ConfigFile {
@@ -181,6 +182,10 @@ pub struct CommandLineArgs {
     /// Prompt for a key before exiting
     #[structopt(short = "k", long = "keep")]
     keep_at_end: bool,
+
+    /// Say yes to package manager's prompt
+    #[structopt(short = "y", long = "yes")]
+    yes: bool,
 }
 
 /// Represents the application configuration
@@ -297,5 +302,11 @@ impl Config {
     /// Whether to set the terminal title
     pub fn set_title(&self) -> bool {
         self.config_file.set_title.unwrap_or(true)
+    }
+
+    /// Whether to say yes to package managers
+    #[allow(dead_code)]
+    pub fn yes(&self) -> bool {
+        self.config_file.assume_yes.unwrap_or(self.opt.yes)
     }
 }

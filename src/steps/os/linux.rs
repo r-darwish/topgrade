@@ -56,7 +56,7 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("anarchy") => Distribution::Arch,
+            Some("arch") | Some("ana") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
@@ -75,19 +75,19 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
         print_separator("System update");
 
         match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
-            Distribution::CentOS => upgrade_redhat(&sudo, run_type),
-            Distribution::Fedora => upgrade_fedora(&sudo, run_type),
-            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type),
-            Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
-            Distribution::Suse => upgrade_suse(&sudo, run_type),
-            Distribution::Void => upgrade_void(&sudo, run_type),
-            Distribution::Solus => upgrade_solus(&sudo, run_type),
-            Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes),
+            Distribution::CentOS => upgrade_redhat(&sudo, run_type, yes),
+            Distribution::Fedora => upgrade_fedora(&sudo, run_type, yes),
+            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
+            Distribution::Gentoo => upgrade_gentoo(&sudo, run_type, yes),
+            Distribution::Suse => upgrade_suse(&sudo, run_type, yes),
+            Distribution::Void => upgrade_void(&sudo, run_type, yes),
+            Distribution::Solus => upgrade_solus(&sudo, run_type, yes),
+            Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type, yes),
         }
     }
 
@@ -119,7 +119,7 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
     let path = {
@@ -130,8 +130,9 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
     debug!("Running Arch update with path: {:?}", path);
 
     if let Some(yay) = which("yay") {
-        run_type
-            .execute(yay)
+        let mut command = run_type.execute(yay);
+
+        command
             .arg("--pacman")
             .arg(pacman)
             .arg("-Syu")
