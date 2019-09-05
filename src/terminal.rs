@@ -31,6 +31,7 @@ struct Terminal {
     width: Option<u16>,
     prefix: String,
     term: Term,
+    set_title: bool,
 }
 
 impl Terminal {
@@ -42,12 +43,19 @@ impl Terminal {
             prefix: env::var("TOPGRADE_PREFIX")
                 .map(|prefix| format!("({}) ", prefix))
                 .unwrap_or_else(|_| String::new()),
+            set_title: true,
         }
     }
 
+    fn set_title(&mut self, set_title: bool) {
+        self.set_title = set_title
+    }
+
     fn print_separator<P: AsRef<str>>(&mut self, message: P) {
-        self.term
-            .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
+        if self.set_title {
+            self.term
+                .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
+        }
         let now = Local::now();
         let message = format!(
             "{}{:02}:{:02}:{:02} - {}",
@@ -121,7 +129,9 @@ impl Terminal {
             return Ok(false);
         }
 
-        self.term.set_title("Topgrade - Awaiting user");
+        if self.set_title {
+            self.term.set_title("Topgrade - Awaiting user");
+        }
         self.term
             .write_fmt(format_args!(
                 "\n{}",
@@ -197,4 +207,8 @@ pub fn is_dumb() -> bool {
 
 pub fn get_char() -> char {
     TERMINAL.lock().unwrap().get_char().unwrap()
+}
+
+pub fn set_title(set_title: bool) {
+    TERMINAL.lock().unwrap().set_title(set_title);
 }

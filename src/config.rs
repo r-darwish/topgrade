@@ -90,6 +90,7 @@ pub struct ConfigFile {
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
+    set_title: Option<bool>,
 }
 
 impl ConfigFile {
@@ -291,5 +292,10 @@ impl Config {
     /// Whether to edit the configuration file
     pub fn edit_config(&self) -> bool {
         self.opt.edit_config
+    }
+
+    /// Whether to set the terminal title
+    pub fn set_title(&self) -> bool {
+        self.config_file.set_title.unwrap_or(true)
     }
 }

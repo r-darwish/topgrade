@@ -66,6 +66,7 @@ fn run() -> Result<(), Error> {
 
     let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
     let config = Config::load(&base_dirs)?;
+    terminal::set_title(config.set_title());
 
     if config.edit_config() {
         Config::edit(&base_dirs)?;
