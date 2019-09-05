@@ -396,18 +396,20 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        execute(
-            &mut report,
-            "Flatpak",
-            || linux::flatpak_update(run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "snap",
-            || linux::run_snap(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
+        if config.should_run(Step::System) {
+            execute(
+                &mut report,
+                "Flatpak",
+                || linux::flatpak_update(run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "snap",
+                || linux::run_snap(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     if let Some(commands) = config.commands() {
