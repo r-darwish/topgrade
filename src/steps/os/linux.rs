@@ -146,7 +146,7 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
             .env("PATH", path)
             .check_run()?;
     } else {
-        print_warning("No sudo or yay detected. Skipping system upgrade");
+        print_warning("Not sudo nor yay detected. Skipping system upgrade");
     }
 
     if cleanup {
