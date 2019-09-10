@@ -277,7 +277,7 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 "oh-my-zsh",
-                || unix::run_oh_my_zsh(run_type),
+                || unix::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(
