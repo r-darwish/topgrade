@@ -344,7 +344,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
     let sudo = require_option(sudo)?;
     let snap = require("snap")?;
 
-    if !PathBuf::from("/var/snapd.socket").exists() {
+    if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
         Err(ErrorKind::SkipStep)?;
     }
     print_separator("snap");
