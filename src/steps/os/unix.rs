@@ -17,9 +17,7 @@ pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
 
     print_separator("zr");
 
-    let zshrc = base_dirs.home_dir().join(".zshrc");
-
-    let cmd = format!("source {} && zr update", zshrc.display());
+    let cmd = format!("source {} && zr update", zshrc(base_dirs).display());
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
