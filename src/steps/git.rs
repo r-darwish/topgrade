@@ -129,6 +129,7 @@ impl Git {
                                 Command::new(&cloned_git)
                                     .current_dir(&repo)
                                     .args(&[
+                                        "--no-pager",
                                         "log",
                                         "--no-decorate",
                                         "--oneline",
