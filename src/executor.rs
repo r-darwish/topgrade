@@ -229,7 +229,7 @@ impl CommandExt for Command {
         trace!("Output of {:?}: {:?}", self, output);
         let status = output.status;
         if !status.success() {
-            Err(ErrorKind::ProcessFailed(status))?
+            return Err(ErrorKind::ProcessFailed(status).into());
         }
         Ok(String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?)
     }

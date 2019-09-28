@@ -147,7 +147,7 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, 
             .env("PATH", path)
             .check_run()?;
     } else {
-        print_warning("No sudo or yay detected. Skipping system upgrade");
+        print_warning("Neither sudo nor yay detected. Skipping system upgrade");
     }
 
     if cleanup {
@@ -345,7 +345,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
     let sudo = require_option(sudo)?;
     let snap = require("snap")?;
 
-    if !PathBuf::from("/var/snapd.socket").exists() {
+    if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
         Err(ErrorKind::SkipStep)?;
     }
     print_separator("snap");

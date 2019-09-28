@@ -123,7 +123,7 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
         .and_then(PathExt::require)?;
 
     if !composer_home.is_descendant_of(base_dirs.home_dir()) {
-        Err(ErrorKind::SkipStep)?;
+        return Err(ErrorKind::SkipStep.into());
     }
 
     print_separator("Composer");
@@ -149,9 +149,10 @@ pub fn run_remote_topgrade(
         #[cfg(unix)]
         {
             crate::tmux::run_remote_topgrade(hostname, &ssh)?;
-            Err(ErrorKind::SkipStep)?
+            Err(ErrorKind::SkipStep.into())
         }
 
+        #[cfg(not(unix))]
         unreachable!("Tmux execution is only implemented in Unix");
     } else {
         let mut args = vec!["-t", hostname];

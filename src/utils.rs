@@ -16,7 +16,7 @@ impl Check for ExitStatus {
         if self.success() {
             Ok(())
         } else {
-            Err(ErrorKind::ProcessFailed(self))?
+            Err(ErrorKind::ProcessFailed(self).into())
         }
     }
 }
@@ -55,7 +55,7 @@ impl PathExt for PathBuf {
         if self.exists() {
             Ok(self)
         } else {
-            Err(ErrorKind::SkipStep)?
+            Err(ErrorKind::SkipStep.into())
         }
     }
 }
@@ -182,7 +182,7 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error
         Err(e) => match e.kind() {
             which_crate::ErrorKind::CannotFindBinaryPath => {
                 debug!("Cannot find {:?}", &binary_name);
-                Err(ErrorKind::SkipStep)?
+                Err(ErrorKind::SkipStep.into())
             }
             _ => {
                 panic!("Detecting {:?} failed: {}", &binary_name, e);
@@ -196,6 +196,6 @@ pub fn require_option<T>(option: Option<T>) -> Result<T, Error> {
     if let Some(value) = option {
         Ok(value)
     } else {
-        Err(ErrorKind::SkipStep)?
+        Err(ErrorKind::SkipStep.into())
     }
 }

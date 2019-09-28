@@ -17,23 +17,23 @@ pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
 
     print_separator("zr");
 
-    let zshrc = base_dirs.home_dir().join(".zshrc");
-
-    let cmd = format!("source {} && zr update", zshrc.display());
+    let cmd = format!("source {} && zr update", zshrc(base_dirs).display());
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
+}
+
+fn zshrc(base_dirs: &BaseDirs) -> PathBuf {
+    env::var("ZDOTDIR")
+        .map(|p| Path::new(&p).join(".zshrc"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
 }
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let zsh = require("zsh")?;
+    let zshrc = zshrc(base_dirs).require()?;
 
     env::var("ZPLUG_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| base_dirs.home_dir().join("zplug"))
-        .require()?;
-
-    let zshrc = env::var("ZDOTDIR")
-        .map(|p| Path::new(&p).join(".zshrc"))
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
         .require()?;
 
     print_separator("zplug");
@@ -42,12 +42,15 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
-pub fn run_oh_my_zsh(run_type: RunType) -> Result<(), Error> {
-    let upgrade = require("upgrade_oh_my_zsh")?;
+pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let zsh = require("zsh")?;
+    let zshrc = zshrc(base_dirs).require()?;
+    base_dirs.home_dir().join(".oh-my-zsh").require()?;
 
     print_separator("oh-my-zsh");
 
-    run_type.execute(upgrade).check_run()
+    let cmd = format!("source {} && upgrade_oh_my_zsh", zshrc.display());
+    run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {

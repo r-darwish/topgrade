@@ -176,39 +176,56 @@ fn run() -> Result<(), Error> {
     }
 
     #[cfg(windows)]
-    execute(
-        &mut report,
-        "Chocolatey",
-        || windows::run_chocolatey(run_type),
-        config.no_retry(),
-    )?;
+    {
+        if config.should_run(Step::PackageManagers) {
+            execute(
+                &mut report,
+                "Chocolatey",
+                || windows::run_chocolatey(run_type),
+                config.no_retry(),
+            )?;
 
-    #[cfg(windows)]
-    execute(&mut report, "Scoop", || windows::run_scoop(run_type), config.no_retry())?;
+            execute(&mut report, "Scoop", || windows::run_scoop(run_type), config.no_retry())?;
+        }
+    }
 
     #[cfg(unix)]
-    execute(
-        &mut report,
-        "brew",
-        || unix::run_homebrew(config.cleanup(), run_type),
-        config.no_retry(),
-    )?;
+    {
+        if config.should_run(Step::PackageManagers) {
+            execute(
+                &mut report,
+                "brew",
+                || unix::run_homebrew(config.cleanup(), run_type),
+                config.no_retry(),
+            )?;
+        }
+
+        execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+    }
+
     #[cfg(target_os = "dragonfly")]
-    execute(
-        &mut report,
-        "DragonFly BSD Packages",
-        || dragonfly::upgrade_packages(sudo.as_ref(), run_type),
-        config.no_retry(),
-    )?;
+    {
+        if config.should_run(Step::PackageManagers) {
+            execute(
+                &mut report,
+                "DragonFly BSD Packages",
+                || dragonfly::upgrade_packages(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
+    }
+
     #[cfg(target_os = "freebsd")]
-    execute(
-        &mut report,
-        "FreeBSD Packages",
-        || freebsd::upgrade_packages(sudo.as_ref(), run_type),
-        config.no_retry(),
-    )?;
-    #[cfg(unix)]
-    execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+    {
+        if config.should_run(Step::PackageManagers) {
+            execute(
+                &mut report,
+                "FreeBSD Packages",
+                || freebsd::upgrade_packages(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
+    }
 
     let emacs = emacs::Emacs::new(&base_dirs);
     if config.should_run(Step::Emacs) {
@@ -277,7 +294,7 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 "oh-my-zsh",
-                || unix::run_oh_my_zsh(run_type),
+                || unix::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(
@@ -405,7 +422,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        if config.should_run(Step::System) {
+        if config.should_run(Step::PackageManagers) {
             execute(
                 &mut report,
                 "Flatpak",
@@ -551,7 +568,7 @@ fn run() -> Result<(), Error> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(ErrorKind::StepFailed)?
+        Err(ErrorKind::StepFailed.into())
     }
 }
 

@@ -83,7 +83,7 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
         if !status.success() {
             io::stdout().write(&output.stdout).ok();
             io::stderr().write(&output.stderr).ok();
-            Err(ErrorKind::ProcessFailed(status))?
+            return Err(ErrorKind::ProcessFailed(status).into());
         } else {
             println!("Plugins upgraded")
         }
@@ -98,7 +98,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error>
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        Err(ErrorKind::SkipStep)?;
+        return Err(ErrorKind::SkipStep.into());
     }
 
     let vimrc = require_option(vimrc(&base_dirs))?;
