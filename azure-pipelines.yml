@@ -16,7 +16,7 @@ steps:
   - script: rustup component add clippy rustfmt
     displayName: install clipppy and rustfmt
 
-  - script: cargo fmt --all-features -- --check
+  - script: cargo fmt --all -- --check
     displayName: rustfmt
   - script: cargo build --all-features
     displayName: Cargo build
