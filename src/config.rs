@@ -156,7 +156,7 @@ pub struct CommandLineArgs {
     #[structopt(short = "k", long = "keep")]
     keep_at_end: bool,
 
-    /// Say yes to package manager's prompt
+    /// Say yes to package manager's prompt (experimental)
     #[structopt(short = "y", long = "yes")]
     yes: bool,
 }
