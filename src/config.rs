@@ -24,6 +24,8 @@ type Commands = BTreeMap<String, String>;
 pub enum Step {
     /// Don't perform system upgrade
     System,
+    /// Don't perform upgrades of package managers
+    PackageManagers,
     /// Don't pull git repositories
     GitRepos,
     /// Don't upgrade Vim packages or configuration files
