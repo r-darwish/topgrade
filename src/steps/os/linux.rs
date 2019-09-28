@@ -56,11 +56,11 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("anarchy") => Distribution::Arch,
+            Some("arch") | Some("ana") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
-            _ => Err(ErrorKind::UnknownLinuxDistribution)?,
+            _ => return Err(ErrorKind::UnknownLinuxDistribution.into()),
         })
     }
 
@@ -71,18 +71,18 @@ impl Distribution {
             return Self::parse_os_release(&os_release);
         }
 
-        Err(ErrorKind::UnknownLinuxDistribution)?
+        Err(ErrorKind::UnknownLinuxDistribution.into())
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
         print_separator("System update");
 
         match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type),
-            Distribution::CentOS => upgrade_redhat(&sudo, run_type),
-            Distribution::Fedora => upgrade_fedora(&sudo, run_type),
-            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes),
+            Distribution::CentOS => upgrade_redhat(&sudo, run_type, yes, false),
+            Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes, true),
+            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
@@ -119,7 +119,7 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
     let path = {
@@ -130,21 +130,26 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
     debug!("Running Arch update with path: {:?}", path);
 
     if let Some(yay) = which("yay") {
-        run_type
-            .execute(yay)
+        let mut command = run_type.execute(yay);
+
+        command
             .arg("--pacman")
             .arg(pacman)
             .arg("-Syu")
             .arg("--devel")
-            .env("PATH", path)
-            .check_run()?;
+            .env("PATH", path);
+
+        if yes {
+            command.arg("--noconfirm");
+        }
+        command.check_run()?;
     } else if let Some(sudo) = &sudo {
-        run_type
-            .execute(&sudo)
-            .arg(pacman)
-            .arg("-Syu")
-            .env("PATH", path)
-            .check_run()?;
+        let mut command = run_type.execute(&sudo);
+        command.arg(pacman).arg("-Syu").env("PATH", path);
+        if yes {
+            command.arg("--noconfirm");
+        }
+        command.check_run()?;
     } else {
         print_warning("Neither sudo nor yay detected. Skipping system upgrade");
     }
@@ -158,9 +163,15 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) 
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool, dnf: bool) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).args(&["/usr/bin/yum", "upgrade"]).check_run()?;
+        let mut command = run_type.execute(&sudo);
+        command.args(&[if dnf { "/usr/bin/dnf" } else { "/usr/bin/yum" }, "upgrade"]);
+        if yes {
+            command.arg("-y");
+        }
+
+        command.check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -201,16 +212,6 @@ fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> 
     Ok(())
 }
 
-fn upgrade_fedora(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
-    if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).args(&["/usr/bin/dnf", "upgrade"]).check_run()?;
-    } else {
-        print_warning("No sudo detected. Skipping system upgrade");
-    }
-
-    Ok(())
-}
-
 fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         if let Some(layman) = which("layman") {
@@ -240,11 +241,16 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("/usr/bin/apt"));
         run_type.execute(&sudo).arg(&apt).arg("update").check_run()?;
-        run_type.execute(&sudo).arg(&apt).arg("dist-upgrade").check_run()?;
+        let mut command = run_type.execute(&sudo);
+        command.arg(&apt).arg("dist-upgrade").check_run()?;
+
+        if yes {
+            command.arg("-y");
+        }
 
         if cleanup {
             run_type.execute(&sudo).arg(&apt).arg("clean").check_run()?;
@@ -345,7 +351,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
     let snap = require("snap")?;
 
     if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
-        Err(ErrorKind::SkipStep)?;
+        return Err(ErrorKind::SkipStep.into());
     }
     print_separator("snap");
 
