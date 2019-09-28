@@ -13,8 +13,8 @@ pool:
   vmImage: $(imageName)
 
 steps:
-  - script: rustup component add clippy rustfmt
-    displayName: install clipppy and rustfmt
+  #- script: rustup component add clippy rustfmt
+  #  displayName: install clipppy and rustfmt
 
   - script: cargo fmt --all -- --check
     displayName: rustfmt
