@@ -2,6 +2,7 @@ strategy:
   matrix:
     Mac:
       imageName: 'macos-10.13'
+      cargo_directory: ~/.cargo
     Linux:
       imageName: 'ubuntu-16.04'
     Windows:
@@ -11,16 +12,19 @@ strategy:
 pool:
   vmImage: $(imageName)
 
+variables:
+  CARGO_HOME: $(Pipeline.Workspace)/.cargo
+
 steps:
   - script: |
       curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
-      echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
+      echo "##vso[task.setvariable variable=PATH;]$PATH:$CARGO_HOME/bin"
     displayName: Install rust
     condition: ne( variables['Agent.OS'], 'Windows_NT' )
   - script: |
       curl -sSf -o rustup-init.exe https://win.rustup.rs
       rustup-init.exe -y --default-toolchain stable
-      echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
+      echo "##vso[task.setvariable variable=PATH;]%PATH%;%CARGO_HOME%\bin"
     displayName: Windows install rust
     condition: eq( variables['Agent.OS'], 'Windows_NT' )
   - script: rustup component add clippy rustfmt
@@ -28,7 +32,7 @@ steps:
   - task: CacheBeta@0
     inputs:
       key: cargo | $(Agent.OS) | $(Build.SourcesDirectory)/Cargo.lock
-      path: $(Pipeline.Workspace)/.cargo
+      path: $(CARGO_HOME)
 
     displayName: 'Cache Cargo'
   - script: cargo fmt --all -- --check
@@ -39,4 +43,3 @@ steps:
     displayName: clippy
   - script: cargo test --all-features
     displayName: Cargo test
-  - script: ls $(Pipeline.Workspace)/.cargo
