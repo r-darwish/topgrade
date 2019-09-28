@@ -38,9 +38,12 @@ where
     fn require(self) -> Result<Self, Error>;
 }
 
-impl PathExt for PathBuf {
+impl<T> PathExt for T
+where
+    T: AsRef<Path>,
+{
     fn if_exists(self) -> Option<Self> {
-        if self.exists() {
+        if self.as_ref().exists() {
             Some(self)
         } else {
             None
@@ -48,11 +51,11 @@ impl PathExt for PathBuf {
     }
 
     fn is_descendant_of(&self, ancestor: &Path) -> bool {
-        self.iter().zip(ancestor.iter()).all(|(a, b)| a == b)
+        self.as_ref().iter().zip(ancestor.iter()).all(|(a, b)| a == b)
     }
 
     fn require(self) -> Result<Self, Error> {
-        if self.exists() {
+        if self.as_ref().exists() {
             Ok(self)
         } else {
             Err(ErrorKind::SkipStep.into())

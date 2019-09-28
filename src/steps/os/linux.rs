@@ -1,14 +1,14 @@
 use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
-use crate::utils::{require, require_option, which};
+use crate::utils::{require, require_option, which, PathExt};
 use failure::ResultExt;
 use ini::Ini;
 use log::debug;
 use serde::Deserialize;
 use std::env::var_os;
 use std::ffi::OsString;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
@@ -80,8 +80,7 @@ impl Distribution {
 
         match self {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes),
-            Distribution::CentOS => upgrade_redhat(&sudo, run_type, yes, false),
-            Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes, true),
+            Distribution::CentOS | Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
@@ -163,10 +162,16 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, 
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool, dnf: bool) -> Result<(), Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         let mut command = run_type.execute(&sudo);
-        command.args(&[if dnf { "/usr/bin/dnf" } else { "/usr/bin/yum" }, "upgrade"]);
+        command
+            .arg(
+                Path::new("/usr/bin/dnf")
+                    .if_exists()
+                    .unwrap_or_else(|| Path::new("/usr/bin/yum")),
+            )
+            .arg("upgrade");
         if yes {
             command.arg("-y");
         }
