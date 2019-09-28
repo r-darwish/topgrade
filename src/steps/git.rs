@@ -121,29 +121,28 @@ impl Git {
                         if output.status.success() {
                             let after_revision = get_head_revision(&cloned_git, &repo);
 
-                            if before_revision != after_revision
-                                && after_revision.is_some()
-                                && before_revision.is_some()
-                            {
-                                println!("{} {}:", style("Changed").yellow().bold(), path);
-                                Command::new(&cloned_git)
-                                    .current_dir(&repo)
-                                    .args(&[
-                                        "--no-pager",
-                                        "log",
-                                        "--no-decorate",
-                                        "--oneline",
-                                        &format!("{}..{}", before_revision.unwrap(), after_revision.unwrap()),
-                                    ])
-                                    .spawn()
-                                    .unwrap()
-                                    .wait()
-                                    .unwrap();
-                                println!();
-                            } else {
-                                println!("{} {}", style("Up-to-date").green().bold(), path);
+                            match (&before_revision, &after_revision) {
+                                (Some(before), Some(after)) if before != after => {
+                                    println!("{} {}:", style("Changed").yellow().bold(), path);
+                                    Command::new(&cloned_git)
+                                        .current_dir(&repo)
+                                        .args(&[
+                                            "--no-pager",
+                                            "log",
+                                            "--no-decorate",
+                                            "--oneline",
+                                            &format!("{}..{}", before, after),
+                                        ])
+                                        .spawn()
+                                        .unwrap()
+                                        .wait()
+                                        .unwrap();
+                                    println!();
+                                }
+                                _ => {
+                                    println!("{} {}", style("Up-to-date").green().bold(), path);
+                                }
                             }
-
                             Ok(true) as Result<bool, Error>
                         } else {
                             println!("{} pulling {}", style("Failed").red().bold(), path);

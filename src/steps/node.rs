@@ -33,7 +33,7 @@ pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Er
     let npm = require("npm").map(NPM::new)?;
     let npm_root = npm.root()?;
     if !npm_root.is_descendant_of(base_dirs.home_dir()) {
-        Err(ErrorKind::SkipStep)?;
+        return Err(ErrorKind::SkipStep.into());
     }
 
     print_separator("Node Package Manager");
