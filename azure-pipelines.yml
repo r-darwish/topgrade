@@ -6,7 +6,6 @@ strategy:
       imageName: 'ubuntu-16.04'
     Windows:
       imageName: 'vs2017-win2016'
-      rustup_toolchain: stable
       working_directory: .
 
 pool:
@@ -14,13 +13,13 @@ pool:
 
 steps:
   - script: |
-      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain $RUSTUP_TOOLCHAIN
+      curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain stable
       echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"
     displayName: Install rust
     condition: ne( variables['Agent.OS'], 'Windows_NT' )
   - script: |
       curl -sSf -o rustup-init.exe https://win.rustup.rs
-      rustup-init.exe -y --default-toolchain %RUSTUP_TOOLCHAIN%
+      rustup-init.exe -y --default-toolchain stable
       echo "##vso[task.setvariable variable=PATH;]%PATH%;%USERPROFILE%\.cargo\bin"
     displayName: Windows install rust
     condition: eq( variables['Agent.OS'], 'Windows_NT' )
