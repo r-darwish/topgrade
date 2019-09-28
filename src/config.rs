@@ -143,6 +143,10 @@ pub struct CommandLineArgs {
     #[structopt(long = "disable", possible_values = &Step::variants())]
     disable: Vec<Step>,
 
+    /// Perform only the specified steps (experimental)
+    #[structopt(long = "only", possible_values = &Step::variants())]
+    only: Vec<Step>,
+
     /// Output logs
     #[structopt(short = "v", long = "verbose")]
     verbose: bool,
@@ -208,6 +212,10 @@ impl Config {
     /// If the step appears either in the `--disable` command line argument
     /// or the `disable` option in the configuration, the function returns false.
     pub fn should_run(&self, step: Step) -> bool {
+        if !self.opt.only.is_empty() {
+            return self.opt.only.contains(&step);
+        }
+
         !(self
             .config_file
             .disable
