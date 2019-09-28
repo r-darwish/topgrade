@@ -56,7 +56,7 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("ana") => Distribution::Arch,
+            Some("arch") | Some("anarchy") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
