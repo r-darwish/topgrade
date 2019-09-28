@@ -1,19 +1,26 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
-
-trigger:
-- master
+strategy:
+  matrix:
+    Mac:
+      imageName: 'macos-10.13'
+    Linux:
+      imageName: 'ubuntu-16.04'
+    Windows:
+      imageName: 'vs2017-win2016'
+      rustup_toolchain: stable
+      working_directory: .
 
 pool:
-  vmImage: 'ubuntu-latest'
+  vmImage: $(imageName)
 
 steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+  - script: rustup component add clippy rustfmt
+    displayName: install clipppy and rustfmt
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - script: cargo fmt --all-features -- --check
+    displayName: rustfmt
+  - script: cargo build --all-features
+    displayName: Cargo build
+  - script: cargo clippy --all-features -- -D warnings
+    displayName: clippy
+  - script: cargo test --all-features
+    displayName: Cargo test
