@@ -39,4 +39,4 @@ steps:
     displayName: clippy
   - script: cargo test --all-features
     displayName: Cargo test
-  - script: $(Pipeline.Workspace)/.cargo
+  - script: ls $(Pipeline.Workspace)/.cargo
