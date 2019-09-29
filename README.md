@@ -93,6 +93,7 @@ Just run `topgrade`. It will run the following steps:
   * [Vundle](https://github.com/VundleVim/Vundle.vim)
   * [Plug](https://github.com/junegunn/vim-plug)
   * [Dein](https://github.com/Shougo/dein.vim)
+  * [Voom](https://github.com/airblade/voom)
 * Node
   * Run `yarn global update` if yarn is installed.
   * Run `npm update -g` if NPM is installed and `npm root -g` is a path inside your home directory.
