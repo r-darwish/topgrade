@@ -287,6 +287,12 @@ fn run() -> Result<(), Error> {
             )?;
             execute(
                 &mut report,
+                "antigen",
+                || unix::run_antigen(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
                 "zplug",
                 || unix::run_zplug(&base_dirs, run_type),
                 config.no_retry(),
