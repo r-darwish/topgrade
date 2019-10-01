@@ -60,7 +60,7 @@ impl Powershell {
         let powershell = require_option(self.path.as_ref())?;
 
         if !Self::has_module(&powershell, "PSWindowsUpdate") {
-            Err(ErrorKind::SkipStep)?;
+            return Err(ErrorKind::SkipStep.into());
         }
         print_separator("Windows Update");
 

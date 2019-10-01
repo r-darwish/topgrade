@@ -51,7 +51,7 @@ pub fn self_update() -> Result<(), Error> {
                     .spawn()
                     .and_then(|mut c| c.wait())
                     .context(ErrorKind::SelfUpdate)?;
-                Err(ErrorKind::Upgraded(status))?
+                return Err(ErrorKind::Upgraded(status).into());
             }
         }
     }
