@@ -77,6 +77,7 @@ Just run `topgrade`. It will run the following steps:
 * **Unix**: Run [zr](https://github.com/jedahan/zr) update
 * **Unix**: Run [zplug](https://github.com/zplug/zplug) update
 * **Unix**: Run [oh-my-zsh](https://github.com/robbyrussell/oh-my-zsh) update
+* **Unix**: Run [antigen](https://github.com/zsh-users/antigen) update
 * **Unix**: Run [fisher](https://github.com/jorgebucaran/fisher)
 * **Unix**: Upgrade tmux plugins with [TPM](https://github.com/tmux-plugins/tpm). *Note*: Do not use
   the `-b` flag in your configuration as suggested by the TPM readme.

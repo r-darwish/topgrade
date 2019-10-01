@@ -27,6 +27,20 @@ fn zshrc(base_dirs: &BaseDirs) -> PathBuf {
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
 }
 
+pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let zsh = require("zsh")?;
+    let zshrc = zshrc(base_dirs).require()?;
+    env::var("ADOTDIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join("antigen.zsh"))
+        .require()?;
+
+    print_separator("antigen");
+
+    let cmd = format!("source {} && antigen selfupdate && antigen update", zshrc.display());
+    run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
+}
+
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
