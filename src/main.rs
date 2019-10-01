@@ -241,7 +241,7 @@ fn run() -> Result<(), Error> {
 
     #[cfg(unix)]
     {
-        git_repos.insert(base_dirs.home_dir().join(".zshrc"));
+        git_repos.insert(zsh::zshrc(&base_dirs));
         git_repos.insert(base_dirs.home_dir().join(".tmux"));
         git_repos.insert(base_dirs.home_dir().join(".config/fish"));
         git_repos.insert(base_dirs.config_dir().join("openbox"));
@@ -282,25 +282,25 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 "zr",
-                || unix::run_zr(&base_dirs, run_type),
+                || zsh::run_zr(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(
                 &mut report,
                 "antigen",
-                || unix::run_antigen(&base_dirs, run_type),
+                || zsh::run_antigen(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(
                 &mut report,
                 "zplug",
-                || unix::run_zplug(&base_dirs, run_type),
+                || zsh::run_zplug(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(
                 &mut report,
                 "oh-my-zsh",
-                || unix::run_oh_my_zsh(&base_dirs, run_type),
+                || zsh::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
             )?;
             execute(

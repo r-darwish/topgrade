@@ -7,5 +7,7 @@ pub mod powershell;
 #[cfg(unix)]
 pub mod tmux;
 pub mod vim;
+#[cfg(unix)]
+pub mod zsh;
 
 pub use self::os::*;
