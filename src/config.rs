@@ -61,6 +61,7 @@ pub struct ConfigFile {
     git_arguments: Option<String>,
     set_title: Option<bool>,
     assume_yes: Option<bool>,
+    yay_arguments: Option<String>,
 }
 
 impl ConfigFile {
@@ -285,5 +286,14 @@ impl Config {
     #[allow(dead_code)]
     pub fn yes(&self) -> bool {
         self.config_file.assume_yes.unwrap_or(self.opt.yes)
+    }
+
+    /// Extra yay arguments
+    #[cfg(target_os = "linux")]
+    pub fn yay_arguments(&self) -> &str {
+        match &self.config_file.yay_arguments {
+            Some(args) => args.as_str(),
+            None => "--devel",
+        }
     }
 }

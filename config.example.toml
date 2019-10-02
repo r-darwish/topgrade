@@ -16,6 +16,9 @@
 # Arguments to pass Git when pulling Repositories
 #git_arguments = "--rebase --autostash"
 
+# Arguments to pass yay when updating packages
+#yay_arguments = "--nodevel"
+
 # Do not set the terminal title
 #set_title = false
 # Commands to run before anything

@@ -158,7 +158,7 @@ fn run() -> Result<(), Error> {
                     execute(
                         &mut report,
                         "System update",
-                        || distribution.upgrade(&sudo, config.cleanup(), run_type, config.yes()),
+                        || distribution.upgrade(&sudo, run_type, &config),
                         config.no_retry(),
                     )?;
                 }
