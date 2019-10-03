@@ -1,3 +1,4 @@
+use crate::config::Config;
 use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::{print_separator, print_warning};
@@ -75,11 +76,14 @@ impl Distribution {
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, run_type: RunType, config: &Config) -> Result<(), Error> {
         print_separator("System update");
 
+        let yes = config.yes();
+        let cleanup = config.cleanup();
+
         match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &config.yay_arguments()),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
@@ -118,7 +122,13 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
+fn upgrade_arch_linux(
+    sudo: &Option<PathBuf>,
+    cleanup: bool,
+    run_type: RunType,
+    yes: bool,
+    yay_arguments: &str,
+) -> Result<(), Error> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
     let path = {
@@ -135,7 +145,7 @@ fn upgrade_arch_linux(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, 
             .arg("--pacman")
             .arg(pacman)
             .arg("-Syu")
-            .arg("--devel")
+            .args(yay_arguments.split_whitespace())
             .env("PATH", path);
 
         if yes {
