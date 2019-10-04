@@ -119,9 +119,9 @@ pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Err
 }
 
 pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
-    let zsh = require("voom")?;
+    let voom = require("voom")?;
 
     print_separator("voom");
 
-    run_type.execute(zsh).args(&["update"]).check_run()
+    run_type.execute(voom).arg("update").check_run()
 }
