@@ -117,3 +117,11 @@ pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Err
     print_separator(&format!("Neovim ({:?})", plugin_framework));
     upgrade(&nvim, &nvimrc, plugin_framework, run_type)
 }
+
+pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let voom = require("voom")?;
+
+    print_separator("voom");
+
+    run_type.execute(voom).arg("update").check_run()
+}

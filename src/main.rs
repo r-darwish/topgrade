@@ -386,6 +386,12 @@ fn run() -> Result<(), Error> {
             || vim::upgrade_neovim(&base_dirs, run_type),
             config.no_retry(),
         )?;
+        execute(
+            &mut report,
+            "voom",
+            || vim::run_voom(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
     }
 
     if config.should_run(Step::Node) {
