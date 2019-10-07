@@ -139,6 +139,13 @@ fn upgrade_arch_linux(
     debug!("Running Arch update with path: {:?}", path);
 
     if let Some(yay) = which("yay") {
+        run_type
+            .execute(&yay)
+            .arg("-Pw")
+            .spawn()
+            .and_then(|mut p| p.wait())
+            .ok();
+
         let mut command = run_type.execute(yay);
 
         command
