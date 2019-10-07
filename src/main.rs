@@ -360,6 +360,12 @@ fn run() -> Result<(), Error> {
     )?;
     execute(
         &mut report,
+        "stack",
+        || generic::run_stack_update(run_type),
+        config.no_retry(),
+    )?;
+    execute(
+        &mut report,
         "myrepos",
         || generic::run_myrepos_update(&base_dirs, run_type),
         config.no_retry(),

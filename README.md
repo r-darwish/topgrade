@@ -89,6 +89,7 @@ Just run `topgrade`. It will run the following steps:
 * Upgrade [myrepos](https://myrepos.branchable.com/) managed sourcecode repositories
 * Upgrade Python packages installed using [pipx](https://github.com/cs01/pipx)
 * Upgrade [R globally installed packages](https://github.com/ankane/jetpack)
+* Upgrade [stack](https://docs.haskellstack.org/en/stable/README/)
 * Upgrade Vim/Neovim packages. Works with the following plugin frameworks:
   * [NeoBundle](https://github.com/Shougo/neobundle.vim)
   * [Vundle](https://github.com/VundleVim/Vundle.vim)
