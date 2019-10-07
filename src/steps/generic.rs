@@ -88,6 +88,13 @@ pub fn run_pipx_update(run_type: RunType) -> Result<(), Error> {
     run_type.execute(&pipx).arg("upgrade-all").check_run()
 }
 
+pub fn run_stack_update(run_type: RunType) -> Result<(), Error> {
+    let stack = utils::require("stack")?;
+    print_separator("stack");
+
+    run_type.execute(&stack).arg("upgrade").check_run()
+}
+
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let myrepos = utils::require("mr")?;
     base_dirs.home_dir().join(".mrconfig").require()?;
