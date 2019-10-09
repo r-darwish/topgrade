@@ -2,7 +2,7 @@ use super::error::{Error, ErrorKind};
 use super::utils::editor;
 use directories::BaseDirs;
 use failure::ResultExt;
-use strum::{EnumString, EnumVariantNames};
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 
 use log::{debug, error, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
@@ -18,7 +18,7 @@ use toml;
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize)]
+#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
@@ -62,6 +62,11 @@ pub struct ConfigFile {
     set_title: Option<bool>,
     assume_yes: Option<bool>,
     yay_arguments: Option<String>,
+    no_retry: Option<bool>,
+    run_in_tmux: Option<bool>,
+    verbose: Option<bool>,
+    cleanup: Option<bool>,
+    only: Option<Vec<Step>>,
 }
 
 impl ConfigFile {
@@ -170,6 +175,7 @@ pub struct CommandLineArgs {
 pub struct Config {
     opt: CommandLineArgs,
     config_file: ConfigFile,
+    allowed_steps: Vec<Step>,
 }
 
 impl Config {
@@ -178,18 +184,22 @@ impl Config {
     /// The function parses the command line arguments and reading the configuration file.
     pub fn load(base_dirs: &BaseDirs) -> Result<Self, Error> {
         let opt = CommandLineArgs::from_args();
+        let config_file = ConfigFile::read(base_dirs)?;
 
         let mut builder = formatted_timed_builder();
 
-        if opt.verbose {
+        if opt.verbose || config_file.verbose.unwrap_or(false) {
             builder.filter(Some("topgrade"), LevelFilter::Trace);
         }
+
+        let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
         builder.init();
 
         Ok(Self {
             opt,
-            config_file: ConfigFile::read(base_dirs)?,
+            config_file,
+            allowed_steps,
         })
     }
 
@@ -218,28 +228,38 @@ impl Config {
     /// If the step appears either in the `--disable` command line argument
     /// or the `disable` option in the configuration, the function returns false.
     pub fn should_run(&self, step: Step) -> bool {
-        if !self.opt.only.is_empty() {
-            return self.opt.only.contains(&step);
-        }
+        self.allowed_steps.contains(&step)
+    }
 
-        !(self
-            .config_file
-            .disable
-            .as_ref()
-            .map(|d| d.contains(&step))
-            .unwrap_or(false)
-            || self.opt.disable.contains(&step))
+    fn allowed_steps(opt: &CommandLineArgs, config_file: &ConfigFile) -> Vec<Step> {
+        let mut enabled_steps: Vec<Step> = if !opt.only.is_empty() {
+            opt.only.clone()
+        } else {
+            config_file
+                .only
+                .as_ref()
+                .map_or_else(|| Step::iter().collect(), |v| v.clone())
+        };
+
+        let disabled_steps: Vec<Step> = if !opt.disable.is_empty() {
+            opt.disable.clone()
+        } else {
+            config_file.disable.as_ref().map_or_else(|| vec![], |v| v.clone())
+        };
+
+        enabled_steps.retain(|e| !disabled_steps.contains(e));
+        enabled_steps
     }
 
     /// Tell whether we should run in tmux.
     pub fn run_in_tmux(&self) -> bool {
-        self.opt.run_in_tmux
+        self.opt.run_in_tmux || self.config_file.run_in_tmux.unwrap_or(false)
     }
 
     /// Tell whether we should perform cleanup steps.
     #[cfg(not(windows))]
     pub fn cleanup(&self) -> bool {
-        self.opt.cleanup
+        self.opt.cleanup || self.config_file.cleanup.unwrap_or(false)
     }
 
     /// Tell whether we are dry-running.
@@ -249,7 +269,7 @@ impl Config {
 
     /// Tell whether we should not attempt to retry anything.
     pub fn no_retry(&self) -> bool {
-        self.opt.no_retry
+        self.opt.no_retry || self.config_file.no_retry.unwrap_or(false)
     }
 
     /// List of remote hosts to run Topgrade in
