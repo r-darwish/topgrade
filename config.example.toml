@@ -4,8 +4,17 @@
 #    "~/.config/something"
 #]
 
-# Same options as the command line flag
+# Disable specific steps - same options as the command line flag
 #disable = ["system", "emacs"]
+
+# Run specific steps - same options as the command line flag
+#only = ["system", "emacs"]
+
+# Do not ask to retry failed steps (default: false)
+#no_retry = true
+
+# Run inside tmux
+#run_in_tmux = true
 
 # List of remote machines with Topgrade installed on them
 #remote_topgrades = ["toothless", "pi", "parnas"]
@@ -28,3 +37,9 @@
 # Custom commands
 #[commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
+
+# Output logs
+#verbose = true
+
+# Cleanup temporary or old files
+#cleanup = true
