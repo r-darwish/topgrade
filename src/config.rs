@@ -4,7 +4,7 @@ use directories::BaseDirs;
 use failure::ResultExt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 
-use log::{debug, error, LevelFilter};
+use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use serde::Deserialize;
 use shellexpand;
@@ -64,19 +64,18 @@ pub struct ConfigFile {
     yay_arguments: Option<String>,
     no_retry: Option<bool>,
     run_in_tmux: Option<bool>,
-    verbose: Option<bool>,
     cleanup: Option<bool>,
     only: Option<Vec<Step>>,
 }
 
 impl ConfigFile {
     fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf, Error> {
-        let config_path = base_dirs.config_dir().join("topgrade.toml");
+        let config_path = base_dirs.config_dir().join("/plooopy/topgrade.toml");
         if !config_path.exists() {
             write(&config_path, include_str!("../config.example.toml"))
                 .map_err(|e| {
-                    error!(
-                        "Unable to write the example configuration file to {}: {}",
+                    debug!(
+                        "Unable to write the example configuration file to {}: {}. Using blank config.",
                         config_path.display(),
                         e
                     );
@@ -119,6 +118,26 @@ impl ConfigFile {
             .and_then(|mut p| p.wait())
             .context(ErrorKind::Configuration)?;
         Ok(())
+    }
+
+    /// Creates a new, blank config file.
+    fn new() -> ConfigFile {
+        ConfigFile {
+            pre_commands: None,
+            commands: None,
+            git_repos: None,
+            disable: None,
+            remote_topgrades: None,
+            ssh_arguments: None,
+            git_arguments: None,
+            set_title: None,
+            assume_yes: None,
+            yay_arguments: None,
+            no_retry: None,
+            run_in_tmux: None,
+            cleanup: None,
+            only: None,
+        }
     }
 }
 
@@ -184,17 +203,18 @@ impl Config {
     /// The function parses the command line arguments and reading the configuration file.
     pub fn load(base_dirs: &BaseDirs) -> Result<Self, Error> {
         let opt = CommandLineArgs::from_args();
-        let config_file = ConfigFile::read(base_dirs)?;
 
         let mut builder = formatted_timed_builder();
 
-        if opt.verbose || config_file.verbose.unwrap_or(false) {
+        if opt.verbose {
             builder.filter(Some("topgrade"), LevelFilter::Trace);
         }
 
-        let allowed_steps = Self::allowed_steps(&opt, &config_file);
-
         builder.init();
+
+        let config_file = ConfigFile::read(base_dirs).unwrap_or_else(|_| ConfigFile::new());
+
+        let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
         Ok(Self {
             opt,

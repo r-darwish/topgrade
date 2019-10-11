@@ -38,8 +38,5 @@
 #[commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
 
-# Output logs
-#verbose = true
-
 # Cleanup temporary or old files
 #cleanup = true
