@@ -3,7 +3,8 @@ use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, HumanizedPath};
 use console::style;
-use futures::future::{join_all, Future};
+use futures_util::try_future::try_join_all;
+use futures_util::future::FutureExt;
 use glob::{glob_with, MatchOptions};
 use log::{debug, error};
 use std::collections::HashSet;
@@ -11,7 +12,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use tokio::runtime::Runtime;
-use tokio_process::CommandExt as TokioCommandExt;
+use tokio_net::process::Command as TokioCommand;
 
 #[derive(Debug)]
 pub struct Git {
@@ -108,7 +109,7 @@ impl Git {
 
                 println!("{} {}", style("Pulling").cyan().bold(), path);
 
-                let mut command = Command::new(git);
+                let mut command = TokioCommand::new(git);
 
                 command.args(&["pull", "--ff-only"]).current_dir(&repo);
 
@@ -116,7 +117,7 @@ impl Git {
                     command.args(extra_arguments.split_whitespace());
                 }
 
-                command.output_async().then(move |result| match result {
+                command.output().map(move |result| match result {
                     Ok(output) => {
                         if output.status.success() {
                             let after_revision = get_head_revision(&cloned_git, &repo);
@@ -160,8 +161,8 @@ impl Git {
             })
             .collect();
 
-        let mut runtime = Runtime::new().unwrap();
-        let results: Vec<bool> = runtime.block_on(join_all(futures))?;
+        let runtime = Runtime::new().unwrap();
+        let results: Vec<bool> = runtime.block_on(try_join_all(futures))?;
         if results.into_iter().any(|success| !success) {
             Err(ErrorKind::StepFailed.into())
         } else {
