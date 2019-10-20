@@ -41,6 +41,17 @@ Topgrade isn't guaranteed to work on Rust versions older than the latest stable 
 intend to install Topgrade using Cargo then you should either install Rust using rustup or use a
 distribution which ships the latest version of Rust, such as Arch Linux.
 
+### Upgrading Topgrade
+The precompiled binaries supplied in the Github releases page are compiled with a self upgrade
+feature. Topgrade will try to upgrade itself before attempting anything else and will respawn itself
+when an update is downloaded. If you choose to install Topgrade in this method it is recommended
+that you place the binary in some place which is writable by your user account, such as
+`~/.local/bin`.
+
+If you prefer to have Topgrade installed in system-wide manner then it's recommended to either
+install it using the OS package manager or `cargo install`. Topgrade will not have the self upgrade
+feature but it will keep itself up to date by calling the operating system's package manager.
+
 ## Usage
 Just run `topgrade`. It will run the following steps:
 
