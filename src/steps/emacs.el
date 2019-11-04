@@ -1,6 +1,6 @@
 (cond
  ((fboundp 'paradox-upgrade-packages)
-  (princ "Upgrading packages with Paradox")
+  (princ "Upgrading packages with Paradox\n")
   (paradox-upgrade-packages)
   (princ
    (if (get-buffer "*Paradox Report*")
@@ -9,11 +9,13 @@
  ((fboundp 'straight-thaw-versions)
   (princ "Thawing versions")
   (straight-thaw-versions))
- (t
-  (princ "Upgrading packages")
+ ((and ((boundp 'package--initialized)
+        package--initialized))
+  (princ "Upgrading packages\n")
   (let ((package-menu-async nil))
     (package-list-packages))
   (package-menu-mark-upgrades)
   (condition-case nil
       (package-menu-execute 'noquery)
-    (user-error nil))))
+    (user-error nil)))
+ (t (princ "Could not detect any package manager\n")))
