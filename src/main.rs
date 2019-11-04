@@ -201,9 +201,9 @@ fn run() -> Result<(), Error> {
                 || unix::run_homebrew(config.cleanup(), run_type),
                 config.no_retry(),
             )?;
-        }
 
-        execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+            execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+        }
     }
 
     #[cfg(target_os = "dragonfly")]
@@ -343,44 +343,66 @@ fn run() -> Result<(), Error> {
         execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;
     }
 
-    execute(
-        &mut report,
-        "opam",
-        || generic::run_opam_update(run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "vcpkg",
-        || generic::run_vcpkg_update(run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "pipx",
-        || generic::run_pipx_update(run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "stack",
-        || generic::run_stack_update(run_type),
-        config.no_retry(),
-    )?;
-    execute(
-        &mut report,
-        "myrepos",
-        || generic::run_myrepos_update(&base_dirs, run_type),
-        config.no_retry(),
-    )?;
+    if config.should_run(Step::Opam) {
+        execute(
+            &mut report,
+            "opam",
+            || generic::run_opam_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Vcpkg) {
+        execute(
+            &mut report,
+            "vcpkg",
+            || generic::run_vcpkg_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Pipx) {
+        execute(
+            &mut report,
+            "pipx",
+            || generic::run_pipx_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Stack) {
+        execute(
+            &mut report,
+            "stack",
+            || generic::run_stack_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Myrepos) {
+        execute(
+            &mut report,
+            "myrepos",
+            || generic::run_myrepos_update(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+    }
+
     #[cfg(unix)]
-    execute(&mut report, "pearl", || unix::run_pearl(run_type), config.no_retry())?;
-    execute(
-        &mut report,
-        "jetpak",
-        || generic::run_jetpack(run_type),
-        config.no_retry(),
-    )?;
+    {
+        if config.should_run(Step::Pearl) {
+            execute(&mut report, "pearl", || unix::run_pearl(run_type), config.no_retry())?;
+        }
+    }
+
+    if config.should_run(Step::Jetpack) {
+        execute(
+            &mut report,
+            "jetpak",
+            || generic::run_jetpack(run_type),
+            config.no_retry(),
+        )?;
+    }
 
     if config.should_run(Step::Vim) {
         execute(
@@ -430,7 +452,11 @@ fn run() -> Result<(), Error> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
+    {
+        if config.should_run(Step::Atom) {
+            execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
+        }
+    }
 
     if config.should_run(Step::Gem) {
         execute(
@@ -472,30 +498,38 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        execute(
-            &mut report,
-            "pihole",
-            || linux::run_pihole_update(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "rpi-update",
-            || linux::run_rpi_update(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "Firmware upgrades",
-            || linux::run_fwupdmgr(run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "Restarts",
-            || linux::run_needrestart(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
+        if config.should_run(Step::System) {
+            execute(
+                &mut report,
+                "pihole",
+                || linux::run_pihole_update(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "rpi-update",
+                || linux::run_rpi_update(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
+
+        if config.should_run(Step::Firmware) {
+            execute(
+                &mut report,
+                "Firmware upgrades",
+                || linux::run_fwupdmgr(run_type),
+                config.no_retry(),
+            )?;
+        }
+
+        if config.should_run(Step::Restarts) {
+            execute(
+                &mut report,
+                "Restarts",
+                || linux::run_needrestart(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     #[cfg(target_os = "macos")]
