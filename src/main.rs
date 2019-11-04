@@ -449,7 +449,11 @@ fn run() -> Result<(), Error> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
+    {
+        if config.should_run(Step::Atom) {
+            execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
+        }
+    }
 
     if config.should_run(Step::Gem) {
         execute(
@@ -491,30 +495,38 @@ fn run() -> Result<(), Error> {
 
     #[cfg(target_os = "linux")]
     {
-        execute(
-            &mut report,
-            "pihole",
-            || linux::run_pihole_update(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "rpi-update",
-            || linux::run_rpi_update(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "Firmware upgrades",
-            || linux::run_fwupdmgr(run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "Restarts",
-            || linux::run_needrestart(sudo.as_ref(), run_type),
-            config.no_retry(),
-        )?;
+        if config.should_run(Step::System) {
+            execute(
+                &mut report,
+                "pihole",
+                || linux::run_pihole_update(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "rpi-update",
+                || linux::run_rpi_update(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
+
+        if config.should_run(Step::Firmware) {
+            execute(
+                &mut report,
+                "Firmware upgrades",
+                || linux::run_fwupdmgr(run_type),
+                config.no_retry(),
+            )?;
+        }
+
+        if config.should_run(Step::Restarts) {
+            execute(
+                &mut report,
+                "Restarts",
+                || linux::run_needrestart(sudo.as_ref(), run_type),
+                config.no_retry(),
+            )?;
+        }
     }
 
     #[cfg(target_os = "macos")]

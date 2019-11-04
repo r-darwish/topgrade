@@ -22,44 +22,28 @@ type Commands = BTreeMap<String, String>;
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
-    /// Don't perform system upgrade
     System,
-    /// Don't perform upgrades of package managers
     PackageManagers,
-    /// Don't pull git repositories
     GitRepos,
-    /// Don't upgrade Vim packages or configuration files
     Vim,
-    /// Don't upgrade Emacs packages or configuration files
     Emacs,
-    /// Don't upgrade ruby gems
     Gem,
-    /// Don't upgrade npm/composer/yarn packages
     Node,
-    /// Don't upgrade SDKMAN! and its packages
     Sdkman,
-    /// Don't run remote Togprades
     Remotes,
-    /// Don't run Rustup
     Rustup,
-    /// Don't run Cargo
     Cargo,
-    /// Don't update Powershell modules
     Shell,
-    /// Don't run OPAM
     Opam,
-    /// Don't run Vcpkg
     Vcpkg,
-    /// Don't ryb Pipx
     Pipx,
-    /// Don't run Stack
     Stack,
-    /// Don't run myrepos
     Myrepos,
-    /// Don't run Pearl
     Pearl,
-    /// Don't run Tetpak
     Jetpack,
+    Atom,
+    Firmware,
+    Restarts,
 }
 
 #[derive(Deserialize, Default, Debug)]
