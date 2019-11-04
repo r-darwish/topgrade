@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::error::{Error, ErrorKind};
-use crate::executor::RunType;
+use crate::executor::{ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use failure::ResultExt;
@@ -349,7 +349,15 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<(), Error> {
     print_separator("Firmware upgrades");
 
     run_type.execute(&fwupdmgr).arg("refresh").check_run()?;
-    run_type.execute(&fwupdmgr).arg("get-updates").check_run()
+    let exit_status = run_type.execute(&fwupdmgr).arg("get-updates").spawn()?.wait()?;
+
+    if let ExecutorExitStatus::Wet(e) = exit_status {
+        if !(e.success() || e.code().map(|c| c == 2).unwrap_or(false)) {
+            return Err(ErrorKind::ProcessFailed(e).into());
+        }
+    }
+
+    Ok(())
 }
 
 #[must_use]
