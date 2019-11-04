@@ -166,6 +166,12 @@ pub struct CommandLineArgs {
     yes: bool,
 }
 
+impl CommandLineArgs {
+    pub fn edit_config(&self) -> bool {
+        self.edit_config
+    }
+}
+
 /// Represents the application configuration
 ///
 /// The struct holds the loaded configuration file, as well as the arguments parsed from the command line.
@@ -181,9 +187,7 @@ impl Config {
     /// Load the configuration.
     ///
     /// The function parses the command line arguments and reading the configuration file.
-    pub fn load(base_dirs: &BaseDirs) -> Result<Self, Error> {
-        let opt = CommandLineArgs::from_args();
-
+    pub fn load(base_dirs: &BaseDirs, opt: CommandLineArgs) -> Result<Self, Error> {
         let mut builder = formatted_timed_builder();
 
         if opt.verbose {
@@ -290,11 +294,6 @@ impl Config {
     /// Prompt for a key before exiting
     pub fn keep_at_end(&self) -> bool {
         self.opt.keep_at_end || env::var("TOPGRADE_KEEP_END").is_ok()
-    }
-
-    /// Whether to edit the configuration file
-    pub fn edit_config(&self) -> bool {
-        self.opt.edit_config
     }
 
     /// Whether to set the terminal title

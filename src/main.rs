@@ -10,7 +10,7 @@ mod steps;
 mod terminal;
 mod utils;
 
-use self::config::{Config, Step};
+use self::config::{CommandLineArgs, Config, Step};
 use self::error::{Error, ErrorKind};
 use self::report::Report;
 use self::steps::*;
@@ -24,6 +24,7 @@ use std::env;
 use std::fmt::Debug;
 use std::io;
 use std::process::exit;
+use structopt::StructOpt;
 
 fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
 where
@@ -65,13 +66,15 @@ fn run() -> Result<(), Error> {
     ctrlc::set_handler();
 
     let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
-    let config = Config::load(&base_dirs)?;
-    terminal::set_title(config.set_title());
 
-    if config.edit_config() {
+    let opt = CommandLineArgs::from_args();
+    if opt.edit_config() {
         Config::edit(&base_dirs)?;
         return Ok(());
     };
+
+    let config = Config::load(&base_dirs, opt)?;
+    terminal::set_title(config.set_title());
 
     if config.run_in_tmux() && env::var("TOPGRADE_INSIDE_TMUX").is_err() {
         #[cfg(unix)]
