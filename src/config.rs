@@ -46,6 +46,20 @@ pub enum Step {
     Cargo,
     /// Don't update Powershell modules
     Shell,
+    /// Don't run OPAM
+    Opam,
+    /// Don't run Vcpkg
+    Vcpkg,
+    /// Don't ryb Pipx
+    Pipx,
+    /// Don't run Stack
+    Stack,
+    /// Don't run myrepos
+    Myrepos,
+    /// Don't run Pearl
+    Pearl,
+    /// Don't run Tetpak
+    Jetpack,
 }
 
 #[derive(Deserialize, Default, Debug)]
