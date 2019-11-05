@@ -149,14 +149,14 @@ pub fn run_remote_topgrade(
     hostname: &str,
     ssh_arguments: &Option<String>,
     run_in_tmux: bool,
-    tmux_arguments: &Option<String>,
+    _tmux_arguments: &Option<String>,
 ) -> Result<(), Error> {
     let ssh = utils::require("ssh")?;
 
     if run_in_tmux && !run_type.dry() {
         #[cfg(unix)]
         {
-            crate::tmux::run_remote_topgrade(hostname, &ssh, tmux_arguments)?;
+            crate::tmux::run_remote_topgrade(hostname, &ssh, _tmux_arguments)?;
             Err(ErrorKind::SkipStep.into())
         }
 

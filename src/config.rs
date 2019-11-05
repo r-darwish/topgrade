@@ -57,7 +57,6 @@ pub struct ConfigFile {
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
-    #[allow(unused_variables)]
     tmux_arguments: Option<String>,
     set_title: Option<bool>,
     assume_yes: Option<bool>,
