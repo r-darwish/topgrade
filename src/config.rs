@@ -48,6 +48,7 @@ pub enum Step {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(unused_variables)]
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
