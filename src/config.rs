@@ -38,6 +38,7 @@ pub enum Step {
     Vcpkg,
     Pipx,
     Stack,
+    Tlmgr,
     Myrepos,
     Pearl,
     Jetpack,

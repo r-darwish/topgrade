@@ -379,6 +379,15 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
+    if config.should_run(Step::Tlmgr) {
+        execute(
+            &mut report,
+            "tlmgr",
+            || generic::run_tlmgr_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
     if config.should_run(Step::Myrepos) {
         execute(
             &mut report,

@@ -95,6 +95,16 @@ pub fn run_stack_update(run_type: RunType) -> Result<(), Error> {
     run_type.execute(&stack).arg("upgrade").check_run()
 }
 
+pub fn run_tlmgr_update(run_type: RunType) -> Result<(), Error> {
+    let tlmgr = utils::require("tlmgr")?;
+    print_separator("TeX Live package manager");
+
+    run_type
+        .execute(&tlmgr)
+        .args(&["update", "--self", "--all"])
+        .check_run()
+}
+
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let myrepos = utils::require("mr")?;
     base_dirs.home_dir().join(".mrconfig").require()?;
