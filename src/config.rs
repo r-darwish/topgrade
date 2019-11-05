@@ -48,7 +48,6 @@ pub enum Step {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
-#[allow(unused_variables)]
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
@@ -58,6 +57,7 @@ pub struct ConfigFile {
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
+    #[allow(unused_variables)]
     tmux_arguments: Option<String>,
     set_title: Option<bool>,
     assume_yes: Option<bool>,
