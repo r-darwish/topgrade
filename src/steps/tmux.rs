@@ -7,7 +7,7 @@ use failure::ResultExt;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
 pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
@@ -21,39 +21,61 @@ pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     run_type.execute(&tpm).arg("all").check_run()
 }
 
-fn has_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
-    Ok(Command::new(tmux)
-        .args(&["has-session", "-t", session_name])
-        .env_remove("TMUX")
-        .output()?
-        .status
-        .success())
+struct Tmux {
+    tmux: PathBuf,
+    args: Option<Vec<String>>,
 }
 
-fn new_session(tmux: &Path, session_name: &str) -> Result<bool, io::Error> {
-    Ok(Command::new(tmux)
-        .args(&["new-session", "-d", "-s", session_name, "-n", "dummy"])
-        .env_remove("TMUX")
-        .spawn()?
-        .wait()?
-        .success())
+impl Tmux {
+    fn new(args: &Option<String>) -> Self {
+        Self {
+            tmux: which("tmux").expect("Could not find tmux"),
+            args: args
+                .as_ref()
+                .map(|args| args.split_whitespace().map(String::from).collect()),
+        }
+    }
+
+    fn build(&self) -> Command {
+        let mut command = Command::new(&self.tmux);
+        if let Some(args) = self.args.as_ref() {
+            command.args(args).env_remove("TMUX");
+        }
+        command
+    }
+
+    fn has_session(&self, session_name: &str) -> Result<bool, io::Error> {
+        Ok(self
+            .build()
+            .args(&["has-session", "-t", session_name])
+            .output()?
+            .status
+            .success())
+    }
+
+    fn new_session(&self, session_name: &str) -> Result<bool, io::Error> {
+        Ok(self
+            .build()
+            .args(&["new-session", "-d", "-s", session_name, "-n", "dummy"])
+            .spawn()?
+            .wait()?
+            .success())
+    }
+
+    fn run_in_session(&self, command: &str) -> Result<(), Error> {
+        self.build()
+            .args(&["new-window", "-a", "-t", "topgrade:1", command])
+            .spawn()
+            .context(ErrorKind::ProcessExecution)?
+            .wait()
+            .context(ErrorKind::ProcessExecution)?
+            .check()?;
+
+        Ok(())
+    }
 }
 
-fn run_in_session(tmux: &Path, command: &str) -> Result<(), Error> {
-    Command::new(tmux)
-        .args(&["new-window", "-a", "-t", "topgrade:1", command])
-        .env_remove("TMUX")
-        .spawn()
-        .context(ErrorKind::ProcessExecution)?
-        .wait()
-        .context(ErrorKind::ProcessExecution)?
-        .check()?;
-
-    Ok(())
-}
-
-pub fn run_in_tmux() -> ! {
-    let tmux = which("tmux").expect("Could not find tmux");
+pub fn run_in_tmux(args: &Option<String>) -> ! {
     let command = {
         let mut command = vec![
             String::from("env"),
@@ -64,18 +86,20 @@ pub fn run_in_tmux() -> ! {
         command.join(" ")
     };
 
-    if !has_session(&tmux, "topgrade").expect("Error launching tmux") {
-        new_session(&tmux, "topgrade").expect("Error launching tmux");
+    let tmux = Tmux::new(args);
+
+    if !tmux.has_session("topgrade").expect("Error launching tmux") {
+        tmux.new_session("topgrade").expect("Error launching tmux");
     }
 
-    run_in_session(&tmux, &command).expect("Error launching tmux");
-    Command::new(&tmux)
+    tmux.run_in_session(&command).expect("Error launching tmux");
+    tmux.build()
         .args(&["kill-window", "-t", "topgrade:dummy"])
         .output()
         .unwrap();
 
     if env::var("TMUX").is_err() {
-        let err = Command::new(tmux).args(&["attach", "-t", "topgrade"]).exec();
+        let err = tmux.build().args(&["attach", "-t", "topgrade"]).exec();
         panic!("{:?}", err);
     } else {
         println!("Topgrade launched in a new tmux session");
@@ -83,13 +107,14 @@ pub fn run_in_tmux() -> ! {
     }
 }
 
-pub fn run_remote_topgrade(hostname: &str, ssh: &Path) -> Result<(), Error> {
+pub fn run_remote_topgrade(hostname: &str, ssh: &Path, tmux_args: &Option<String>) -> Result<(), Error> {
     let command = format!(
         "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 topgrade",
         ssh = ssh.display(),
         hostname = hostname
     );
-    Command::new(which("tmux").unwrap())
+    Tmux::new(tmux_args)
+        .build()
         .args(&["new-window", "-a", "-t", "topgrade:1", &command])
         .env_remove("TMUX")
         .spawn()

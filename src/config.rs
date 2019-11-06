@@ -57,6 +57,7 @@ pub struct ConfigFile {
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
+    tmux_arguments: Option<String>,
     set_title: Option<bool>,
     assume_yes: Option<bool>,
     yay_arguments: Option<String>,
@@ -287,6 +288,11 @@ impl Config {
     /// Extra Git arguments
     pub fn git_arguments(&self) -> &Option<String> {
         &self.config_file.git_arguments
+    }
+
+    /// Extra Tmux arguments
+    pub fn tmux_arguments(&self) -> &Option<String> {
+        &self.config_file.tmux_arguments
     }
 
     /// Prompt for a key before exiting
