@@ -51,7 +51,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
 
     print_separator("zplug");
 
-    let cmd = format!("source {} && zplug update", zshrc.display());
+    let cmd = format!("source \"{}\" && zplug update", zshrc.display());
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
