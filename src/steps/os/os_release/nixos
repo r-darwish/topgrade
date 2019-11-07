@@ -1,0 +1,11 @@
+NAME=NixOS
+ID=nixos
+VERSION="20.03pre200231.7827d3f4497 (Markhor)"
+VERSION_CODENAME=markhor
+VERSION_ID="20.03pre200231.7827d3f4497"
+PRETTY_NAME="NixOS 20.03pre200231.7827d3f4497 (Markhor)"
+LOGO="nix-snowflake"
+HOME_URL="https://nixos.org/"
+DOCUMENTATION_URL="https://nixos.org/nixos/manual/index.html"
+SUPPORT_URL="https://nixos.org/nixos/support.html"
+BUG_REPORT_URL="https://github.com/NixOS/nixpkgs/issues"

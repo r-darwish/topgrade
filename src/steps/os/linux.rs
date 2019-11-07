@@ -32,6 +32,7 @@ pub enum Distribution {
     Void,
     Solus,
     Exherbo,
+    NixOS,
 }
 
 impl Distribution {
@@ -61,6 +62,7 @@ impl Distribution {
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
+            Some("nixos") => Distribution::NixOS,
             _ => return Err(ErrorKind::UnknownLinuxDistribution.into()),
         })
     }
@@ -91,6 +93,7 @@ impl Distribution {
             Distribution::Void => upgrade_void(&sudo, run_type),
             Distribution::Solus => upgrade_solus(&sudo, run_type),
             Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
+            Distribution::NixOS => upgrade_nixos(&sudo, cleanup, run_type),
         }
     }
 
@@ -331,6 +334,26 @@ fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> 
     Ok(())
 }
 
+fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+    if let Some(sudo) = &sudo {
+        run_type
+            .execute(&sudo)
+            .args(&["/run/current-system/sw/bin/nixos-rebuild", "switch", "--upgrade"])
+            .check_run()?;
+
+        if cleanup {
+            run_type
+                .execute(&sudo)
+                .args(&["/run/current-system/sw/bin/nix-collect-garbage", "-d"])
+                .check_run()?;
+        }
+    } else {
+        print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
 pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
     let sudo = require_option(sudo)?;
     let needrestart = require("needrestart")?;
@@ -492,5 +515,10 @@ mod tests {
     #[test]
     fn test_exherbo() {
         test_template(&include_str!("os_release/exherbo"), Distribution::Exherbo);
+    }
+
+    #[test]
+    fn test_nixos() {
+        test_template(&include_str!("os_release/nixos"), Distribution::NixOS);
     }
 }
