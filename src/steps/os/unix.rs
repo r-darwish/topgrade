@@ -53,6 +53,7 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<(), Error> {
 #[must_use]
 pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     let nix = require("nix")?;
+    let nix_channel = require("nix-channel")?;
     let nix_env = require("nix-env")?;
 
     print_separator("Nix");
@@ -61,6 +62,7 @@ pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     } else {
         run_type.execute(&nix).arg("upgrade-nix").check_run()?;
     }
+    run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
 
