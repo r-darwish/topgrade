@@ -64,6 +64,13 @@ pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
 
+pub fn run_home_manager(run_type: RunType) -> Result<(), Error> {
+    let home_manager = require("home-manager")?;
+
+    print_separator("home-manager");
+    run_type.execute(&home_manager).arg("switch").check_run()
+}
+
 pub fn run_pearl(run_type: RunType) -> Result<(), Error> {
     let pearl = require("pearl")?;
     print_separator("pearl");
