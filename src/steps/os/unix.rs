@@ -1,7 +1,6 @@
-use super::linux::Distribution;
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
-use crate::terminal::{print_separator, print_warning};
+use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
 use directories::BaseDirs;
 use std::env;
@@ -55,13 +54,20 @@ pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     let nix = require("nix")?;
     let nix_channel = require("nix-channel")?;
     let nix_env = require("nix-env")?;
-
     print_separator("Nix");
-    if let Ok(Distribution::NixOS) = Distribution::detect() {
-        print_warning("Nix on NixOS must be upgraded via 'nixos-rebuild', skipping.");
-    } else {
-        run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+
+    #[cfg(target_os = "linux")]
+    {
+        use super::linux::Distribution;
+        use log::debug;
+
+        if let Ok(Distribution::NixOS) = Distribution::detect() {
+            debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
+            return Err(ErrorKind::SkipStep.into());
+        }
     }
+
+    run_type.execute(&nix).arg("upgrade-nix").check_run()?;
     run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
