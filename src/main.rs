@@ -204,6 +204,12 @@ fn run() -> Result<(), Error> {
             )?;
 
             execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+            execute(
+                &mut report,
+                "home-manager",
+                || unix::run_home_manager(run_type),
+                config.no_retry(),
+            )?;
         }
     }
 

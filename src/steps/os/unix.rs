@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::{Error, ErrorKind};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
@@ -52,11 +52,31 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<(), Error> {
 #[must_use]
 pub fn run_nix(run_type: RunType) -> Result<(), Error> {
     let nix = require("nix")?;
+    let nix_channel = require("nix-channel")?;
     let nix_env = require("nix-env")?;
-
     print_separator("Nix");
+
+    #[cfg(target_os = "linux")]
+    {
+        use super::linux::Distribution;
+        use log::debug;
+
+        if let Ok(Distribution::NixOS) = Distribution::detect() {
+            debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
+            return Err(ErrorKind::SkipStep.into());
+        }
+    }
+
     run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+    run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
+}
+
+pub fn run_home_manager(run_type: RunType) -> Result<(), Error> {
+    let home_manager = require("home-manager")?;
+
+    print_separator("home-manager");
+    run_type.execute(&home_manager).arg("switch").check_run()
 }
 
 pub fn run_pearl(run_type: RunType) -> Result<(), Error> {

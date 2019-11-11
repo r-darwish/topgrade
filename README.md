@@ -22,6 +22,7 @@ package manager. Topgrade is tested on and knows the following platforms:
   * Red Hat based
   * Debian based
   * Gentoo
+  * NixOS
   * openSUSE
   * Void
 * DragonFly BSD
@@ -31,6 +32,12 @@ package manager. Topgrade is tested on and knows the following platforms:
 
 ## Installation
 Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
+
+On NixOS, use the `topgrade` package in `nixpkgs`:
+
+```sh
+nix-env -iA topgrade
+```
 
 macOS users can install topgrade via Homebrew.
 
