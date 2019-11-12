@@ -1,4 +1,6 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::Error;
+#[cfg(target_os = "linux")]
+use crate::error::ErrorKind;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
