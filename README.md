@@ -21,6 +21,7 @@ package manager. Topgrade is tested on and knows the following platforms:
   * Arch based
   * Red Hat based
   * Debian based
+  * Clear Linux
   * Gentoo
   * NixOS
   * openSUSE
@@ -67,6 +68,7 @@ Just run `topgrade`. It will run the following steps:
   * **Arch based**: Run [yay](https://github.com/Jguer/yay) or fall back to pacman
   * **Redhat based**: Run `yum upgrade` (or `dnf` if present)
   * **Debian based**: Run `apt update && apt dist-upgrade`
+  * **Clear Linux**: Run `swupd update`
   * **Gentoo**: Run `layman -s ALL && emerge --sync -q && eix-update && emerge -uDNa world`
   * **openSUSE**: Run `zypper refresh && zypper dist-upgrade`
   * **Void**: Run `xbps-install -Su`

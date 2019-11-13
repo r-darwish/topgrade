@@ -25,6 +25,7 @@ struct OsRelease {
 pub enum Distribution {
     Arch,
     CentOS,
+    ClearLinux,
     Fedora,
     Debian,
     Gentoo,
@@ -55,6 +56,7 @@ impl Distribution {
 
         Ok(match id {
             Some("centos") | Some("ol") => Distribution::CentOS,
+            Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
@@ -87,6 +89,7 @@ impl Distribution {
         match self {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &config.yay_arguments()),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes),
+            Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
@@ -302,6 +305,19 @@ fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error>
     Ok(())
 }
 
+fn upgrade_clearlinux(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+    if let Some(sudo) = &sudo {
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/swupd", "update"])
+            .check_run()?;
+    } else {
+        print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
 fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
     if let Some(sudo) = &sudo {
         run_type.execute(&sudo).args(&["/usr/bin/cave", "sync"]).check_run()?;
@@ -460,6 +476,11 @@ mod tests {
     #[test]
     fn test_centos() {
         test_template(&include_str!("os_release/centos"), Distribution::CentOS);
+    }
+
+    #[test]
+    fn test_clearlinux() {
+        test_template(&include_str!("os_release/clearlinux"), Distribution::ClearLinux);
     }
 
     #[test]
