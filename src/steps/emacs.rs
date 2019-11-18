@@ -41,18 +41,24 @@ impl Emacs {
 
         print_separator("Emacs");
 
-        // Convert the whitespace in the emacs lisp code to NONBREAKING SPACE.
-        let escaped: String = EMACS_UPGRADE
-            .chars()
-            .map(|c| if c.is_whitespace() { '\u{00a0}' } else { c })
-            .collect();
+        let mut command = run_type.execute(&emacs);
 
-        run_type
-            .execute(&emacs)
-            .args(&["--batch", "-l"])
+        command
+            .args(&["--batch", "--debug-init", "-l"])
             .arg(init_file)
-            .arg("--eval")
-            .arg(escaped)
-            .check_run()
+            .arg("--eval");
+
+        #[cfg(unix)]
+        command.arg(
+            EMACS_UPGRADE
+                .chars()
+                .map(|c| if c.is_whitespace() { '\u{00a0}' } else { c })
+                .collect(),
+        );
+
+        #[cfg(not(unix))]
+        command.arg(EMACS_UPGRADE);
+
+        command.check_run()
     }
 }
