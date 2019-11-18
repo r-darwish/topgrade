@@ -53,7 +53,7 @@ impl Emacs {
             EMACS_UPGRADE
                 .chars()
                 .map(|c| if c.is_whitespace() { '\u{00a0}' } else { c })
-                .collect(),
+                .collect::<String>(),
         );
 
         #[cfg(not(unix))]
