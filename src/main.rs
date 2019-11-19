@@ -415,13 +415,13 @@ fn run() -> Result<(), Error> {
         execute(
             &mut report,
             "vim",
-            || vim::upgrade_vim(&base_dirs, run_type),
+            || vim::upgrade_vim(&base_dirs, run_type, config.cleanup()),
             config.no_retry(),
         )?;
         execute(
             &mut report,
             "Neovim",
-            || vim::upgrade_neovim(&base_dirs, run_type),
+            || vim::upgrade_neovim(&base_dirs, run_type, config.cleanup()),
             config.no_retry(),
         )?;
         execute(
