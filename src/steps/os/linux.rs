@@ -152,11 +152,11 @@ fn upgrade_arch_linux(
             .and_then(|mut p| p.wait())
             .ok();
 
-        let mut command = run_type.execute(yay);
+        let mut command = run_type.execute(&yay);
 
         command
             .arg("--pacman")
-            .arg(pacman)
+            .arg(&pacman)
             .arg("-Syu")
             .args(yay_arguments.split_whitespace())
             .env("PATH", path);
@@ -165,21 +165,33 @@ fn upgrade_arch_linux(
             command.arg("--noconfirm");
         }
         command.check_run()?;
+
+        if cleanup {
+            let mut command = run_type.execute(&yay);
+            command.arg("--pacman").arg(&pacman).arg("-Scc");
+            if yes {
+                command.arg("--noconfirm");
+            }
+            command.check_run()?;
+        }
     } else if let Some(sudo) = &sudo {
         let mut command = run_type.execute(&sudo);
-        command.arg(pacman).arg("-Syu").env("PATH", path);
+        command.arg(&pacman).arg("-Syu").env("PATH", path);
         if yes {
             command.arg("--noconfirm");
         }
         command.check_run()?;
+
+        if cleanup {
+            let mut command = run_type.execute(&sudo);
+            command.arg(&pacman).arg("-Scc");
+            if yes {
+                command.arg("--noconfirm");
+            }
+            command.check_run()?;
+        }
     } else {
         print_warning("Neither sudo nor yay detected. Skipping system upgrade");
-    }
-
-    if cleanup {
-        if let Some(sudo) = &sudo {
-            run_type.execute(&sudo).args(&["/usr/bin/pacman", "-Scc"]).check_run()?;
-        }
     }
 
     Ok(())
