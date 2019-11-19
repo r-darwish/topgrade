@@ -64,11 +64,6 @@ deploy:
   provider: releases
   skip_cleanup: true
 
-cache: cargo
-before_cache:
-  # Travis can't cache files that are not readable by "others"
-  - chmod -R a+r $HOME/.cargo
-
 notifications:
   email:
     on_success: never
