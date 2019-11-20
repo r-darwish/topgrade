@@ -355,6 +355,15 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
+    if config.should_run(Step::Go) {
+        execute(
+            &mut report,
+            "Go",
+            || generic::run_go(&base_dirs, run_type),
+            config.no_retry(),
+        )?;
+    }
+
     if config.should_run(Step::Emacs) {
         execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;
     }

@@ -4,6 +4,7 @@ use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use directories::BaseDirs;
 use failure::ResultExt;
+use std::env;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -20,9 +21,19 @@ pub fn run_cargo_update(run_type: RunType) -> Result<(), Error> {
 
 pub fn run_flutter_upgrade(run_type: RunType) -> Result<(), Error> {
     let flutter = utils::require("flutter")?;
-    print_separator("Flutter");
 
+    print_separator("Flutter");
     run_type.execute(&flutter).arg("upgrade").check_run()
+}
+
+pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+    let go = utils::require("go")?;
+    env::var("GOPATH")
+        .unwrap_or_else(|_| base_dirs.home_dir().join("go").to_str().unwrap().to_string())
+        .require()?;
+
+    print_separator("Go");
+    run_type.execute(&go).arg("get").arg("-u").arg("all").check_run()
 }
 
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
