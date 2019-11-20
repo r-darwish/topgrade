@@ -33,6 +33,7 @@ pub enum Step {
     Remotes,
     Rustup,
     Cargo,
+    Flutter,
     Shell,
     Opam,
     Vcpkg,

@@ -346,6 +346,15 @@ fn run() -> Result<(), Error> {
         )?;
     }
 
+    if config.should_run(Step::Flutter) {
+        execute(
+            &mut report,
+            "Flutter",
+            || generic::run_flutter_upgrade(run_type),
+            config.no_retry(),
+        )?;
+    }
+
     if config.should_run(Step::Emacs) {
         execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;
     }

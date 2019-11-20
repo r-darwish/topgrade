@@ -18,6 +18,13 @@ pub fn run_cargo_update(run_type: RunType) -> Result<(), Error> {
         .check_run()
 }
 
+pub fn run_flutter_upgrade(run_type: RunType) -> Result<(), Error> {
+    let flutter = utils::require("flutter")?;
+    print_separator("Flutter");
+
+    run_type.execute(&flutter).arg("upgrade").check_run()
+}
+
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     let gem = utils::require("gem")?;
     base_dirs.home_dir().join(".gem").require()?;
