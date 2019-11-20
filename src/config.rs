@@ -34,6 +34,7 @@ pub enum Step {
     Rustup,
     Cargo,
     Flutter,
+    Go,
     Shell,
     Opam,
     Vcpkg,
