@@ -36,16 +36,16 @@ impl PluginFramework {
     }
 
     pub fn upgrade_command(self, cleanup: bool) -> &'static str {
-        let plug_commands: &str;
-        if cleanup {
-            plug_commands = "PlugUpgrade | PlugClean | PlugUpdate";
-        } else {
-            plug_commands = "PlugUpgrade | PlugUpdate";
-        }
         match self {
             PluginFramework::NeoBundle => "NeoBundleUpdate",
             PluginFramework::Vundle => "PluginUpdate",
-            PluginFramework::Plug => plug_commands,
+            PluginFramework::Plug => {
+                if cleanup {
+                    "PlugUpgrade | PlugClean | PlugUpdate"
+                } else {
+                    "PlugUpgrade | PlugUpdate"
+                }
+            }
             PluginFramework::Dein => "call dein#install() | call dein#update()",
         }
     }
