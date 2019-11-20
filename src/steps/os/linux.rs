@@ -273,17 +273,23 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes:
     if let Some(sudo) = &sudo {
         let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("/usr/bin/apt"));
         run_type.execute(&sudo).arg(&apt).arg("update").check_run()?;
-        let mut command = run_type.execute(&sudo);
-        command.arg(&apt).arg("dist-upgrade").check_run()?;
 
+        let mut command = run_type.execute(&sudo);
+        command.arg(&apt).arg("dist-upgrade");
         if yes {
             command.arg("-y");
         }
+        command.check_run()?;
 
         if cleanup {
             run_type.execute(&sudo).arg(&apt).arg("clean").check_run()?;
 
-            run_type.execute(&sudo).arg(&apt).arg("autoremove").check_run()?;
+            let mut command = run_type.execute(&sudo);
+            command.arg(&apt).arg("autoremove");
+            if yes {
+                command.arg("-y");
+            }
+            command.check_run()?;
         }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
