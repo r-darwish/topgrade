@@ -35,11 +35,17 @@ impl PluginFramework {
         }
     }
 
-    pub fn upgrade_command(self) -> &'static str {
+    pub fn upgrade_command(self, cleanup: bool) -> &'static str {
         match self {
             PluginFramework::NeoBundle => "NeoBundleUpdate",
             PluginFramework::Vundle => "PluginUpdate",
-            PluginFramework::Plug => "PlugUpgrade | PlugUpdate",
+            PluginFramework::Plug => {
+                if cleanup {
+                    "PlugUpgrade | PlugClean | PlugUpdate"
+                } else {
+                    "PlugUpgrade | PlugUpdate"
+                }
+            }
             PluginFramework::Dein => "call dein#install() | call dein#update()",
         }
     }
@@ -62,14 +68,20 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 }
 
 #[must_use]
-fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, run_type: RunType) -> Result<(), Error> {
+fn upgrade(
+    vim: &PathBuf,
+    vimrc: &PathBuf,
+    plugin_framework: PluginFramework,
+    run_type: RunType,
+    cleanup: bool,
+) -> Result<(), Error> {
     let output = run_type
         .execute(&vim)
         .args(&["-N", "-u"])
         .arg(vimrc)
         .args(&[
             "-c",
-            plugin_framework.upgrade_command(),
+            plugin_framework.upgrade_command(cleanup),
             "-c",
             "quitall",
             "-e",
@@ -93,7 +105,7 @@ fn upgrade(vim: &PathBuf, vimrc: &PathBuf, plugin_framework: PluginFramework, ru
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<(), Error> {
     let vim = require("vim")?;
 
     let output = Command::new(&vim).arg("--version").check_output()?;
@@ -105,17 +117,17 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error>
     let plugin_framework = require_option(PluginFramework::detect(&vimrc))?;
 
     print_separator(&format!("Vim ({:?})", plugin_framework));
-    upgrade(&vim, &vimrc, plugin_framework, run_type)
+    upgrade(&vim, &vimrc, plugin_framework, run_type, cleanup)
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<(), Error> {
     let nvim = require("nvim")?;
     let nvimrc = require_option(nvimrc(&base_dirs))?;
     let plugin_framework = require_option(PluginFramework::detect(&nvimrc))?;
 
     print_separator(&format!("Neovim ({:?})", plugin_framework));
-    upgrade(&nvim, &nvimrc, plugin_framework, run_type)
+    upgrade(&nvim, &nvimrc, plugin_framework, run_type, cleanup)
 }
 
 pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {

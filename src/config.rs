@@ -260,7 +260,6 @@ impl Config {
     }
 
     /// Tell whether we should perform cleanup steps.
-    #[cfg(not(windows))]
     pub fn cleanup(&self) -> bool {
         self.opt.cleanup || self.config_file.cleanup.unwrap_or(false)
     }
