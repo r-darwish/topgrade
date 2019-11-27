@@ -57,9 +57,10 @@ impl Powershell {
         let powershell = require_option(self.path.as_ref())?;
 
         print_separator("Powershell Modules Update");
+        println!("Updating modules...");
         run_type
             .execute(&powershell)
-            .args(&["-Command", "Update-Module", "-v"])
+            .args(&["-Command", "Update-Module"])
             .check_run()
     }
 
