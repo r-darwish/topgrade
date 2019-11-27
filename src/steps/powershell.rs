@@ -33,6 +33,14 @@ impl Powershell {
     }
 
     #[cfg(windows)]
+    pub fn windows_powershell() -> Self {
+        Powershell {
+            path: which("powershell").filter(|_| !is_dumb()),
+            profile: None,
+        }
+    }
+
+    #[cfg(windows)]
     pub fn has_module(powershell: &PathBuf, command: &str) -> bool {
         Command::new(&powershell)
             .args(&["-Command", &format!("Get-Module -ListAvailable {}", command)])
