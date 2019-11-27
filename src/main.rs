@@ -259,6 +259,13 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.config_dir().join("i3"));
     }
 
+    #[cfg(windows)]
+    git_repos.insert(
+        base_dirs
+            .data_local_dir()
+            .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
+    );
+
     if let Some(profile) = powershell.profile() {
         git_repos.insert(profile);
     }

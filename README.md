@@ -93,6 +93,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/bspwm
   * ~/.config/i3
   * Powershell Profile
+  * [Microsoft Terminal](https://github.com/microsoft/terminal) configuration
   * Custom defined paths
 * **Unix**: Run [zr](https://github.com/jedahan/zr) update
 * **Unix**: Run [zplug](https://github.com/zplug/zplug) update
