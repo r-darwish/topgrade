@@ -316,6 +316,12 @@ fn run() -> Result<(), Error> {
             )?;
             execute(
                 &mut report,
+                "zplugin",
+                || zsh::run_zplugin(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
                 "oh-my-zsh",
                 || zsh::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
