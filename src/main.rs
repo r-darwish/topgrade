@@ -543,12 +543,6 @@ fn run() -> Result<(), Error> {
                 || linux::run_pihole_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
-            execute(
-                &mut report,
-                "rpi-update",
-                || linux::run_rpi_update(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
         }
 
         if config.should_run(Step::Firmware) {
@@ -556,6 +550,12 @@ fn run() -> Result<(), Error> {
                 &mut report,
                 "Firmware upgrades",
                 || linux::run_fwupdmgr(run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "rpi-update",
+                || linux::run_rpi_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
         }
