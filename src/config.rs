@@ -94,7 +94,19 @@ impl ConfigFile {
     /// If the configuration file does not exist the function returns the default ConfigFile.
     fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
         let config_path = Self::ensure(base_dirs)?;
-        let mut result: Self = toml::from_str(&fs::read_to_string(config_path).context(ErrorKind::Configuration)?)
+
+        let contents = fs::read_to_string(&config_path)
+            .map_err(|e| {
+                log::error!("Unable to read {}", config_path.display());
+                e
+            })
+            .context(ErrorKind::Configuration)?;
+
+        let mut result: Self = toml::from_str(&contents)
+            .map_err(|e| {
+                log::error!("Failed to deserialize {}", config_path.display());
+                e
+            })
             .context(ErrorKind::Configuration)?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
@@ -197,7 +209,21 @@ impl Config {
 
         builder.init();
 
-        let config_file = ConfigFile::read(base_dirs).unwrap_or_else(|_| ConfigFile::default());
+        let config_file = ConfigFile::read(base_dirs).unwrap_or_else(|e| {
+            use failure::Fail;
+
+            // Inform the user about errors when loading the configuration,
+            // but fallback to the default config to at least attempt to do something
+            log::error!("failed to load configuration: {}", e);
+
+            let mut err = e.cause();
+            while let Some(e) = err {
+                log::error!("{}", e);
+                err = e.cause();
+            }
+
+            ConfigFile::default()
+        });
 
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
