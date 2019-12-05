@@ -71,6 +71,7 @@ impl ConfigFile {
     fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
+            debug!("No configuration exists");
             write(&config_path, include_str!("../config.example.toml")).map_err(|e| {
                 debug!(
                     "Unable to write the example configuration file to {}: {}. Using blank config.",
@@ -78,8 +79,7 @@ impl ConfigFile {
                     e
                 );
                 e
-            });
-            debug!("No configuration exists");
+            })?;
         }
 
         Ok(config_path)
@@ -117,7 +117,10 @@ impl ConfigFile {
         let editor = editor();
 
         debug!("Editing {} with {}", config_path.display(), editor);
-        Command::new(editor).arg(config_path).spawn().and_then(|mut p| p.wait());
+        Command::new(editor)
+            .arg(config_path)
+            .spawn()
+            .and_then(|mut p| p.wait())?;
         Ok(())
     }
 }

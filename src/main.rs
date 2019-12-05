@@ -15,7 +15,7 @@ use self::error::TopgradeError;
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
@@ -66,7 +66,7 @@ where
 fn run() -> Result<()> {
     ctrlc::set_handler();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(TopgradeError::NoBaseDirectories)?;
+    let base_dirs = directories::BaseDirs::new().ok_or(anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::from_args();
     if opt.edit_config() {
@@ -113,9 +113,6 @@ fn run() -> Result<()> {
 
             if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
-                if let Some(cause) = e.cause() {
-                    print_warning(format!("Caused by: {}", cause));
-                }
             }
         }
     }
@@ -675,28 +672,23 @@ fn main() {
         Err(error) => {
             #[cfg(all(windows, feature = "self-update"))]
             {
-                // TODO
-                // if let TopgradeError::Upgraded(status) = error.kind() {
-                //     exit(status.code().unwrap());
-                // }
+                if let Some(TopgradeError::Upgraded(status)) = error.downcast_ref::<TopgradeError>() {
+                    exit(status.code().unwrap());
+                }
             }
 
-            let should_print = true; // TODO match error.kind() {
-                                     // TopgradeError::StepFailed => false,
-                                     // TopgradeError::Retry => error
-                                     //     .cause()
-                                     //     .and_then(|cause| cause.downcast_ref::<io::Error>())
-                                     //     .filter(|io_error| io_error.kind() == io::TopgradeError::Interrupted)
-                                     //     .is_none(),
-                                     // _ => true,
-                                     //};
+            let skip_print = (error
+                .downcast_ref::<TopgradeError>()
+                .filter(|e| **e == TopgradeError::StepFailed)
+                .is_some())
+                || (error
+                    .downcast_ref::<io::Error>()
+                    .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
+                    .is_some());
 
-            // if should_print {
-            //     println!("Error: {}", error);
-            //     if let Some(cause) = error.cause() {
-            //         println!("Caused by: {}", cause);
-            //     }
-            // }
+            if !skip_print {
+                println!("Error: {}", error);
+            }
             exit(1);
         }
     }
