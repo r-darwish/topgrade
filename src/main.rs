@@ -40,7 +40,6 @@ where
                 break;
             }
             Err(e) if e.downcast_ref::<TopgradeError>().is_some() => {
-                // TODO: Check for skip step
                 break;
             }
             Err(_) => {
@@ -99,17 +98,28 @@ fn run() -> Result<()> {
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
-            // TODO
-            // #[cfg(windows)]
-            // {
-            //     let upgraded = match &result {
-            //         Ok(()) => false,
-            //         Err(e) => e.upgraded(),
-            //     };
-            //     if upgraded {
-            //         return result;
-            //     }
-            // }
+            #[cfg(windows)]
+            {
+                let upgraded = match &result {
+                    Err(e)
+                        if e.downcast_ref::<TopgradeError>()
+                            .filter(|e| {
+                                if let TopgradeError::Upgraded(_) = e {
+                                    true
+                                } else {
+                                    false
+                                }
+                            })
+                            .is_some() =>
+                    {
+                        true
+                    }
+                    _ => false,
+                };
+                if upgraded {
+                    return result;
+                }
+            }
 
             if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));

@@ -1,5 +1,7 @@
 use super::terminal::*;
-use anyhow::Result;
+#[cfg(windows)]
+use crate::error::TopgradeError;
+use anyhow::{bail, Result};
 use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
 use std::env;
@@ -46,7 +48,7 @@ pub fn self_update() -> Result<()> {
             #[cfg(windows)]
             {
                 let status = command.spawn().and_then(|mut c| c.wait())?;
-                return Err(TopgradeError::Upgraded(status).into());
+                bail!(TopgradeError::Upgraded(status));
             }
         }
     }
