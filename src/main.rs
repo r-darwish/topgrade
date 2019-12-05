@@ -11,7 +11,7 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
-use self::error::TopgradeError;
+use self::error::{TopgradeError, Upgraded};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
@@ -65,7 +65,7 @@ where
 fn run() -> Result<()> {
     ctrlc::set_handler();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(anyhow!("No base directories"))?;
+    let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::from_args();
     if opt.edit_config() {
@@ -98,30 +98,13 @@ fn run() -> Result<()> {
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
-            #[cfg(windows)]
-            {
-                let upgraded = match &result {
-                    Err(e)
-                        if e.downcast_ref::<TopgradeError>()
-                            .filter(|e| {
-                                if let TopgradeError::Upgraded(_) = e {
-                                    true
-                                } else {
-                                    false
-                                }
-                            })
-                            .is_some() =>
-                    {
-                        true
+            if let Err(e) = &result {
+                #[cfg(windows)]
+                {
+                    if e.downcast_ref::<Upgraded>().is_some() {
+                        return result;
                     }
-                    _ => false,
-                };
-                if upgraded {
-                    return result;
                 }
-            }
-
-            if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
             }
         }
@@ -682,7 +665,7 @@ fn main() {
         Err(error) => {
             #[cfg(all(windows, feature = "self-update"))]
             {
-                if let Some(TopgradeError::Upgraded(status)) = error.downcast_ref::<TopgradeError>() {
+                if let Some(Upgraded(status)) = error.downcast_ref::<Upgraded>() {
                     exit(status.code().unwrap());
                 }
             }

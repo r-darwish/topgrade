@@ -15,8 +15,9 @@ pub enum TopgradeError {
 
     #[error("A step should be skipped")]
     SkipStep,
-
-    #[cfg(all(windows, feature = "self-update"))]
-    #[error("Topgrade Upgraded")]
-    Upgraded(ExitStatus),
 }
+
+#[cfg(all(windows, feature = "self-update"))]
+#[derive(Error, Debug)]
+#[error("Topgrade Upgraded")]
+pub struct Upgraded(pub ExitStatus);
