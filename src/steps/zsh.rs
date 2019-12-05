@@ -6,7 +6,7 @@ use directories::BaseDirs;
 use std::env;
 use std::path::{Path, PathBuf};
 
-pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
 
     env::var("ZR_HOME")
@@ -26,7 +26,7 @@ pub fn zshrc(base_dirs: &BaseDirs) -> PathBuf {
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
 }
 
-pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
     env::var("ADOTDIR")
@@ -40,7 +40,7 @@ pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error>
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
-pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
@@ -55,7 +55,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
     run_type.execute(zsh).args(&["-c", cmd.as_str()]).check_run()
 }
 
-pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
     base_dirs.home_dir().join(".oh-my-zsh").require()?;

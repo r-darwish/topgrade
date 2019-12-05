@@ -1,7 +1,7 @@
-use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
+use anyhow::Result;
 use directories::BaseDirs;
 #[cfg(windows)]
 use std::env;
@@ -35,7 +35,7 @@ impl Emacs {
         self.directory.as_ref()
     }
 
-    pub fn upgrade(&self, run_type: RunType) -> Result<(), Error> {
+    pub fn upgrade(&self, run_type: RunType) -> Result<()> {
         let emacs = require("emacs")?;
         let init_file = require_option(self.directory.as_ref())?.join("init.el").require()?;
 

@@ -1,17 +1,18 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::TopgradeError;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::require;
+use anyhow::Result;
 use std::process::Command;
 
-pub fn run_chocolatey(run_type: RunType) -> Result<(), Error> {
+pub fn run_chocolatey(run_type: RunType) -> Result<()> {
     let choco = require("choco")?;
 
     print_separator("Chocolatey");
     run_type.execute(&choco).args(&["upgrade", "all"]).check_run()
 }
 
-pub fn run_scoop(run_type: RunType) -> Result<(), Error> {
+pub fn run_scoop(run_type: RunType) -> Result<()> {
     let scoop = require("scoop")?;
 
     print_separator("Scoop");
@@ -20,12 +21,12 @@ pub fn run_scoop(run_type: RunType) -> Result<(), Error> {
     run_type.execute(&scoop).args(&["update", "*"]).check_run()
 }
 
-pub fn run_wsl_topgrade(run_type: RunType) -> Result<(), Error> {
+pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {
     let wsl = require("wsl")?;
     let topgrade = Command::new(&wsl)
         .args(&["bash", "-l", "which", "topgrade"])
         .check_output()
-        .map_err(|_| ErrorKind::SkipStep)?;
+        .map_err(|_| TopgradeError::SkipStep)?;
 
     run_type
         .execute(&wsl)

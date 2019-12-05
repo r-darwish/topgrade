@@ -1,4 +1,6 @@
-use super::error::{Error, ErrorKind};
+use crate::error::TopgradeError;
+use anyhow::Result;
+
 use log::{debug, error};
 use std::env;
 use std::ffi::OsStr;
@@ -8,21 +10,21 @@ use std::process::{ExitStatus, Output};
 use which_crate;
 
 pub trait Check {
-    fn check(self) -> Result<(), Error>;
+    fn check(self) -> Result<()>;
 }
 
 impl Check for ExitStatus {
-    fn check(self) -> Result<(), Error> {
+    fn check(self) -> Result<()> {
         if self.success() {
             Ok(())
         } else {
-            Err(ErrorKind::ProcessFailed(self).into())
+            Err(TopgradeError::ProcessFailed(self).into())
         }
     }
 }
 
 impl Check for Output {
-    fn check(self) -> Result<(), Error> {
+    fn check(self) -> Result<()> {
         self.status.check()
     }
 }
@@ -35,7 +37,7 @@ where
     fn is_descendant_of(&self, ancestor: &Path) -> bool;
 
     /// Returns the path if it exists or ErrorKind::SkipStep otherwise
-    fn require(self) -> Result<Self, Error>;
+    fn require(self) -> Result<Self>;
 }
 
 impl<T> PathExt for T
@@ -54,11 +56,11 @@ where
         self.as_ref().iter().zip(ancestor.iter()).all(|(a, b)| a == b)
     }
 
-    fn require(self) -> Result<Self, Error> {
+    fn require(self) -> Result<Self> {
         if self.as_ref().exists() {
             Ok(self)
         } else {
-            Err(ErrorKind::SkipStep.into())
+            Err(TopgradeError::SkipStep.into())
         }
     }
 }
@@ -176,7 +178,7 @@ mod tests {
     }
 }
 
-pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error> {
+pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
     match which_crate::which(&binary_name) {
         Ok(path) => {
             debug!("Detected {:?} as {:?}", &path, &binary_name);
@@ -185,7 +187,7 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error
         Err(e) => match e.kind() {
             which_crate::ErrorKind::CannotFindBinaryPath => {
                 debug!("Cannot find {:?}", &binary_name);
-                Err(ErrorKind::SkipStep.into())
+                Err(TopgradeError::SkipStep.into())
             }
             _ => {
                 panic!("Detecting {:?} failed: {}", &binary_name, e);
@@ -195,10 +197,10 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf, Error
 }
 
 #[allow(dead_code)]
-pub fn require_option<T>(option: Option<T>) -> Result<T, Error> {
+pub fn require_option<T>(option: Option<T>) -> Result<T> {
     if let Some(value) = option {
         Ok(value)
     } else {
-        Err(ErrorKind::SkipStep.into())
+        Err(TopgradeError::SkipStep.into())
     }
 }

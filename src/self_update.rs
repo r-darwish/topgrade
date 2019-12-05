@@ -1,6 +1,6 @@
-use super::error::{Error, ErrorKind};
 use super::terminal::*;
-use failure::ResultExt;
+use crate::error::TopgradeError;
+use anyhow::Result;
 use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
 use std::env;
@@ -8,7 +8,7 @@ use std::env;
 use std::os::unix::process::CommandExt;
 use std::process::Command;
 
-pub fn self_update() -> Result<(), Error> {
+pub fn self_update() -> Result<()> {
     print_separator("Self update");
     let current_exe = env::current_exe();
 
@@ -23,8 +23,7 @@ pub fn self_update() -> Result<(), Error> {
         .current_version(self_update_crate::cargo_crate_version!())
         .no_confirm(true)
         .build()
-        .and_then(Update::update_extended)
-        .context(ErrorKind::SelfUpdate)?;
+        .and_then(Update::update_extended)?;
 
     if let GitHubUpdateStatus::Updated(release) = &result {
         println!("\nTopgrade upgraded to {}:\n", release.version());
@@ -36,22 +35,19 @@ pub fn self_update() -> Result<(), Error> {
     {
         if result.updated() {
             print_warning("Respawning...");
-            let mut command = Command::new(current_exe.context(ErrorKind::SelfUpdate)?);
+            let mut command = Command::new(current_exe?);
             command.args(env::args().skip(1)).env("TOPGRADE_NO_SELF_UPGRADE", "");
 
             #[cfg(unix)]
             {
                 let err = command.exec();
-                Err(err).context(ErrorKind::SelfUpdate)?
+                Err(err)?
             }
 
             #[cfg(windows)]
             {
-                let status = command
-                    .spawn()
-                    .and_then(|mut c| c.wait())
-                    .context(ErrorKind::SelfUpdate)?;
-                return Err(ErrorKind::Upgraded(status).into());
+                let status = command.spawn().and_then(|mut c| c.wait())?;
+                return Err(TopgradeError::Upgraded(status).into());
             }
         }
     }
