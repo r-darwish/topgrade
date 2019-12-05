@@ -1,5 +1,4 @@
 use super::terminal::*;
-use crate::error::TopgradeError;
 use anyhow::Result;
 use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};

@@ -1,9 +1,9 @@
-use crate::error::Error;
 #[cfg(target_os = "linux")]
 use crate::error::TopgradeError;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
+use anyhow::Result;
 use directories::BaseDirs;
 use std::env;
 use std::path::{Path, PathBuf};

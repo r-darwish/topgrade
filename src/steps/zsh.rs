@@ -1,7 +1,7 @@
-use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
+use anyhow::Result;
 use directories::BaseDirs;
 use std::env;
 use std::path::{Path, PathBuf};

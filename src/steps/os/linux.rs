@@ -1,9 +1,9 @@
 use crate::config::Config;
-use crate::error::{TopgradeError};
+use crate::error::TopgradeError;
 use crate::executor::{ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
-use failure::ResultExt;
+use anyhow::Result;
 use ini::Ini;
 use log::debug;
 use serde::Deserialize;
@@ -71,7 +71,7 @@ impl Distribution {
 
     pub fn detect() -> Result<Self> {
         if PathBuf::from(OS_RELEASE_PATH).exists() {
-            let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?;
+            let os_release = Ini::load_from_file(OS_RELEASE_PATH)?;
 
             return Self::parse_os_release(&os_release);
         }
