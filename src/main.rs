@@ -318,6 +318,12 @@ fn run() -> Result<()> {
             )?;
             execute(
                 &mut report,
+                "zplugin",
+                || zsh::run_zplugin(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
                 "oh-my-zsh",
                 || zsh::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
@@ -539,12 +545,6 @@ fn run() -> Result<()> {
                 || linux::run_pihole_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
-            execute(
-                &mut report,
-                "rpi-update",
-                || linux::run_rpi_update(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
         }
 
         if config.should_run(Step::Firmware) {
@@ -552,6 +552,12 @@ fn run() -> Result<()> {
                 &mut report,
                 "Firmware upgrades",
                 || linux::run_fwupdmgr(run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "rpi-update",
+                || linux::run_rpi_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
         }
