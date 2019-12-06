@@ -4,12 +4,26 @@ on: [push]
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+     strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
     - uses: actions/checkout@v1
     - uses: actions-rs/cargo@v1.0.1
+      name: Check format
       with:
-        command: check
+        command: fmt --all -- --check
+    - uses: actions-rs/cargo@v1.0.1
+      name: Run clippy
+      with:
+        command: clippy --all-targets -- -D warnings
+    - uses: actions-rs/cargo@v1.0.1
+      name: Run clippy (All features)
+      with:
+        command: clippy --all-targets --all-features -- -D warnings
+    - uses: actions-rs/cargo@v1.0.1
+      name: Run tests
+      with:
+        command: test
    
