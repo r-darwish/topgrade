@@ -13,7 +13,7 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
-        override: true
+        profile: minimal
         components: rustfmt, clippy
     - uses: actions-rs/cargo@v1.0.1
       name: Check format
