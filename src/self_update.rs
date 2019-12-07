@@ -42,7 +42,7 @@ pub fn self_update() -> Result<()> {
             #[cfg(unix)]
             {
                 let err = command.exec();
-                Err(err)?
+                bail!(err);
             }
 
             #[cfg(windows)]

@@ -11,7 +11,9 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
-use self::error::{TopgradeError, Upgraded};
+use self::error::TopgradeError;
+#[cfg(all(windows, feature = "self-update"))]
+use self::error::Upgraded;
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
