@@ -14,6 +14,7 @@ jobs:
       with:
         toolchain: stable
         profile: minimal
+        override: true
         components: rustfmt, clippy
     - uses: actions-rs/cargo@v1.0.1
       name: Check format
