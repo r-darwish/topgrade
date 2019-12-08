@@ -1,4 +1,4 @@
-use crate::error::{TopgradeError};
+use crate::error::TopgradeError;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::require_option;
