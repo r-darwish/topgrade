@@ -85,15 +85,15 @@ pub fn run_in_tmux(args: &Option<String>) -> ! {
 
     let tmux = Tmux::new(args);
 
-    if !tmux.has_session("topgrade").expect("Error launching tmux") {
-        tmux.new_session("topgrade").expect("Error launching tmux");
+    if !tmux.has_session("topgrade").expect("Error detecting a tmux session") {
+        tmux.new_session("topgrade").expect("Error creating a tmux session");
     }
 
-    tmux.run_in_session(&command).expect("Error launching tmux");
+    tmux.run_in_session(&command).expect("Error running topgrade in tmux");
     tmux.build()
         .args(&["kill-window", "-t", "topgrade:dummy"])
         .output()
-        .unwrap();
+        .expect("Error killing the dummy tmux window");
 
     if env::var("TMUX").is_err() {
         let err = tmux.build().args(&["attach", "-t", "topgrade"]).exec();

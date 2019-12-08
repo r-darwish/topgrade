@@ -58,8 +58,10 @@ where
 
     fn require(self) -> Result<Self> {
         if self.as_ref().exists() {
+            debug!("Path {:?} exists", self.as_ref());
             Ok(self)
         } else {
+            debug!("Path {:?} doesn't exist", self.as_ref());
             Err(TopgradeError::SkipStep.into())
         }
     }
