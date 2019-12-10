@@ -1,4 +1,4 @@
-use crate::error::TopgradeError;
+use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
@@ -139,12 +139,12 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
     let composer_home = Command::new(&composer)
         .args(&["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
-        .map_err(|_| (TopgradeError::SkipStep))
+        .map_err(|_| (SkipStep))
         .map(|s| PathBuf::from(s.trim()))?
         .require()?;
 
     if !composer_home.is_descendant_of(base_dirs.home_dir()) {
-        return Err(TopgradeError::SkipStep.into());
+        return Err(SkipStep.into());
     }
 
     print_separator("Composer");
@@ -171,7 +171,7 @@ pub fn run_remote_topgrade(
         #[cfg(unix)]
         {
             crate::tmux::run_remote_topgrade(hostname, &ssh, _tmux_arguments)?;
-            Err(TopgradeError::SkipStep.into())
+            Err(SkipStep.into())
         }
 
         #[cfg(not(unix))]

@@ -1,4 +1,4 @@
-use crate::error::TopgradeError;
+use crate::error::{SkipStep, TopgradeError};
 use anyhow::Result;
 
 use log::{debug, error};
@@ -62,7 +62,7 @@ where
             Ok(self)
         } else {
             debug!("Path {:?} doesn't exist", self.as_ref());
-            Err(TopgradeError::SkipStep.into())
+            Err(SkipStep.into())
         }
     }
 }
@@ -189,7 +189,7 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
         Err(e) => match e.kind() {
             which_crate::ErrorKind::CannotFindBinaryPath => {
                 debug!("Cannot find {:?}", &binary_name);
-                Err(TopgradeError::SkipStep.into())
+                Err(SkipStep.into())
             }
             _ => {
                 panic!("Detecting {:?} failed: {}", &binary_name, e);
@@ -203,6 +203,6 @@ pub fn require_option<T>(option: Option<T>) -> Result<T> {
     if let Some(value) = option {
         Ok(value)
     } else {
-        Err(TopgradeError::SkipStep.into())
+        Err(SkipStep.into())
     }
 }

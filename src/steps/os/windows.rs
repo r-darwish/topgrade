@@ -1,4 +1,4 @@
-use crate::error::TopgradeError;
+use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::require;
@@ -26,7 +26,7 @@ pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {
     let topgrade = Command::new(&wsl)
         .args(&["bash", "-l", "which", "topgrade"])
         .check_output()
-        .map_err(|_| TopgradeError::SkipStep)?;
+        .map_err(|_| SkipStep)?;
 
     run_type
         .execute(&wsl)

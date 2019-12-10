@@ -1,4 +1,4 @@
-use crate::error::TopgradeError;
+use crate::error::{SkipStep, TopgradeError};
 use anyhow::Result;
 
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
@@ -112,7 +112,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Re
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        return Err(TopgradeError::SkipStep.into());
+        return Err(SkipStep.into());
     }
 
     let vimrc = require_option(vimrc(&base_dirs))?;

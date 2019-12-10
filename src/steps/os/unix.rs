@@ -1,5 +1,5 @@
 #[cfg(target_os = "linux")]
-use crate::error::TopgradeError;
+use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
@@ -65,7 +65,7 @@ pub fn run_nix(run_type: RunType) -> Result<()> {
 
         if let Ok(Distribution::NixOS) = Distribution::detect() {
             debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
-            return Err(TopgradeError::SkipStep.into());
+            return Err(SkipStep.into());
         }
     }
 

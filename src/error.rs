@@ -12,10 +12,11 @@ pub enum TopgradeError {
     #[error("Unknown Linux Distribution")]
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
-
-    #[error("A step should be skipped")]
-    SkipStep,
 }
+
+#[derive(Error, Debug)]
+#[error("A step should be skipped")]
+pub struct SkipStep;
 
 #[cfg(all(windows, feature = "self-update"))]
 #[derive(Error, Debug)]

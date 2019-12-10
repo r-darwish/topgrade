@@ -11,9 +11,9 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
-use self::error::TopgradeError;
 #[cfg(all(windows, feature = "self-update"))]
 use self::error::Upgraded;
+use self::error::{SkipStep, TopgradeError};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
@@ -41,7 +41,7 @@ where
                 report.push_result(Some((key, true)));
                 break;
             }
-            Err(e) if e.downcast_ref::<TopgradeError>().is_some() => {
+            Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
                 break;
             }
             Err(_) => {

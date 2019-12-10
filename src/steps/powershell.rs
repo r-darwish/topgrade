@@ -1,5 +1,5 @@
 #[cfg(windows)]
-use crate::error::TopgradeError;
+use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
@@ -69,7 +69,7 @@ impl Powershell {
         let powershell = require_option(self.path.as_ref())?;
 
         if !Self::has_module(&powershell, "PSWindowsUpdate") {
-            return Err(TopgradeError::SkipStep.into());
+            return Err(SkipStep.into());
         }
         print_separator("Windows Update");
 

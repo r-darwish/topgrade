@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::error::TopgradeError;
+use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
@@ -438,7 +438,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let snap = require("snap")?;
 
     if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
-        return Err(TopgradeError::SkipStep.into());
+        return Err(SkipStep.into());
     }
     print_separator("snap");
 

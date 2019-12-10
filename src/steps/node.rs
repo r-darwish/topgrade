@@ -1,4 +1,4 @@
-use crate::error::TopgradeError;
+use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
@@ -35,7 +35,7 @@ pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
     let npm_root = npm.root()?;
     if !npm_root.is_descendant_of(base_dirs.home_dir()) {
-        return Err(TopgradeError::SkipStep.into());
+        return Err(SkipStep.into());
     }
 
     print_separator("Node Package Manager");
