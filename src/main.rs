@@ -13,7 +13,7 @@ mod utils;
 use self::config::{CommandLineArgs, Config, Step};
 #[cfg(all(windows, feature = "self-update"))]
 use self::error::Upgraded;
-use self::error::{SkipStep, TopgradeError};
+use self::error::{SkipStep, StepFailed};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
@@ -655,7 +655,7 @@ fn run() -> Result<()> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(TopgradeError::StepFailed.into())
+        Err(StepFailed.into())
     }
 }
 
@@ -672,10 +672,7 @@ fn main() {
                 }
             }
 
-            let skip_print = (error
-                .downcast_ref::<TopgradeError>()
-                .filter(|e| **e == TopgradeError::StepFailed)
-                .is_some())
+            let skip_print = (error.downcast_ref::<StepFailed>().is_some())
                 || (error
                     .downcast_ref::<io::Error>()
                     .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)

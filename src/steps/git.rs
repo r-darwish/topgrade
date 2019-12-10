@@ -164,7 +164,7 @@ impl Git {
         let mut runtime = Runtime::new().unwrap();
         let results: Vec<bool> = runtime.block_on(join_all(futures))?;
         if results.into_iter().any(|success| !success) {
-            Err(TopgradeError::StepFailed.into())
+            Err(TopgradeError::PullFailed.into())
         } else {
             Ok(())
         }

@@ -3,16 +3,20 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum TopgradeError {
-    #[error("A step failed")]
-    StepFailed,
-
     #[error("{0}")]
     ProcessFailed(ExitStatus),
 
     #[error("Unknown Linux Distribution")]
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
+
+    #[error("A pull action was failed")]
+    PullFailed,
 }
+
+#[derive(Error, Debug)]
+#[error("A step failed")]
+pub struct StepFailed;
 
 #[derive(Error, Debug)]
 #[error("A step should be skipped")]
