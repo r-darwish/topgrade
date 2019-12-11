@@ -25,6 +25,9 @@
 # Arguments to pass Git when pulling Repositories
 #git_arguments = "--rebase --autostash"
 
+# Arguments to pass tmux when pulling Repositories
+#tmux_arguments = "-S /var/tmux.sock"
+
 # Arguments to pass yay when updating packages
 #yay_arguments = "--nodevel"
 

@@ -1,9 +1,9 @@
 use crate::config::Config;
-use crate::error::{Error, ErrorKind};
+use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
-use failure::ResultExt;
+use anyhow::Result;
 use ini::Ini;
 use log::debug;
 use serde::Deserialize;
@@ -25,6 +25,7 @@ struct OsRelease {
 pub enum Distribution {
     Arch,
     CentOS,
+    ClearLinux,
     Fedora,
     Debian,
     Gentoo,
@@ -32,10 +33,11 @@ pub enum Distribution {
     Void,
     Solus,
     Exherbo,
+    NixOS,
 }
 
 impl Distribution {
-    fn parse_os_release(os_release: &ini::Ini) -> Result<Self, Error> {
+    fn parse_os_release(os_release: &ini::Ini) -> Result<Self> {
         let section = os_release.general_section();
         let id = section.get("ID").map(String::as_str);
         let id_like: Option<Vec<&str>> = section
@@ -54,6 +56,7 @@ impl Distribution {
 
         Ok(match id {
             Some("centos") | Some("ol") => Distribution::CentOS,
+            Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
@@ -61,22 +64,23 @@ impl Distribution {
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
-            _ => return Err(ErrorKind::UnknownLinuxDistribution.into()),
+            Some("nixos") => Distribution::NixOS,
+            _ => return Err(TopgradeError::UnknownLinuxDistribution.into()),
         })
     }
 
-    pub fn detect() -> Result<Self, Error> {
+    pub fn detect() -> Result<Self> {
         if PathBuf::from(OS_RELEASE_PATH).exists() {
-            let os_release = Ini::load_from_file(OS_RELEASE_PATH).context(ErrorKind::UnknownLinuxDistribution)?;
+            let os_release = Ini::load_from_file(OS_RELEASE_PATH)?;
 
             return Self::parse_os_release(&os_release);
         }
 
-        Err(ErrorKind::UnknownLinuxDistribution.into())
+        Err(TopgradeError::UnknownLinuxDistribution.into())
     }
 
     #[must_use]
-    pub fn upgrade(self, sudo: &Option<PathBuf>, run_type: RunType, config: &Config) -> Result<(), Error> {
+    pub fn upgrade(self, sudo: &Option<PathBuf>, run_type: RunType, config: &Config) -> Result<()> {
         print_separator("System update");
 
         let yes = config.yes();
@@ -85,12 +89,14 @@ impl Distribution {
         match self {
             Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &config.yay_arguments()),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes),
+            Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
             Distribution::Solus => upgrade_solus(&sudo, run_type),
             Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
+            Distribution::NixOS => upgrade_nixos(&sudo, cleanup, run_type),
         }
     }
 
@@ -128,7 +134,7 @@ fn upgrade_arch_linux(
     run_type: RunType,
     yes: bool,
     yay_arguments: &str,
-) -> Result<(), Error> {
+) -> Result<()> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
 
     let path = {
@@ -146,11 +152,11 @@ fn upgrade_arch_linux(
             .and_then(|mut p| p.wait())
             .ok();
 
-        let mut command = run_type.execute(yay);
+        let mut command = run_type.execute(&yay);
 
         command
             .arg("--pacman")
-            .arg(pacman)
+            .arg(&pacman)
             .arg("-Syu")
             .args(yay_arguments.split_whitespace())
             .env("PATH", path);
@@ -159,27 +165,39 @@ fn upgrade_arch_linux(
             command.arg("--noconfirm");
         }
         command.check_run()?;
+
+        if cleanup {
+            let mut command = run_type.execute(&yay);
+            command.arg("--pacman").arg(&pacman).arg("-Scc");
+            if yes {
+                command.arg("--noconfirm");
+            }
+            command.check_run()?;
+        }
     } else if let Some(sudo) = &sudo {
         let mut command = run_type.execute(&sudo);
-        command.arg(pacman).arg("-Syu").env("PATH", path);
+        command.arg(&pacman).arg("-Syu").env("PATH", path);
         if yes {
             command.arg("--noconfirm");
         }
         command.check_run()?;
+
+        if cleanup {
+            let mut command = run_type.execute(&sudo);
+            command.arg(&pacman).arg("-Scc");
+            if yes {
+                command.arg("--noconfirm");
+            }
+            command.check_run()?;
+        }
     } else {
         print_warning("Neither sudo nor yay detected. Skipping system upgrade");
-    }
-
-    if cleanup {
-        if let Some(sudo) = &sudo {
-            run_type.execute(&sudo).args(&["/usr/bin/pacman", "-Scc"]).check_run()?;
-        }
     }
 
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Result<(), Error> {
+fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Result<()> {
     if let Some(sudo) = &sudo {
         let mut command = run_type.execute(&sudo);
         command
@@ -201,7 +219,7 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Resul
     Ok(())
 }
 
-fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
         run_type
             .execute(&sudo)
@@ -219,7 +237,7 @@ fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> 
     Ok(())
 }
 
-fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
         for _ in 0..2 {
             run_type
@@ -234,7 +252,7 @@ fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> 
     Ok(())
 }
 
-fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
         if let Some(layman) = which("layman") {
             run_type.execute(&sudo).arg(layman).args(&["-s", "ALL"]).check_run()?;
@@ -263,21 +281,27 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<(), Error> {
+fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<()> {
     if let Some(sudo) = &sudo {
         let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("/usr/bin/apt"));
         run_type.execute(&sudo).arg(&apt).arg("update").check_run()?;
-        let mut command = run_type.execute(&sudo);
-        command.arg(&apt).arg("dist-upgrade").check_run()?;
 
+        let mut command = run_type.execute(&sudo);
+        command.arg(&apt).arg("dist-upgrade");
         if yes {
             command.arg("-y");
         }
+        command.check_run()?;
 
         if cleanup {
             run_type.execute(&sudo).arg(&apt).arg("clean").check_run()?;
 
-            run_type.execute(&sudo).arg(&apt).arg("autoremove").check_run()?;
+            let mut command = run_type.execute(&sudo);
+            command.arg(&apt).arg("autoremove");
+            if yes {
+                command.arg("-y");
+            }
+            command.check_run()?;
         }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -286,7 +310,7 @@ fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes:
     Ok(())
 }
 
-fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
         run_type
             .execute(&sudo)
@@ -299,7 +323,20 @@ fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<(), Error>
     Ok(())
 }
 
-fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<(), Error> {
+fn upgrade_clearlinux(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
+    if let Some(sudo) = &sudo {
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/swupd", "update"])
+            .check_run()?;
+    } else {
+        print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
         run_type.execute(&sudo).args(&["/usr/bin/cave", "sync"]).check_run()?;
 
@@ -331,7 +368,27 @@ fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> 
     Ok(())
 }
 
-pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<()> {
+    if let Some(sudo) = &sudo {
+        run_type
+            .execute(&sudo)
+            .args(&["/run/current-system/sw/bin/nixos-rebuild", "switch", "--upgrade"])
+            .check_run()?;
+
+        if cleanup {
+            run_type
+                .execute(&sudo)
+                .args(&["/run/current-system/sw/bin/nix-collect-garbage", "-d"])
+                .check_run()?;
+        }
+    } else {
+        print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let needrestart = require("needrestart")?;
 
@@ -343,7 +400,7 @@ pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), 
 }
 
 #[must_use]
-pub fn run_fwupdmgr(run_type: RunType) -> Result<(), Error> {
+pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
     let fwupdmgr = require("fwupdmgr")?;
 
     print_separator("Firmware upgrades");
@@ -353,7 +410,7 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<(), Error> {
 
     if let ExecutorExitStatus::Wet(e) = exit_status {
         if !(e.success() || e.code().map(|c| c == 2).unwrap_or(false)) {
-            return Err(ErrorKind::ProcessFailed(e).into());
+            return Err(TopgradeError::ProcessFailed(e).into());
         }
     }
 
@@ -361,7 +418,7 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<(), Error> {
 }
 
 #[must_use]
-pub fn flatpak_update(run_type: RunType) -> Result<(), Error> {
+pub fn flatpak_update(run_type: RunType) -> Result<()> {
     let flatpak = require("flatpak")?;
     print_separator("Flatpak User Packages");
 
@@ -376,12 +433,12 @@ pub fn flatpak_update(run_type: RunType) -> Result<(), Error> {
 }
 
 #[must_use]
-pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let snap = require("snap")?;
 
     if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
-        return Err(ErrorKind::SkipStep.into());
+        return Err(SkipStep.into());
     }
     print_separator("snap");
 
@@ -389,7 +446,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> 
 }
 
 #[must_use]
-pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let rpi_update = require("rpi-update")?;
 
@@ -399,7 +456,7 @@ pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), E
 }
 
 #[must_use]
-pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let pihole = require("pihole")?;
 
@@ -409,7 +466,7 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
 }
 
 #[must_use]
-pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<(), Error> {
+pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let etc_update = require("etc-update")?;
     print_separator("etc-update");
@@ -437,6 +494,11 @@ mod tests {
     #[test]
     fn test_centos() {
         test_template(&include_str!("os_release/centos"), Distribution::CentOS);
+    }
+
+    #[test]
+    fn test_clearlinux() {
+        test_template(&include_str!("os_release/clearlinux"), Distribution::ClearLinux);
     }
 
     #[test]
@@ -492,5 +554,10 @@ mod tests {
     #[test]
     fn test_exherbo() {
         test_template(&include_str!("os_release/exherbo"), Distribution::Exherbo);
+    }
+
+    #[test]
+    fn test_nixos() {
+        test_template(&include_str!("os_release/nixos"), Distribution::NixOS);
     }
 }

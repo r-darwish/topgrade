@@ -1,7 +1,7 @@
-use crate::error::Error;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
+use anyhow::Result;
 use directories::BaseDirs;
 #[cfg(windows)]
 use std::env;
@@ -35,24 +35,30 @@ impl Emacs {
         self.directory.as_ref()
     }
 
-    pub fn upgrade(&self, run_type: RunType) -> Result<(), Error> {
+    pub fn upgrade(&self, run_type: RunType) -> Result<()> {
         let emacs = require("emacs")?;
         let init_file = require_option(self.directory.as_ref())?.join("init.el").require()?;
 
         print_separator("Emacs");
 
-        // Convert the whitespace in the emacs lisp code to NONBREAKING SPACE.
-        let escaped: String = EMACS_UPGRADE
-            .chars()
-            .map(|c| if c.is_whitespace() { '\u{00a0}' } else { c })
-            .collect();
+        let mut command = run_type.execute(&emacs);
 
-        run_type
-            .execute(&emacs)
-            .args(&["--batch", "-l"])
+        command
+            .args(&["--batch", "--debug-init", "-l"])
             .arg(init_file)
-            .arg("--eval")
-            .arg(escaped)
-            .check_run()
+            .arg("--eval");
+
+        #[cfg(unix)]
+        command.arg(
+            EMACS_UPGRADE
+                .chars()
+                .map(|c| if c.is_whitespace() { '\u{00a0}' } else { c })
+                .collect::<String>(),
+        );
+
+        #[cfg(not(unix))]
+        command.arg(EMACS_UPGRADE);
+
+        command.check_run()
     }
 }

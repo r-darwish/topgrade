@@ -1,92 +1,28 @@
-use failure::{Backtrace, Context, Fail};
-use std::fmt::{self, Display};
 use std::process::ExitStatus;
+use thiserror::Error;
 
-#[derive(Debug)]
-pub struct Error {
-    inner: Context<ErrorKind>,
-}
-
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Fail)]
-pub enum ErrorKind {
-    #[fail(display = "Error asking the user for retry")]
-    Retry,
-
-    #[fail(display = "Cannot find the user base directories")]
-    NoBaseDirectories,
-
-    #[fail(display = "A step failed")]
-    StepFailed,
-
-    #[fail(display = "Error reading the configuration")]
-    Configuration,
-
-    #[fail(display = "A custom pre-command failed")]
-    PreCommand,
-
-    #[fail(display = "{}", _0)]
+#[derive(Error, Debug, PartialEq)]
+pub enum TopgradeError {
+    #[error("{0}")]
     ProcessFailed(ExitStatus),
 
-    #[fail(display = "Unknown Linux Distribution")]
+    #[error("Unknown Linux Distribution")]
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
 
-    #[fail(display = "Process execution failure")]
-    ProcessExecution,
-
-    #[fail(display = "Self-update failure")]
-    #[cfg(feature = "self-update")]
-    SelfUpdate,
-
-    #[fail(display = "A step should be skipped")]
-    SkipStep,
-
-    #[cfg(all(windows, feature = "self-update"))]
-    #[fail(display = "Topgrade Upgraded")]
-    Upgraded(ExitStatus),
+    #[error("A pull action was failed")]
+    PullFailed,
 }
 
-impl Fail for Error {
-    fn cause(&self) -> Option<&dyn Fail> {
-        self.inner.cause()
-    }
+#[derive(Error, Debug)]
+#[error("A step failed")]
+pub struct StepFailed;
 
-    fn backtrace(&self) -> Option<&Backtrace> {
-        self.inner.backtrace()
-    }
-}
+#[derive(Error, Debug)]
+#[error("A step should be skipped")]
+pub struct SkipStep;
 
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        Display::fmt(&self.inner, f)
-    }
-}
-
-impl Error {
-    pub fn kind(&self) -> ErrorKind {
-        *self.inner.get_context()
-    }
-
-    #[cfg(all(windows, feature = "self-update"))]
-    pub fn upgraded(&self) -> bool {
-        if let ErrorKind::Upgraded(_) = self.kind() {
-            true
-        } else {
-            false
-        }
-    }
-}
-
-impl From<ErrorKind> for Error {
-    fn from(kind: ErrorKind) -> Error {
-        Error {
-            inner: Context::new(kind),
-        }
-    }
-}
-
-impl From<Context<ErrorKind>> for Error {
-    fn from(inner: Context<ErrorKind>) -> Error {
-        Error { inner }
-    }
-}
+#[cfg(all(windows, feature = "self-update"))]
+#[derive(Error, Debug)]
+#[error("Topgrade Upgraded")]
+pub struct Upgraded(pub ExitStatus);

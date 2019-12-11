@@ -11,11 +11,13 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
-use self::error::{Error, ErrorKind};
+#[cfg(all(windows, feature = "self-update"))]
+use self::error::Upgraded;
+use self::error::{SkipStep, StepFailed};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
-use failure::{Fail, ResultExt};
+use anyhow::{anyhow, Result};
 use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
@@ -26,9 +28,9 @@ use std::io;
 use std::process::exit;
 use structopt::StructOpt;
 
-fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
+fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<()>
 where
-    F: Fn() -> Result<(), Error>,
+    F: Fn() -> Result<()>,
     M: Into<Cow<'a, str>> + Debug,
 {
     debug!("Step {:?}", key);
@@ -39,7 +41,7 @@ where
                 report.push_result(Some((key, true)));
                 break;
             }
-            Err(ref e) if e.kind() == ErrorKind::SkipStep => {
+            Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
                 break;
             }
             Err(_) => {
@@ -49,7 +51,7 @@ where
                 }
 
                 let should_ask = interrupted || !no_retry;
-                let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
+                let should_retry = should_ask && should_retry(interrupted)?;
 
                 if !should_retry {
                     report.push_result(Some((key, false)));
@@ -62,10 +64,10 @@ where
     Ok(())
 }
 
-fn run() -> Result<(), Error> {
+fn run() -> Result<()> {
     ctrlc::set_handler();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
+    let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::from_args();
     if opt.edit_config() {
@@ -79,7 +81,7 @@ fn run() -> Result<(), Error> {
     if config.run_in_tmux() && env::var("TOPGRADE_INSIDE_TMUX").is_err() {
         #[cfg(unix)]
         {
-            tmux::run_in_tmux();
+            tmux::run_in_tmux(config.tmux_arguments());
         }
     }
 
@@ -98,29 +100,21 @@ fn run() -> Result<(), Error> {
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
-            #[cfg(windows)]
-            {
-                let upgraded = match &result {
-                    Ok(()) => false,
-                    Err(e) => e.upgraded(),
-                };
-                if upgraded {
-                    return result;
+            if let Err(e) = &result {
+                #[cfg(windows)]
+                {
+                    if e.downcast_ref::<Upgraded>().is_some() {
+                        return result;
+                    }
                 }
-            }
-
-            if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
-                if let Some(cause) = e.cause() {
-                    print_warning(format!("Caused by: {}", cause));
-                }
             }
         }
     }
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, run_type).context(ErrorKind::PreCommand)?;
+            generic::run_custom_command(&name, &command, run_type)?;
         }
     }
 
@@ -142,6 +136,7 @@ fn run() -> Result<(), Error> {
                             remote_topgrade,
                             config.ssh_arguments(),
                             config.run_in_tmux(),
+                            config.tmux_arguments(),
                         )
                     },
                     config.no_retry(),
@@ -203,6 +198,12 @@ fn run() -> Result<(), Error> {
             )?;
 
             execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+            execute(
+                &mut report,
+                "home-manager",
+                || unix::run_home_manager(run_type),
+                config.no_retry(),
+            )?;
         }
     }
 
@@ -251,6 +252,13 @@ fn run() -> Result<(), Error> {
         git_repos.insert(base_dirs.config_dir().join("bspwm"));
         git_repos.insert(base_dirs.config_dir().join("i3"));
     }
+
+    #[cfg(windows)]
+    git_repos.insert(
+        base_dirs
+            .data_local_dir()
+            .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
+    );
 
     if let Some(profile) = powershell.profile() {
         git_repos.insert(profile);
@@ -302,6 +310,12 @@ fn run() -> Result<(), Error> {
             )?;
             execute(
                 &mut report,
+                "zplugin",
+                || zsh::run_zplugin(&base_dirs, run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
                 "oh-my-zsh",
                 || zsh::run_oh_my_zsh(&base_dirs, run_type),
                 config.no_retry(),
@@ -335,6 +349,24 @@ fn run() -> Result<(), Error> {
             &mut report,
             "cargo",
             || generic::run_cargo_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Flutter) {
+        execute(
+            &mut report,
+            "Flutter",
+            || generic::run_flutter_upgrade(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Go) {
+        execute(
+            &mut report,
+            "Go",
+            || generic::run_go(&base_dirs, run_type),
             config.no_retry(),
         )?;
     }
@@ -417,13 +449,13 @@ fn run() -> Result<(), Error> {
         execute(
             &mut report,
             "vim",
-            || vim::upgrade_vim(&base_dirs, run_type),
+            || vim::upgrade_vim(&base_dirs, run_type, config.cleanup()),
             config.no_retry(),
         )?;
         execute(
             &mut report,
             "Neovim",
-            || vim::upgrade_neovim(&base_dirs, run_type),
+            || vim::upgrade_neovim(&base_dirs, run_type, config.cleanup()),
             config.no_retry(),
         )?;
         execute(
@@ -514,12 +546,6 @@ fn run() -> Result<(), Error> {
                 || linux::run_pihole_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
-            execute(
-                &mut report,
-                "rpi-update",
-                || linux::run_rpi_update(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
         }
 
         if config.should_run(Step::Firmware) {
@@ -527,6 +553,12 @@ fn run() -> Result<(), Error> {
                 &mut report,
                 "Firmware upgrades",
                 || linux::run_fwupdmgr(run_type),
+                config.no_retry(),
+            )?;
+            execute(
+                &mut report,
+                "rpi-update",
+                || linux::run_rpi_update(sudo.as_ref(), run_type),
                 config.no_retry(),
             )?;
         }
@@ -571,7 +603,7 @@ fn run() -> Result<(), Error> {
             execute(
                 &mut report,
                 "Windows update",
-                || powershell.windows_update(run_type),
+                || powershell::Powershell::windows_powershell().windows_update(run_type),
                 config.no_retry(),
             )?;
         }
@@ -632,7 +664,7 @@ fn run() -> Result<(), Error> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(ErrorKind::StepFailed.into())
+        Err(StepFailed.into())
     }
 }
 
@@ -644,26 +676,19 @@ fn main() {
         Err(error) => {
             #[cfg(all(windows, feature = "self-update"))]
             {
-                if let ErrorKind::Upgraded(status) = error.kind() {
+                if let Some(Upgraded(status)) = error.downcast_ref::<Upgraded>() {
                     exit(status.code().unwrap());
                 }
             }
 
-            let should_print = match error.kind() {
-                ErrorKind::StepFailed => false,
-                ErrorKind::Retry => error
-                    .cause()
-                    .and_then(|cause| cause.downcast_ref::<io::Error>())
+            let skip_print = (error.downcast_ref::<StepFailed>().is_some())
+                || (error
+                    .downcast_ref::<io::Error>()
                     .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
-                    .is_none(),
-                _ => true,
-            };
+                    .is_some());
 
-            if should_print {
+            if !skip_print {
                 println!("Error: {}", error);
-                if let Some(cause) = error.cause() {
-                    println!("Caused by: {}", cause);
-                }
             }
             exit(1);
         }

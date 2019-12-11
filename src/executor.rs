@@ -1,7 +1,7 @@
 //! Utilities for command execution
-use super::error::{Error, ErrorKind};
-use super::utils::Check;
-use failure::ResultExt;
+use crate::error::TopgradeError;
+use crate::utils::Check;
+use anyhow::Result;
 use log::trace;
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
@@ -119,9 +119,9 @@ impl Executor {
     }
 
     /// See `std::process::Command::spawn`
-    pub fn spawn(&mut self) -> Result<ExecutorChild, Error> {
+    pub fn spawn(&mut self) -> Result<ExecutorChild> {
         let result = match self {
-            Executor::Wet(c) => c.spawn().context(ErrorKind::ProcessExecution).map(ExecutorChild::Wet)?,
+            Executor::Wet(c) => c.spawn().map(ExecutorChild::Wet)?,
             Executor::Dry(c) => {
                 c.dry_run();
                 ExecutorChild::Dry
@@ -132,9 +132,9 @@ impl Executor {
     }
 
     /// See `std::process::Command::output`
-    pub fn output(&mut self) -> Result<ExecutorOutput, Error> {
+    pub fn output(&mut self) -> Result<ExecutorOutput> {
         match self {
-            Executor::Wet(c) => Ok(ExecutorOutput::Wet(c.output().context(ErrorKind::ProcessExecution)?)),
+            Executor::Wet(c) => Ok(ExecutorOutput::Wet(c.output()?)),
             Executor::Dry(c) => {
                 c.dry_run();
                 Ok(ExecutorOutput::Dry)
@@ -145,7 +145,7 @@ impl Executor {
     /// A convinence method for `spawn().wait().check()`.
     /// Returns an error if something went wrong during the execution or if the
     /// process exited with failure.
-    pub fn check_run(&mut self) -> Result<(), Error> {
+    pub fn check_run(&mut self) -> Result<()> {
         self.spawn()?.wait()?.check()
     }
 }
@@ -189,12 +189,9 @@ pub enum ExecutorChild {
 
 impl ExecutorChild {
     /// See `std::process::Child::wait`
-    pub fn wait(&mut self) -> Result<ExecutorExitStatus, Error> {
+    pub fn wait(&mut self) -> Result<ExecutorExitStatus> {
         let result = match self {
-            ExecutorChild::Wet(c) => c
-                .wait()
-                .context(ErrorKind::ProcessExecution)
-                .map(ExecutorExitStatus::Wet)?,
+            ExecutorChild::Wet(c) => c.wait().map(ExecutorExitStatus::Wet)?,
             ExecutorChild::Dry => ExecutorExitStatus::Dry,
         };
 
@@ -209,7 +206,7 @@ pub enum ExecutorExitStatus {
 }
 
 impl Check for ExecutorExitStatus {
-    fn check(self) -> Result<(), Error> {
+    fn check(self) -> Result<()> {
         match self {
             ExecutorExitStatus::Wet(e) => e.check(),
             ExecutorExitStatus::Dry => Ok(()),
@@ -220,17 +217,17 @@ impl Check for ExecutorExitStatus {
 /// Extension methods for `std::process::Command`
 pub trait CommandExt {
     /// Run the command, wait for it to complete, check the return code and decode the output as UTF-8.
-    fn check_output(&mut self) -> Result<String, Error>;
+    fn check_output(&mut self) -> Result<String>;
 }
 
 impl CommandExt for Command {
-    fn check_output(&mut self) -> Result<String, Error> {
-        let output = self.output().context(ErrorKind::ProcessExecution)?;
+    fn check_output(&mut self) -> Result<String> {
+        let output = self.output()?;
         trace!("Output of {:?}: {:?}", self, output);
         let status = output.status;
         if !status.success() {
-            return Err(ErrorKind::ProcessFailed(status).into());
+            return Err(TopgradeError::ProcessFailed(status).into());
         }
-        Ok(String::from_utf8(output.stdout).context(ErrorKind::ProcessExecution)?)
+        Ok(String::from_utf8(output.stdout)?)
     }
 }

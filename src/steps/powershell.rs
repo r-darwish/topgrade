@@ -1,9 +1,9 @@
-use crate::error::Error;
 #[cfg(windows)]
-use crate::error::ErrorKind;
+use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
+use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -33,6 +33,14 @@ impl Powershell {
     }
 
     #[cfg(windows)]
+    pub fn windows_powershell() -> Self {
+        Powershell {
+            path: which("powershell").filter(|_| !is_dumb()),
+            profile: None,
+        }
+    }
+
+    #[cfg(windows)]
     pub fn has_module(powershell: &PathBuf, command: &str) -> bool {
         Command::new(&powershell)
             .args(&["-Command", &format!("Get-Module -ListAvailable {}", command)])
@@ -45,22 +53,23 @@ impl Powershell {
         self.profile.as_ref()
     }
 
-    pub fn update_modules(&self, run_type: RunType) -> Result<(), Error> {
+    pub fn update_modules(&self, run_type: RunType) -> Result<()> {
         let powershell = require_option(self.path.as_ref())?;
 
         print_separator("Powershell Modules Update");
+        println!("Updating modules...");
         run_type
             .execute(&powershell)
-            .args(&["-Command", "Update-Module", "-v"])
+            .args(&["-Command", "Update-Module"])
             .check_run()
     }
 
     #[cfg(windows)]
-    pub fn windows_update(&self, run_type: RunType) -> Result<(), Error> {
+    pub fn windows_update(&self, run_type: RunType) -> Result<()> {
         let powershell = require_option(self.path.as_ref())?;
 
         if !Self::has_module(&powershell, "PSWindowsUpdate") {
-            return Err(ErrorKind::SkipStep.into());
+            return Err(SkipStep.into());
         }
         print_separator("Windows Update");
 
