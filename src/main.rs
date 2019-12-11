@@ -90,7 +90,7 @@ fn run() -> Result<()> {
 
     let mut report = Report::new();
 
-    #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
+    #[cfg(unix)]
     let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
 
@@ -415,7 +415,7 @@ fn run() -> Result<()> {
         execute(
             &mut report,
             "tlmgr",
-            || generic::run_tlmgr_update(run_type),
+            || generic::run_tlmgr_update(&sudo, run_type),
             config.no_retry(),
         )?;
     }
