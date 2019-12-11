@@ -1,16 +1,15 @@
-use crate::error::{Error, ErrorKind};
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{which, Check, PathExt};
+use anyhow::Result;
 use directories::BaseDirs;
-use failure::ResultExt;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{exit, Command};
 
-pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let tpm = base_dirs
         .home_dir()
         .join(".tmux/plugins/tpm/bin/update_plugins")
@@ -62,13 +61,11 @@ impl Tmux {
             .success())
     }
 
-    fn run_in_session(&self, command: &str) -> Result<(), Error> {
+    fn run_in_session(&self, command: &str) -> Result<()> {
         self.build()
             .args(&["new-window", "-a", "-t", "topgrade:1", command])
-            .spawn()
-            .context(ErrorKind::ProcessExecution)?
-            .wait()
-            .context(ErrorKind::ProcessExecution)?
+            .spawn()?
+            .wait()?
             .check()?;
 
         Ok(())
@@ -107,7 +104,7 @@ pub fn run_in_tmux(args: &Option<String>) -> ! {
     }
 }
 
-pub fn run_remote_topgrade(hostname: &str, ssh: &Path, tmux_args: &Option<String>) -> Result<(), Error> {
+pub fn run_remote_topgrade(hostname: &str, ssh: &Path, tmux_args: &Option<String>) -> Result<()> {
     let command = format!(
         "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 topgrade",
         ssh = ssh.display(),
@@ -117,9 +114,7 @@ pub fn run_remote_topgrade(hostname: &str, ssh: &Path, tmux_args: &Option<String
         .build()
         .args(&["new-window", "-a", "-t", "topgrade:1", &command])
         .env_remove("TMUX")
-        .spawn()
-        .context(ErrorKind::ProcessExecution)?
-        .wait()
-        .context(ErrorKind::ProcessExecution)?
+        .spawn()?
+        .wait()?
         .check()
 }

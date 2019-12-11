@@ -1,7 +1,8 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::TopgradeError;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, HumanizedPath};
+use anyhow::Result;
 use console::style;
 use futures::future::{join_all, Future};
 use glob::{glob_with, MatchOptions};
@@ -79,7 +80,7 @@ impl Git {
         repositories: &Repositories,
         run_type: RunType,
         extra_arguments: &Option<String>,
-    ) -> Result<(), Error> {
+    ) -> Result<()> {
         if repositories.repositories.is_empty() {
             return Ok(());
         }
@@ -143,7 +144,7 @@ impl Git {
                                     println!("{} {}", style("Up-to-date").green().bold(), path);
                                 }
                             }
-                            Ok(true) as Result<bool, Error>
+                            Ok(true) as Result<bool>
                         } else {
                             println!("{} pulling {}", style("Failed").red().bold(), path);
                             if let Ok(text) = std::str::from_utf8(&output.stderr) {
@@ -163,7 +164,7 @@ impl Git {
         let mut runtime = Runtime::new().unwrap();
         let results: Vec<bool> = runtime.block_on(join_all(futures))?;
         if results.into_iter().any(|success| !success) {
-            Err(ErrorKind::StepFailed.into())
+            Err(TopgradeError::PullFailed.into())
         } else {
             Ok(())
         }

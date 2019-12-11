@@ -1,4 +1,6 @@
-use crate::error::{Error, ErrorKind};
+use crate::error::{SkipStep, TopgradeError};
+use anyhow::Result;
+
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
@@ -74,7 +76,7 @@ fn upgrade(
     plugin_framework: PluginFramework,
     run_type: RunType,
     cleanup: bool,
-) -> Result<(), Error> {
+) -> Result<()> {
     let output = run_type
         .execute(&vim)
         .args(&["-N", "-u"])
@@ -95,7 +97,7 @@ fn upgrade(
         if !status.success() {
             io::stdout().write(&output.stdout).ok();
             io::stderr().write(&output.stderr).ok();
-            return Err(ErrorKind::ProcessFailed(status).into());
+            return Err(TopgradeError::ProcessFailed(status).into());
         } else {
             println!("Plugins upgraded")
         }
@@ -105,12 +107,12 @@ fn upgrade(
 }
 
 #[must_use]
-pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<(), Error> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
     let vim = require("vim")?;
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        return Err(ErrorKind::SkipStep.into());
+        return Err(SkipStep.into());
     }
 
     let vimrc = require_option(vimrc(&base_dirs))?;
@@ -121,7 +123,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Re
 }
 
 #[must_use]
-pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<(), Error> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
     let nvim = require("nvim")?;
     let nvimrc = require_option(nvimrc(&base_dirs))?;
     let plugin_framework = require_option(PluginFramework::detect(&nvimrc))?;
@@ -130,7 +132,7 @@ pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) ->
     upgrade(&nvim, &nvimrc, plugin_framework, run_type, cleanup)
 }
 
-pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<(), Error> {
+pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let voom = require("voom")?;
 
     print_separator("voom");

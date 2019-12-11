@@ -11,11 +11,13 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
-use self::error::{Error, ErrorKind};
+#[cfg(all(windows, feature = "self-update"))]
+use self::error::Upgraded;
+use self::error::{SkipStep, StepFailed};
 use self::report::Report;
 use self::steps::*;
 use self::terminal::*;
-use failure::{Fail, ResultExt};
+use anyhow::{anyhow, Result};
 use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
@@ -26,9 +28,9 @@ use std::io;
 use std::process::exit;
 use structopt::StructOpt;
 
-fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<(), Error>
+fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<()>
 where
-    F: Fn() -> Result<(), Error>,
+    F: Fn() -> Result<()>,
     M: Into<Cow<'a, str>> + Debug,
 {
     debug!("Step {:?}", key);
@@ -39,7 +41,7 @@ where
                 report.push_result(Some((key, true)));
                 break;
             }
-            Err(ref e) if e.kind() == ErrorKind::SkipStep => {
+            Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
                 break;
             }
             Err(_) => {
@@ -49,7 +51,7 @@ where
                 }
 
                 let should_ask = interrupted || !no_retry;
-                let should_retry = should_ask && should_retry(interrupted).context(ErrorKind::Retry)?;
+                let should_retry = should_ask && should_retry(interrupted)?;
 
                 if !should_retry {
                     report.push_result(Some((key, false)));
@@ -62,10 +64,10 @@ where
     Ok(())
 }
 
-fn run() -> Result<(), Error> {
+fn run() -> Result<()> {
     ctrlc::set_handler();
 
-    let base_dirs = directories::BaseDirs::new().ok_or(ErrorKind::NoBaseDirectories)?;
+    let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::from_args();
     if opt.edit_config() {
@@ -98,29 +100,21 @@ fn run() -> Result<(), Error> {
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
-            #[cfg(windows)]
-            {
-                let upgraded = match &result {
-                    Ok(()) => false,
-                    Err(e) => e.upgraded(),
-                };
-                if upgraded {
-                    return result;
+            if let Err(e) = &result {
+                #[cfg(windows)]
+                {
+                    if e.downcast_ref::<Upgraded>().is_some() {
+                        return result;
+                    }
                 }
-            }
-
-            if let Err(e) = result {
                 print_warning(format!("Self update error: {}", e));
-                if let Some(cause) = e.cause() {
-                    print_warning(format!("Caused by: {}", cause));
-                }
             }
         }
     }
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, run_type).context(ErrorKind::PreCommand)?;
+            generic::run_custom_command(&name, &command, run_type)?;
         }
     }
 
@@ -661,7 +655,7 @@ fn run() -> Result<(), Error> {
     if report.data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
-        Err(ErrorKind::StepFailed.into())
+        Err(StepFailed.into())
     }
 }
 
@@ -673,26 +667,19 @@ fn main() {
         Err(error) => {
             #[cfg(all(windows, feature = "self-update"))]
             {
-                if let ErrorKind::Upgraded(status) = error.kind() {
+                if let Some(Upgraded(status)) = error.downcast_ref::<Upgraded>() {
                     exit(status.code().unwrap());
                 }
             }
 
-            let should_print = match error.kind() {
-                ErrorKind::StepFailed => false,
-                ErrorKind::Retry => error
-                    .cause()
-                    .and_then(|cause| cause.downcast_ref::<io::Error>())
+            let skip_print = (error.downcast_ref::<StepFailed>().is_some())
+                || (error
+                    .downcast_ref::<io::Error>()
                     .filter(|io_error| io_error.kind() == io::ErrorKind::Interrupted)
-                    .is_none(),
-                _ => true,
-            };
+                    .is_some());
 
-            if should_print {
+            if !skip_print {
                 println!("Error: {}", error);
-                if let Some(cause) = error.cause() {
-                    println!("Caused by: {}", cause);
-                }
             }
             exit(1);
         }

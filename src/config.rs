@@ -1,9 +1,6 @@
-use super::error::{Error, ErrorKind};
 use super::utils::editor;
+use anyhow::Result;
 use directories::BaseDirs;
-use failure::ResultExt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
-
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use serde::Deserialize;
@@ -14,6 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 use toml;
 
 type Commands = BTreeMap<String, String>;
@@ -70,20 +68,18 @@ pub struct ConfigFile {
 }
 
 impl ConfigFile {
-    fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf, Error> {
+    fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf> {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
         if !config_path.exists() {
-            write(&config_path, include_str!("../config.example.toml"))
-                .map_err(|e| {
-                    debug!(
-                        "Unable to write the example configuration file to {}: {}. Using blank config.",
-                        config_path.display(),
-                        e
-                    );
-                    e
-                })
-                .context(ErrorKind::Configuration)?;
             debug!("No configuration exists");
+            write(&config_path, include_str!("../config.example.toml")).map_err(|e| {
+                debug!(
+                    "Unable to write the example configuration file to {}: {}. Using blank config.",
+                    config_path.display(),
+                    e
+                );
+                e
+            })?;
         }
 
         Ok(config_path)
@@ -92,22 +88,18 @@ impl ConfigFile {
     /// Read the configuration file.
     ///
     /// If the configuration file does not exist the function returns the default ConfigFile.
-    fn read(base_dirs: &BaseDirs) -> Result<ConfigFile, Error> {
+    fn read(base_dirs: &BaseDirs) -> Result<ConfigFile> {
         let config_path = Self::ensure(base_dirs)?;
 
-        let contents = fs::read_to_string(&config_path)
-            .map_err(|e| {
-                log::error!("Unable to read {}", config_path.display());
-                e
-            })
-            .context(ErrorKind::Configuration)?;
+        let contents = fs::read_to_string(&config_path).map_err(|e| {
+            log::error!("Unable to read {}", config_path.display());
+            e
+        })?;
 
-        let mut result: Self = toml::from_str(&contents)
-            .map_err(|e| {
-                log::error!("Failed to deserialize {}", config_path.display());
-                e
-            })
-            .context(ErrorKind::Configuration)?;
+        let mut result: Self = toml::from_str(&contents).map_err(|e| {
+            log::error!("Failed to deserialize {}", config_path.display());
+            e
+        })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
             for path in paths.iter_mut() {
@@ -120,7 +112,7 @@ impl ConfigFile {
         Ok(result)
     }
 
-    fn edit(base_dirs: &BaseDirs) -> Result<(), Error> {
+    fn edit(base_dirs: &BaseDirs) -> Result<()> {
         let config_path = Self::ensure(base_dirs)?;
         let editor = editor();
 
@@ -128,8 +120,7 @@ impl ConfigFile {
         Command::new(editor)
             .arg(config_path)
             .spawn()
-            .and_then(|mut p| p.wait())
-            .context(ErrorKind::Configuration)?;
+            .and_then(|mut p| p.wait())?;
         Ok(())
     }
 }
@@ -200,7 +191,7 @@ impl Config {
     /// Load the configuration.
     ///
     /// The function parses the command line arguments and reading the configuration file.
-    pub fn load(base_dirs: &BaseDirs, opt: CommandLineArgs) -> Result<Self, Error> {
+    pub fn load(base_dirs: &BaseDirs, opt: CommandLineArgs) -> Result<Self> {
         let mut builder = formatted_timed_builder();
 
         if opt.verbose {
@@ -210,18 +201,9 @@ impl Config {
         builder.init();
 
         let config_file = ConfigFile::read(base_dirs).unwrap_or_else(|e| {
-            use failure::Fail;
-
             // Inform the user about errors when loading the configuration,
             // but fallback to the default config to at least attempt to do something
             log::error!("failed to load configuration: {}", e);
-
-            let mut err = e.cause();
-            while let Some(e) = err {
-                log::error!("{}", e);
-                err = e.cause();
-            }
-
             ConfigFile::default()
         });
 
@@ -235,7 +217,7 @@ impl Config {
     }
 
     /// Launch an editor to edit the configuration
-    pub fn edit(base_dirs: &BaseDirs) -> Result<(), Error> {
+    pub fn edit(base_dirs: &BaseDirs) -> Result<()> {
         ConfigFile::edit(base_dirs)
     }
 
