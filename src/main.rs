@@ -415,7 +415,15 @@ fn run() -> Result<()> {
         execute(
             &mut report,
             "tlmgr",
-            || generic::run_tlmgr_update(&sudo, run_type),
+            || {
+                generic::run_tlmgr_update(
+                    #[cfg(unix)]
+                    &sudo,
+                    #[cfg(windows)]
+                    &None,
+                    run_type,
+                )
+            },
             config.no_retry(),
         )?;
     }
