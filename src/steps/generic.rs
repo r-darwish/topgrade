@@ -113,10 +113,11 @@ pub fn run_stack_update(run_type: RunType) -> Result<()> {
 
 pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     let tlmgr = utils::require("tlmgr")?;
+    let kpsewhich = utils::require("kpsewhich")?;
     let tlmgr_directory = {
         let mut d = PathBuf::from(std::str::from_utf8(
-            &Command::new(&tlmgr).arg("-var-value=SELFAUTOPARENT").output()?.stdout,
-        )?);
+            &Command::new(&kpsewhich).arg("-var-value=SELFAUTOPARENT").output()?.stdout,
+        )?.trim());
         d.push("tlpkg");
         d
     }
@@ -134,10 +135,9 @@ pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()>
         c.arg(&tlmgr);
         c
     };
-
     command.args(&["update", "--self", "--all"]);
 
-    run_type.execute(&tlmgr).check_run()
+    command.check_run()
 }
 
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
