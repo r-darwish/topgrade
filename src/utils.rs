@@ -88,7 +88,7 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
     }
 }
 
-#[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
+#[cfg(unix)]
 pub fn sudo() -> Option<PathBuf> {
     which("sudo").or_else(|| which("pkexec"))
 }

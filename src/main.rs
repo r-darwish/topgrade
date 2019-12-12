@@ -90,7 +90,7 @@ fn run() -> Result<()> {
 
     let mut report = Report::new();
 
-    #[cfg(any(target_os = "dragonfly", target_os = "freebsd", target_os = "linux"))]
+    #[cfg(unix)]
     let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
 
@@ -407,6 +407,23 @@ fn run() -> Result<()> {
             &mut report,
             "stack",
             || generic::run_stack_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Tlmgr) {
+        execute(
+            &mut report,
+            "tlmgr",
+            || {
+                generic::run_tlmgr_update(
+                    #[cfg(unix)]
+                    &sudo,
+                    #[cfg(windows)]
+                    &None,
+                    run_type,
+                )
+            },
             config.no_retry(),
         )?;
     }

@@ -1,12 +1,14 @@
-use crate::error::SkipStep;
+use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use anyhow::Result;
 use directories::BaseDirs;
+use log::debug;
 use std::env;
 use std::path::PathBuf;
 use std::process::Command;
+use tempfile::tempfile_in;
 
 pub fn run_cargo_update(run_type: RunType) -> Result<()> {
     let cargo_update = utils::require("cargo-install-update")?;
@@ -107,6 +109,41 @@ pub fn run_stack_update(run_type: RunType) -> Result<()> {
     print_separator("stack");
 
     run_type.execute(&stack).arg("upgrade").check_run()
+}
+
+pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
+    let tlmgr = utils::require("tlmgr")?;
+    let kpsewhich = utils::require("kpsewhich")?;
+    let tlmgr_directory = {
+        let mut d = PathBuf::from(
+            std::str::from_utf8(
+                &Command::new(&kpsewhich)
+                    .arg("-var-value=SELFAUTOPARENT")
+                    .output()?
+                    .stdout,
+            )?
+            .trim(),
+        );
+        d.push("tlpkg");
+        d
+    }
+    .require()?;
+
+    let directory_writable = tempfile_in(&tlmgr_directory).is_ok();
+    debug!("{:?} writable: {}", tlmgr_directory, directory_writable);
+
+    print_separator("TeX Live package manager");
+
+    let mut command = if directory_writable {
+        run_type.execute(&tlmgr)
+    } else {
+        let mut c = run_type.execute(sudo.as_ref().ok_or(TopgradeError::SudoRequired)?);
+        c.arg(&tlmgr);
+        c
+    };
+    command.args(&["update", "--self", "--all"]);
+
+    command.check_run()
 }
 
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
