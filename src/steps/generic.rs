@@ -115,9 +115,15 @@ pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()>
     let tlmgr = utils::require("tlmgr")?;
     let kpsewhich = utils::require("kpsewhich")?;
     let tlmgr_directory = {
-        let mut d = PathBuf::from(std::str::from_utf8(
-            &Command::new(&kpsewhich).arg("-var-value=SELFAUTOPARENT").output()?.stdout,
-        )?.trim());
+        let mut d = PathBuf::from(
+            std::str::from_utf8(
+                &Command::new(&kpsewhich)
+                    .arg("-var-value=SELFAUTOPARENT")
+                    .output()?
+                    .stdout,
+            )?
+            .trim(),
+        );
         d.push("tlpkg");
         d
     }
