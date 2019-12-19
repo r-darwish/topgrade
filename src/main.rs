@@ -251,6 +251,7 @@ fn run() -> Result<()> {
         git_repos.insert(base_dirs.config_dir().join("openbox"));
         git_repos.insert(base_dirs.config_dir().join("bspwm"));
         git_repos.insert(base_dirs.config_dir().join("i3"));
+        git_repos.insert(base_dirs.config_dir().join("sway"));
     }
 
     #[cfg(windows)]

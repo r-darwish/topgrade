@@ -92,6 +92,7 @@ Just run `topgrade`. It will run the following steps:
   * ~/.config/openbox
   * ~/.config/bspwm
   * ~/.config/i3
+  * ~/.config/sway
   * Powershell Profile
   * [Microsoft Terminal](https://github.com/microsoft/terminal) configuration
   * Custom defined paths
