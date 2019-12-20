@@ -172,6 +172,15 @@ pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> 
     ctx.run_type().execute(shell()).arg("-c").arg(command).check_run()
 }
 
+#[cfg(unix)]
+pub fn run_asdf_update(run_type: RunType) -> Result<()> {
+    let asdf = utils::require("asdf")?;
+
+    print_separator("Asdf");
+
+    run_type.execute(&asdf).args(&["plugin-update", "--all"]).check_run()
+}
+
 pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)

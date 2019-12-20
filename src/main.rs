@@ -297,6 +297,13 @@ fn run() -> Result<()> {
         runner.execute("voom", || vim::run_voom(&base_dirs, run_type))?;
     }
 
+    #[cfg(unix)]
+    {
+        if config.should_run(Step::Asdf) {
+            runner.execute("asdf", || generic::run_asdf_update(run_type))?;
+        }
+    }
+
     if config.should_run(Step::Node) {
         runner.execute("NPM", || node::run_npm_upgrade(&base_dirs, run_type))?;
         runner.execute("yarn", || node::yarn_global_update(run_type))?;

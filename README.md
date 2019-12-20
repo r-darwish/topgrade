@@ -76,6 +76,7 @@ Just run `topgrade`. It will run the following steps:
 * **DragonFly BSD**: Upgrade and audit packages
 * **FreeBSD**: Upgrade and audit packages
 * **Unix**: Run `brew update && brew upgrade`. This should handle both Homebrew and Linuxbrew
+* **Unix**: Run [asdf](https://github.com/asdf-vm/asdf-plugins)'s `asdf plugin-update --all`
 * **Unix**: Run `nix upgrade-nix && nix --upgrade`.
 * **Unix**: Run [Pearl](https://github.com/pearl-core/pearl) `pearl update`.
 * **Windows**: Run Topgrade inside WSL.

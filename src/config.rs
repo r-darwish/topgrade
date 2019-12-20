@@ -49,6 +49,7 @@ pub enum Step {
     Firmware,
     Restarts,
     Tldr,
+    Asdf,
 }
 
 #[derive(Deserialize, Default, Debug)]
