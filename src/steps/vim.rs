@@ -69,7 +69,6 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
 }
 
-#[must_use]
 fn upgrade(
     vim: &PathBuf,
     vimrc: &PathBuf,
@@ -106,7 +105,6 @@ fn upgrade(
     Ok(())
 }
 
-#[must_use]
 pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
     let vim = require("vim")?;
 
@@ -122,7 +120,6 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Re
     upgrade(&vim, &vimrc, plugin_framework, run_type, cleanup)
 }
 
-#[must_use]
 pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
     let nvim = require("nvim")?;
     let nvimrc = require_option(nvimrc(&base_dirs))?;

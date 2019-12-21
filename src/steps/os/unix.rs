@@ -25,7 +25,6 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
-#[must_use]
 pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
     let brew = require("brew")?;
     print_separator("Brew");
@@ -51,7 +50,6 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-#[must_use]
 pub fn run_nix(run_type: RunType) -> Result<()> {
     let nix = require("nix")?;
     let nix_channel = require("nix-channel")?;

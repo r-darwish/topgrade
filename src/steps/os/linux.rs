@@ -79,7 +79,6 @@ impl Distribution {
         Err(TopgradeError::UnknownLinuxDistribution.into())
     }
 
-    #[must_use]
     pub fn upgrade(self, sudo: &Option<PathBuf>, run_type: RunType, config: &Config) -> Result<()> {
         print_separator("System update");
 
@@ -399,7 +398,6 @@ pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> 
     Ok(())
 }
 
-#[must_use]
 pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
     let fwupdmgr = require("fwupdmgr")?;
 
@@ -417,7 +415,6 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-#[must_use]
 pub fn flatpak_update(run_type: RunType) -> Result<()> {
     let flatpak = require("flatpak")?;
     print_separator("Flatpak User Packages");
@@ -432,7 +429,6 @@ pub fn flatpak_update(run_type: RunType) -> Result<()> {
         .check_run()
 }
 
-#[must_use]
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let snap = require("snap")?;
@@ -445,7 +441,6 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     run_type.execute(sudo).arg(snap).arg("refresh").check_run()
 }
 
-#[must_use]
 pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let rpi_update = require("rpi-update")?;
@@ -455,7 +450,6 @@ pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     run_type.execute(sudo).arg(rpi_update).check_run()
 }
 
-#[must_use]
 pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let pihole = require("pihole")?;
@@ -465,7 +459,6 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
     run_type.execute(sudo).arg(pihole).arg("-up").check_run()
 }
 
-#[must_use]
 pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let etc_update = require("etc-update")?;

@@ -2,7 +2,6 @@ use crate::executor::RunType;
 use crate::terminal::print_separator;
 use anyhow::Result;
 
-#[must_use]
 pub fn upgrade_macos(run_type: RunType) -> Result<()> {
     print_separator("App Store");
 
