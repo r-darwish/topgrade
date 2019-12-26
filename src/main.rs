@@ -236,6 +236,7 @@ fn run() -> Result<()> {
         if let Some(directory) = emacs.directory() {
             git_repos.insert(directory);
         }
+        git_repos.insert(base_dirs.home_dir().join(".doom.d"));
     }
 
     if config.should_run(Step::Vim) {
