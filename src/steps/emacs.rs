@@ -5,9 +5,13 @@ use anyhow::Result;
 use directories::BaseDirs;
 #[cfg(windows)]
 use std::env;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
+#[cfg(windows)]
+const DDOM_PATH: &str = "bin/doom.cmd";
+#[cfg(unix)]
+const DDOM_PATH: &str = "bin/doom";
 
 pub struct Emacs {
     directory: Option<PathBuf>,
@@ -35,9 +39,20 @@ impl Emacs {
         self.directory.as_ref()
     }
 
+    fn update_doom(doom: &Path, run_type: RunType) -> Result<()> {
+        print_separator("Doom Emacs");
+
+        run_type.execute(doom).arg("upgrade").check_run()
+    }
+
     pub fn upgrade(&self, run_type: RunType) -> Result<()> {
         let emacs = require("emacs")?;
         let init_file = require_option(self.directory.as_ref())?.join("init.el").require()?;
+        let doom = require_option(self.directory.as_ref())?.join(DDOM_PATH);
+
+        if doom.exists() {
+            return Emacs::update_doom(&doom, run_type);
+        }
 
         print_separator("Emacs");
 
