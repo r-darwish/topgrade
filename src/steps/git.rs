@@ -1,7 +1,7 @@
-use crate::error::TopgradeError;
+use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{which, HumanizedPath};
+use crate::utils::which;
 use anyhow::Result;
 use console::style;
 use futures::future::{join_all, Future};
@@ -13,6 +13,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use tokio::runtime::Runtime;
 use tokio_process::CommandExt as TokioCommandExt;
+
+#[cfg(windows)]
+static PATH_PREFIX: &str = "\\\\?\\";
 
 #[derive(Debug)]
 pub struct Git {
@@ -56,6 +59,18 @@ impl Git {
 
                 debug!("Checking if {} is a git repository", path.display());
 
+                #[cfg(windows)]
+                let path = {
+                    let mut path_string = path.into_os_string().to_string_lossy().into_owned();
+                    if path_string.starts_with(PATH_PREFIX) {
+                        path_string.replace_range(0..PATH_PREFIX.len(), "");
+                    }
+
+                    debug!("Transformed path to {}", path_string);
+
+                    path_string
+                };
+
                 if let Some(git) = &self.git {
                     let output = Command::new(&git)
                         .args(&["rev-parse", "--show-toplevel"])
@@ -82,7 +97,7 @@ impl Git {
         extra_arguments: &Option<String>,
     ) -> Result<()> {
         if repositories.repositories.is_empty() {
-            return Ok(());
+            return Err(SkipStep.into());
         }
 
         let git = self.git.as_ref().unwrap();
@@ -93,7 +108,7 @@ impl Git {
             repositories
                 .repositories
                 .iter()
-                .for_each(|repo| println!("Would pull {}", HumanizedPath::from(std::path::Path::new(&repo))));
+                .for_each(|repo| println!("Would pull {}", &repo));
 
             return Ok(());
         }
@@ -103,7 +118,7 @@ impl Git {
             .iter()
             .map(|repo| {
                 let repo = repo.clone();
-                let path = format!("{}", HumanizedPath::from(std::path::Path::new(&repo)));
+                let path = repo.to_string();
                 let before_revision = get_head_revision(git, &repo);
                 let cloned_git = git.to_owned();
 

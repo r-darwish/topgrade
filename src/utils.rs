@@ -4,8 +4,8 @@ use anyhow::Result;
 use log::{debug, error};
 use std::env;
 use std::ffi::OsStr;
-use std::fmt::{self, Debug};
-use std::path::{Component, Path, PathBuf};
+use std::fmt::Debug;
+use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Output};
 use which_crate;
 
@@ -91,59 +91,6 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
 #[cfg(unix)]
 pub fn sudo() -> Option<PathBuf> {
     which("sudo").or_else(|| which("pkexec"))
-}
-
-/// `std::fmt::Display` implementation for `std::path::Path`.
-///
-/// This struct differs from `std::path::Display` in that in Windows it takes care of printing backslashes
-/// instead of slashes and don't print the `\\?` prefix in long paths.
-pub struct HumanizedPath<'a> {
-    path: &'a Path,
-}
-
-impl<'a> From<&'a Path> for HumanizedPath<'a> {
-    fn from(path: &'a Path) -> Self {
-        Self { path }
-    }
-}
-
-impl<'a> fmt::Display for HumanizedPath<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        if cfg!(windows) {
-            let mut iterator = self.path.components().peekable();
-
-            while let Some(component) = iterator.next() {
-                let mut print_seperator = iterator.peek().is_some();
-
-                match &component {
-                    Component::Normal(c) if *c == "?" => {
-                        print_seperator = false;
-                    }
-                    Component::RootDir | Component::CurDir => {
-                        print_seperator = false;
-                    }
-                    Component::ParentDir => {
-                        write!(f, "..")?;
-                    }
-                    Component::Prefix(p) => {
-                        write!(f, "{}", p.as_os_str().to_string_lossy())?;
-                        print_seperator = true;
-                    }
-                    Component::Normal(c) => {
-                        write!(f, "{}", c.to_string_lossy())?;
-                    }
-                };
-
-                if print_seperator {
-                    write!(f, "{}", std::path::MAIN_SEPARATOR)?;
-                }
-            }
-        } else {
-            write!(f, "{}", self.path.display())?;
-        }
-
-        Ok(())
-    }
 }
 
 pub fn editor() -> String {
