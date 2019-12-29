@@ -97,36 +97,6 @@ pub fn editor() -> String {
     env::var("EDITOR").unwrap_or_else(|_| String::from(if cfg!(windows) { "notepad" } else { "vi" }))
 }
 
-#[cfg(test)]
-#[cfg(windows)]
-mod tests {
-    use super::*;
-
-    fn humanize<P: AsRef<Path>>(path: P) -> String {
-        format!("{}", HumanizedPath::from(path.as_ref()))
-    }
-
-    #[test]
-    fn test_just_drive() {
-        assert_eq!("C:\\", humanize("C:\\"));
-    }
-
-    #[test]
-    fn test_path() {
-        assert_eq!("C:\\hi", humanize("C:\\hi"));
-    }
-
-    #[test]
-    fn test_unc() {
-        assert_eq!("\\\\server\\share\\", humanize("\\\\server\\share"));
-    }
-
-    #[test]
-    fn test_long_path() {
-        assert_eq!("C:\\hi", humanize("//?/C:/hi"));
-    }
-}
-
 pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
     match which_crate::which(&binary_name) {
         Ok(path) => {
