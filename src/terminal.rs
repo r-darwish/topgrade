@@ -1,6 +1,7 @@
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
+use notify_rust::Notification;
 use std::cmp::{max, min};
 use std::env;
 use std::io::{self, Write};
@@ -124,7 +125,7 @@ impl Terminal {
             .ok();
     }
 
-    fn should_retry(&mut self, interrupted: bool) -> Result<bool, io::Error> {
+    fn should_retry(&mut self, interrupted: bool, step_name: &str) -> Result<bool, io::Error> {
         if self.width.is_none() {
             return Ok(false);
         }
@@ -132,6 +133,15 @@ impl Terminal {
         if self.set_title {
             self.term.set_title("Topgrade - Awaiting user");
         }
+
+        Notification::new()
+            .summary("Topgrade")
+            .body(&format!("{} failed", step_name))
+            .appname("topgrade")
+            .timeout(0)
+            .show()
+            .ok();
+
         self.term
             .write_fmt(format_args!(
                 "\n{}",
@@ -178,8 +188,8 @@ impl Default for Terminal {
     }
 }
 
-pub fn should_retry(interrupted: bool) -> Result<bool, io::Error> {
-    TERMINAL.lock().unwrap().should_retry(interrupted)
+pub fn should_retry(interrupted: bool, step_name: &str) -> Result<bool, io::Error> {
+    TERMINAL.lock().unwrap().should_retry(interrupted, step_name)
 }
 
 pub fn print_separator<P: AsRef<str>>(message: P) {
