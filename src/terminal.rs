@@ -1,6 +1,7 @@
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
+#[cfg(target_os = "macos")]
 use notify_rust::Notification;
 use std::cmp::{max, min};
 use std::env;
@@ -125,6 +126,7 @@ impl Terminal {
             .ok();
     }
 
+    #[allow(unused_variables)]
     fn should_retry(&mut self, interrupted: bool, step_name: &str) -> Result<bool, io::Error> {
         if self.width.is_none() {
             return Ok(false);
@@ -134,6 +136,7 @@ impl Terminal {
             self.term.set_title("Topgrade - Awaiting user");
         }
 
+        #[cfg(target_os = "macos")]
         Notification::new()
             .summary("Topgrade")
             .body(&format!("{} failed", step_name))
