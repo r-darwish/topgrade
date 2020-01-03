@@ -33,6 +33,7 @@ where
     F: Fn() -> Result<()>,
     M: Into<Cow<'a, str>> + Debug,
 {
+    let key = key.into();
     debug!("Step {:?}", key);
 
     loop {
@@ -51,7 +52,7 @@ where
                 }
 
                 let should_ask = interrupted || !no_retry;
-                let should_retry = should_ask && should_retry(interrupted)?;
+                let should_retry = should_ask && should_retry(interrupted, key.as_ref())?;
 
                 if !should_retry {
                     report.push_result(Some((key, false)));
