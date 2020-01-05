@@ -4,15 +4,15 @@ use crate::terminal::print_separator;
 use crate::utils::which;
 use anyhow::Result;
 use console::style;
-use futures::future::{join_all, Future};
 use glob::{glob_with, MatchOptions};
 use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
+use std::io::Read;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use tokio::runtime::Runtime;
-use tokio_process::CommandExt as TokioCommandExt;
+use std::process::{Child, Command, Stdio};
+use std::thread::sleep;
+use std::time::Duration;
 
 #[cfg(windows)]
 static PATH_PREFIX: &str = "\\\\?\\";
@@ -20,6 +20,12 @@ static PATH_PREFIX: &str = "\\\\?\\";
 #[derive(Debug)]
 pub struct Git {
     git: Option<PathBuf>,
+}
+
+struct PullProcess {
+    child: Child,
+    repo: String,
+    before_revision: Option<String>,
 }
 
 pub struct Repositories<'a> {
@@ -113,14 +119,13 @@ impl Git {
             return Ok(());
         }
 
-        let futures: Vec<_> = repositories
+        let mut processes: Vec<_> = repositories
             .repositories
             .iter()
-            .map(|repo| {
+            .filter_map(|repo| {
                 let repo = repo.clone();
                 let path = repo.to_string();
                 let before_revision = get_head_revision(git, &repo);
-                let cloned_git = git.to_owned();
 
                 println!("{} {}", style("Pulling").cyan().bold(), path);
 
@@ -132,53 +137,68 @@ impl Git {
                     command.args(extra_arguments.split_whitespace());
                 }
 
-                command.output_async().then(move |result| match result {
-                    Ok(output) => {
-                        if output.status.success() {
-                            let after_revision = get_head_revision(&cloned_git, &repo);
-
-                            match (&before_revision, &after_revision) {
-                                (Some(before), Some(after)) if before != after => {
-                                    println!("{} {}:", style("Changed").yellow().bold(), path);
-                                    Command::new(&cloned_git)
-                                        .current_dir(&repo)
-                                        .args(&[
-                                            "--no-pager",
-                                            "log",
-                                            "--no-decorate",
-                                            "--oneline",
-                                            &format!("{}..{}", before, after),
-                                        ])
-                                        .spawn()
-                                        .unwrap()
-                                        .wait()
-                                        .unwrap();
-                                    println!();
-                                }
-                                _ => {
-                                    println!("{} {}", style("Up-to-date").green().bold(), path);
-                                }
-                            }
-                            Ok(true) as Result<bool>
-                        } else {
-                            println!("{} pulling {}", style("Failed").red().bold(), path);
-                            if let Ok(text) = std::str::from_utf8(&output.stderr) {
-                                print!("{}", text);
-                            }
-                            Ok(false)
-                        }
-                    }
-                    Err(e) => {
-                        println!("{} pulling {}: {}", style("Failed").red().bold(), path, e);
-                        Ok(false)
-                    }
-                })
+                command
+                    .stdout(Stdio::null())
+                    .stderr(Stdio::piped())
+                    .spawn()
+                    .map(|child| PullProcess {
+                        child,
+                        repo,
+                        before_revision,
+                    })
+                    .ok()
             })
             .collect();
 
-        let mut runtime = Runtime::new().unwrap();
-        let results: Vec<bool> = runtime.block_on(join_all(futures))?;
-        if results.into_iter().any(|success| !success) {
+        let mut success = true;
+        while !processes.is_empty() {
+            let mut remaining_processes = Vec::<PullProcess>::with_capacity(processes.len());
+            for mut p in processes {
+                if let Some(status) = p.child.try_wait().unwrap() {
+                    if status.success() {
+                        let after_revision = get_head_revision(&git, &p.repo);
+
+                        match (&p.before_revision, &after_revision) {
+                            (Some(before), Some(after)) if before != after => {
+                                println!("{} {}:", style("Changed").yellow().bold(), &p.repo);
+
+                                Command::new(&git)
+                                    .current_dir(&p.repo)
+                                    .args(&[
+                                        "--no-pager",
+                                        "log",
+                                        "--no-decorate",
+                                        "--oneline",
+                                        &format!("{}..{}", before, after),
+                                    ])
+                                    .spawn()
+                                    .unwrap()
+                                    .wait()
+                                    .unwrap();
+                                println!();
+                            }
+                            _ => {
+                                println!("{} {}", style("Up-to-date").green().bold(), &p.repo);
+                            }
+                        }
+                    } else {
+                        success = false;
+                        println!("{} pulling {}", style("Failed").red().bold(), &p.repo);
+                        let mut stderr = String::new();
+                        if p.child.stderr.unwrap().read_to_string(&mut stderr).is_ok() {
+                            print!("{}", stderr);
+                        }
+                    }
+                } else {
+                    remaining_processes.push(p);
+                }
+            }
+
+            processes = remaining_processes;
+            sleep(Duration::from_millis(200));
+        }
+
+        if !success {
             Err(TopgradeError::PullFailed.into())
         } else {
             Ok(())
