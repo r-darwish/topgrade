@@ -2,7 +2,7 @@ use crate::error::TopgradeError;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::require_option;
-use failure::ResultExt;
+use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Command;
 
