@@ -45,6 +45,7 @@ pub enum Step {
     Atom,
     Firmware,
     Restarts,
+    Tldr,
 }
 
 #[derive(Deserialize, Default, Debug)]

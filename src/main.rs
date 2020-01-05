@@ -336,6 +336,10 @@ fn run() -> Result<()> {
                 config.no_retry(),
             )?;
         }
+
+        if config.should_run(Step::Tldr) {
+            execute(&mut report, "TLDR", || unix::run_tldr(run_type), config.no_retry())?;
+        }
     }
 
     if config.should_run(Step::Rustup) {
