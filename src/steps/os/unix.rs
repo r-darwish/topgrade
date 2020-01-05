@@ -79,6 +79,13 @@ pub fn run_home_manager(run_type: RunType) -> Result<()> {
     run_type.execute(&home_manager).arg("switch").check_run()
 }
 
+pub fn run_tldr(run_type: RunType) -> Result<()> {
+    let tldr = require("tldr")?;
+
+    print_separator("TLDR");
+    run_type.execute(&tldr).args(&["--update", "-v"]).check_run()
+}
+
 pub fn run_pearl(run_type: RunType) -> Result<()> {
     let pearl = require("pearl")?;
     print_separator("pearl");

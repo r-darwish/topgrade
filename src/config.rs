@@ -11,7 +11,7 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
 use toml;
 
 type Commands = BTreeMap<String, String>;
@@ -45,6 +45,7 @@ pub enum Step {
     Atom,
     Firmware,
     Restarts,
+    Tldr,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -151,11 +152,11 @@ pub struct CommandLineArgs {
     no_retry: bool,
 
     /// Do not perform upgrades for the given steps
-    #[structopt(long = "disable", possible_values = &Step::variants())]
+    #[structopt(long = "disable", possible_values = &Step::VARIANTS)]
     disable: Vec<Step>,
 
     /// Perform only the specified steps (experimental)
-    #[structopt(long = "only", possible_values = &Step::variants())]
+    #[structopt(long = "only", possible_values = &Step::VARIANTS)]
     only: Vec<Step>,
 
     /// Output logs
