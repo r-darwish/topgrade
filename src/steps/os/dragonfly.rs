@@ -20,10 +20,8 @@ pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<()> {
         println!();
         Command::new(sudo)
             .args(&["/usr/local/sbin/pkg", "audit", "-Fr"])
-            .spawn()
-            .context(ErrorKind::ProcessExecution)?
-            .wait()
-            .context(ErrorKind::ProcessExecution)?;
+            .spawn()?
+            .wait()?;
     }
     Ok(())
 }
