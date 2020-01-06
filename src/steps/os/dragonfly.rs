@@ -1,8 +1,7 @@
-use crate::error::TopgradeError;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::require_option;
-use failure::ResultExt;
+use anyhow::Result;
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -20,10 +19,8 @@ pub fn audit_packages(sudo: &Option<PathBuf>) -> Result<()> {
         println!();
         Command::new(sudo)
             .args(&["/usr/local/sbin/pkg", "audit", "-Fr"])
-            .spawn()
-            .context(ErrorKind::ProcessExecution)?
-            .wait()
-            .context(ErrorKind::ProcessExecution)?;
+            .spawn()?
+            .wait()?;
     }
     Ok(())
 }
