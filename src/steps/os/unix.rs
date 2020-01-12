@@ -83,7 +83,7 @@ pub fn run_tldr(run_type: RunType) -> Result<()> {
     let tldr = require("tldr")?;
 
     print_separator("TLDR");
-    run_type.execute(&tldr).args(&["--update", "-v"]).check_run()
+    run_type.execute(&tldr).arg("--update").check_run()
 }
 
 pub fn run_pearl(run_type: RunType) -> Result<()> {
