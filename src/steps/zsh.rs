@@ -17,7 +17,7 @@ pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("zr");
 
     let cmd = format!("source {} && zr update", zshrc(base_dirs).display());
-    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
 pub fn zshrc(base_dirs: &BaseDirs) -> PathBuf {
@@ -37,7 +37,7 @@ pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("antigen");
 
     let cmd = format!("source {} && antigen selfupdate && antigen update", zshrc.display());
-    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -52,7 +52,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("zplug");
 
     let cmd = format!("source {} && zplug update", zshrc.display());
-    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
 pub fn run_zplugin(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -70,7 +70,7 @@ pub fn run_zplugin(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         "source {} && zplugin self-update && zplugin update --all",
         zshrc.display()
     );
-    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
 pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -81,5 +81,5 @@ pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("oh-my-zsh");
 
     let cmd = format!("source {} && upgrade_oh_my_zsh", zshrc.display());
-    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
