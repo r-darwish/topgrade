@@ -106,6 +106,7 @@ Just run `topgrade`. It will run the following steps:
 * Update Rustup by running `rustup update`. This will also attempt to run `rustup self update` when Rustup is installed inside the home directory.
 * Run Cargo [install-update](https://github.com/nabijaczleweli/cargo-update)
 * Upgrade Emacs packages (You'll get a better output if you have [Paradox](https://github.com/Malabarba/paradox) installed)
+* Upgrade [Go packages](https://golang.org/pkg/cmd/go/internal/get/)
 * Upgrade [OCaml packages](https://opam.ocaml.org/)
 * Upgrade [vcpkg](https://github.com/Microsoft/vcpkg) globally installed packages
 * Upgrade [myrepos](https://myrepos.branchable.com/) managed sourcecode repositories
