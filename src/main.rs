@@ -233,8 +233,7 @@ fn run() -> Result<()> {
     }
 
     let emacs = emacs::Emacs::new(&base_dirs);
-    if config.use_predefined_git_repos()
-    {
+    if config.use_predefined_git_repos() {
         if config.should_run(Step::Emacs) {
             if let Some(directory) = emacs.directory() {
                 git_repos.insert(directory);
