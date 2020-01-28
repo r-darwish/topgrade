@@ -130,13 +130,13 @@ Just run `topgrade`. It will run the following steps:
 * **Linux**: Update snap packages
 * **Linux**: Run [fwupdmgr](https://github.com/hughsie/fwupd) to show firmware upgrade. (View
   only. No upgrades will actually be performed)
-* **Linux**: Run `rpi-update` to update Raspberry Pi Firmware
 * **Linux**: Run [pihole](https://pi-hole.net/) updater
 * Run custom defined commands
 * Final stage
   * **Linux**: Run [needrestart](https://github.com/liske/needrestart)
   * **Windows**: Run Windows Update (You'll have to install [PSWindowsUpdate](https://marckean.com/2016/06/01/use-powershell-to-install-windows-updates/))
-  * **macOS**: Upgrade App Store applications
+  * **macOS**: Upgrade App Store applications using [mas](https://github.com/mas-cli/mas)
+  * **macOS**: Upgrade the system
   * **FreeBSD**: Run `freebsd-upgrade`
 
 ## Customization

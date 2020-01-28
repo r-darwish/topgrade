@@ -585,9 +585,11 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
+            execute(&mut report, "App Store", || macos::run_mas(run_type), config.no_retry())?;
+
             execute(
                 &mut report,
-                "App Store",
+                "System upgrade",
                 || macos::upgrade_macos(run_type),
                 config.no_retry(),
             )?;
