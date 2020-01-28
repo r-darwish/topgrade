@@ -1,3 +1,4 @@
+#![allow(unused_imports)]
 use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
@@ -17,6 +18,7 @@ impl NPM {
         Self { command }
     }
 
+    #[cfg(not(target_os = "macos"))]
     fn root(&self) -> Result<PathBuf> {
         Command::new(&self.command)
             .args(&["root", "-g"])
@@ -31,11 +33,15 @@ impl NPM {
     }
 }
 
-pub fn run_npm_upgrade(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
-    let npm_root = npm.root()?;
-    if !npm_root.is_descendant_of(base_dirs.home_dir()) {
-        return Err(SkipStep.into());
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        let npm_root = npm.root()?;
+        if !npm_root.is_descendant_of(_base_dirs.home_dir()) {
+            return Err(SkipStep.into());
+        }
     }
 
     print_separator("Node Package Manager");
