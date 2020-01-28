@@ -441,15 +441,6 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     run_type.execute(sudo).arg(snap).arg("refresh").check_run()
 }
 
-pub fn run_rpi_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
-    let rpi_update = require("rpi-update")?;
-
-    print_separator("rpi-update");
-
-    run_type.execute(sudo).arg(rpi_update).check_run()
-}
-
 pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let pihole = require("pihole")?;
