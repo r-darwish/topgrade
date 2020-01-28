@@ -4,6 +4,9 @@
 #    "~/.config/something"
 #]
 
+# Don't pull the predefined git repos
+# predefined_git_repos = false
+
 # Disable specific steps - same options as the command line flag
 #disable = ["system", "emacs"]
 

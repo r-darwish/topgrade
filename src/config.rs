@@ -57,6 +57,7 @@ pub struct ConfigFile {
     pre_commands: Option<Commands>,
     commands: Option<Commands>,
     git_repos: Option<Vec<String>>,
+    predefined_git_repos: Option<bool>,
     disable: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
@@ -189,6 +190,10 @@ pub struct CommandLineArgs {
     /// Say yes to package manager's prompt (experimental)
     #[structopt(short = "y", long = "yes")]
     yes: bool,
+
+    /// Disable predefined_git_repos
+    #[structopt(long = "disable-predefined-git-repos")]
+    disable_predefined_git_repos: bool,
 }
 
 impl CommandLineArgs {
@@ -348,5 +353,9 @@ impl Config {
             Some(args) => args.as_str(),
             None => "--devel",
         }
+    }
+
+    pub fn use_predefined_git_repos(&self) -> bool {
+        !self.opt.disable_predefined_git_repos && self.config_file.predefined_git_repos.unwrap_or(true)
     }
 }

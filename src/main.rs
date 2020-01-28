@@ -233,38 +233,41 @@ fn run() -> Result<()> {
     }
 
     let emacs = emacs::Emacs::new(&base_dirs);
-    if config.should_run(Step::Emacs) {
-        if let Some(directory) = emacs.directory() {
-            git_repos.insert(directory);
-        }
-        git_repos.insert(base_dirs.home_dir().join(".doom.d"));
-    }
-
-    if config.should_run(Step::Vim) {
-        git_repos.insert(base_dirs.home_dir().join(".vim"));
-        git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
-    }
-
-    #[cfg(unix)]
+    if config.use_predefined_git_repos()
     {
-        git_repos.insert(zsh::zshrc(&base_dirs));
-        git_repos.insert(base_dirs.home_dir().join(".tmux"));
-        git_repos.insert(base_dirs.home_dir().join(".config/fish"));
-        git_repos.insert(base_dirs.config_dir().join("openbox"));
-        git_repos.insert(base_dirs.config_dir().join("bspwm"));
-        git_repos.insert(base_dirs.config_dir().join("i3"));
-        git_repos.insert(base_dirs.config_dir().join("sway"));
-    }
+        if config.should_run(Step::Emacs) {
+            if let Some(directory) = emacs.directory() {
+                git_repos.insert(directory);
+            }
+            git_repos.insert(base_dirs.home_dir().join(".doom.d"));
+        }
 
-    #[cfg(windows)]
-    git_repos.insert(
-        base_dirs
-            .data_local_dir()
-            .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
-    );
+        if config.should_run(Step::Vim) {
+            git_repos.insert(base_dirs.home_dir().join(".vim"));
+            git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
+        }
 
-    if let Some(profile) = powershell.profile() {
-        git_repos.insert(profile);
+        #[cfg(unix)]
+        {
+            git_repos.insert(zsh::zshrc(&base_dirs));
+            git_repos.insert(base_dirs.home_dir().join(".tmux"));
+            git_repos.insert(base_dirs.home_dir().join(".config/fish"));
+            git_repos.insert(base_dirs.config_dir().join("openbox"));
+            git_repos.insert(base_dirs.config_dir().join("bspwm"));
+            git_repos.insert(base_dirs.config_dir().join("i3"));
+            git_repos.insert(base_dirs.config_dir().join("sway"));
+        }
+
+        #[cfg(windows)]
+        git_repos.insert(
+            base_dirs
+                .data_local_dir()
+                .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
+        );
+
+        if let Some(profile) = powershell.profile() {
+            git_repos.insert(profile);
+        }
     }
 
     if config.should_run(Step::GitRepos) {
