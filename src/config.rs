@@ -1,4 +1,6 @@
 use super::utils::editor;
+#[cfg(target_os = "macos")]
+use crate::terminal::print_warning;
 use anyhow::Result;
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
@@ -71,7 +73,22 @@ pub struct ConfigFile {
 
 impl ConfigFile {
     fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf> {
+        #[cfg(not(target_os = "macos"))]
         let config_path = base_dirs.config_dir().join("topgrade.toml");
+
+        #[cfg(target_os = "macos")]
+        let config_path = {
+            let deprecated_path = base_dirs.config_dir().join("topgrade.toml");
+            let new_path = base_dirs.home_dir().join(".config/topgrade.toml");
+            if deprecated_path.exists() {
+                print_warning(format!("Storing configuration file at {old} is deprecated. Please move it to {new} by executing `mv \"{old}\" \"{new}\"`",
+                              old=deprecated_path.display(), new=new_path.display()));
+                deprecated_path
+            } else {
+                new_path
+            }
+        };
+
         if !config_path.exists() {
             debug!("No configuration exists");
             write(&config_path, include_str!("../config.example.toml")).map_err(|e| {
@@ -82,6 +99,8 @@ impl ConfigFile {
                 );
                 e
             })?;
+        } else {
+            debug!("Configuration at {}", config_path.display());
         }
 
         Ok(config_path)
