@@ -191,7 +191,7 @@ pub struct CommandLineArgs {
     #[structopt(short = "y", long = "yes")]
     yes: bool,
 
-    /// Disable predefined_git_repos
+    /// Don't pull the predefined git repos
     #[structopt(long = "disable-predefined-git-repos")]
     disable_predefined_git_repos: bool,
 }
