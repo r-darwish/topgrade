@@ -15,6 +15,7 @@ const DDOM_PATH: &str = "bin/doom";
 
 pub struct Emacs {
     directory: Option<PathBuf>,
+    doom: Option<PathBuf>,
 }
 
 impl Emacs {
@@ -30,9 +31,13 @@ impl Emacs {
     }
 
     pub fn new(base_dirs: &BaseDirs) -> Self {
-        Self {
-            directory: Emacs::directory_path(base_dirs),
-        }
+        let directory = Emacs::directory_path(base_dirs);
+        let doom = directory.as_ref().and_then(|d| d.join(DDOM_PATH).if_exists());
+        Self { directory, doom }
+    }
+
+    pub fn is_doom(&self) -> bool {
+        self.doom.is_some()
     }
 
     pub fn directory(&self) -> Option<&PathBuf> {
@@ -48,10 +53,9 @@ impl Emacs {
     pub fn upgrade(&self, run_type: RunType) -> Result<()> {
         let emacs = require("emacs")?;
         let init_file = require_option(self.directory.as_ref())?.join("init.el").require()?;
-        let doom = require_option(self.directory.as_ref())?.join(DDOM_PATH);
 
-        if doom.exists() {
-            return Emacs::update_doom(&doom, run_type);
+        if let Some(doom) = &self.doom {
+            return Emacs::update_doom(doom, run_type);
         }
 
         print_separator("Emacs");
