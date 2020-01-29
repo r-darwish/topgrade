@@ -79,5 +79,9 @@ pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
     print_separator("oh-my-zsh");
 
-    run_type.execute("sh").env("ZSH", &oh_my_zsh).arg(&oh_my_zsh.join("tools/upgrade.sh")).check_run()
+    run_type
+        .execute("sh")
+        .env("ZSH", &oh_my_zsh)
+        .arg(&oh_my_zsh.join("tools/upgrade.sh"))
+        .check_run()
 }
