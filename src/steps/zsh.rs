@@ -74,12 +74,10 @@ pub fn run_zplugin(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 }
 
 pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
-    let zsh = require("zsh")?;
-    let zshrc = zshrc(base_dirs).require()?;
-    base_dirs.home_dir().join(".oh-my-zsh").require()?;
+    require("zsh")?;
+    let oh_my_zsh = base_dirs.home_dir().join(".oh-my-zsh").require()?;
 
     print_separator("oh-my-zsh");
 
-    let cmd = format!("source {} && upgrade_oh_my_zsh", zshrc.display());
-    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
+    run_type.execute("sh").env("ZSH", &oh_my_zsh).arg(&oh_my_zsh.join("tools/upgrade.sh")).check_run()
 }
