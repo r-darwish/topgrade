@@ -200,11 +200,11 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Resul
     if let Some(sudo) = &sudo {
         let mut command = run_type.execute(&sudo);
         command
-            .arg(
-                Path::new("/usr/bin/dnf")
+            .arg(Path::new("/usr/bin/dnf").if_exists().unwrap_or_else(|| {
+                Path::new("/usr/bin/yum")
                     .if_exists()
-                    .unwrap_or_else(|| Path::new("/usr/bin/yum")),
-            )
+                    .unwrap_or_else(|| Path::new("/usr/bin/rpm-ostree"))
+            }))
             .arg("upgrade");
         if yes {
             command.arg("-y");
