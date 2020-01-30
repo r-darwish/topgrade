@@ -623,7 +623,10 @@ fn run() -> Result<()> {
             execute(
                 &mut report,
                 "Windows update",
-                || powershell::Powershell::windows_powershell().windows_update(run_type),
+                || {
+                    powershell::Powershell::windows_powershell()
+                        .windows_update(run_type, config.accept_all_windows_updates())
+                },
                 config.no_retry(),
             )?;
         }

@@ -65,7 +65,7 @@ impl Powershell {
     }
 
     #[cfg(windows)]
-    pub fn windows_update(&self, run_type: RunType) -> Result<()> {
+    pub fn windows_update(&self, run_type: RunType, accept_all_updates: bool) -> Result<()> {
         let powershell = require_option(self.path.as_ref())?;
 
         if !Self::has_module(&powershell, "PSWindowsUpdate") {
@@ -77,7 +77,10 @@ impl Powershell {
             .execute(&powershell)
             .args(&[
                 "-Command",
-                "Import-Module PSWindowsUpdate; Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -Verbose",
+                &format!(
+                    "Import-Module PSWindowsUpdate; Install-WindowsUpdate -MicrosoftUpdate {} -Verbose",
+                    if accept_all_updates { "-AcceptAll" } else { "" }
+                ),
             ])
             .check_run()
     }

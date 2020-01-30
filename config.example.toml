@@ -34,6 +34,9 @@
 # Arguments to pass yay when updating packages
 #yay_arguments = "--nodevel"
 
+# Manually select Windows updates
+# accept_all_windows_updates = false
+
 # Do not set the terminal title
 #set_title = false
 # Commands to run before anything

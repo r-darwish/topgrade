@@ -69,6 +69,7 @@ pub struct ConfigFile {
     no_retry: Option<bool>,
     run_in_tmux: Option<bool>,
     cleanup: Option<bool>,
+    accept_all_windows_updates: Option<bool>,
     only: Option<Vec<Step>>,
 }
 
@@ -344,6 +345,12 @@ impl Config {
     #[allow(dead_code)]
     pub fn yes(&self) -> bool {
         self.config_file.assume_yes.unwrap_or(self.opt.yes)
+    }
+
+    /// Whether to accept all Windows updates
+    #[allow(dead_code)]
+    pub fn accept_all_windows_updates(&self) -> bool {
+        self.config_file.accept_all_windows_updates.unwrap_or(true)
     }
 
     /// Extra yay arguments
