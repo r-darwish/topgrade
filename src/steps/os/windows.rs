@@ -12,13 +12,19 @@ pub fn run_chocolatey(run_type: RunType) -> Result<()> {
     run_type.execute(&choco).args(&["upgrade", "all"]).check_run()
 }
 
-pub fn run_scoop(run_type: RunType) -> Result<()> {
+pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
     let scoop = require("scoop")?;
 
     print_separator("Scoop");
 
     run_type.execute(&scoop).args(&["update"]).check_run()?;
-    run_type.execute(&scoop).args(&["update", "*"]).check_run()
+    run_type.execute(&scoop).args(&["update", "*"]).check_run()?;
+
+    if cleanup {
+        run_type.execute(&scoop).args(&["cleanup", "*"]).check_run()?;
+    }
+
+    Ok(())
 }
 
 pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {

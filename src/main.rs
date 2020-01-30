@@ -184,7 +184,12 @@ fn run() -> Result<()> {
                 config.no_retry(),
             )?;
 
-            execute(&mut report, "Scoop", || windows::run_scoop(run_type), config.no_retry())?;
+            execute(
+                &mut report,
+                "Scoop",
+                || windows::run_scoop(config.cleanup(), run_type),
+                config.no_retry(),
+            )?;
         }
     }
 
