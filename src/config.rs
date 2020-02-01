@@ -29,6 +29,7 @@ pub enum Step {
     Emacs,
     Gem,
     Node,
+    Composer,
     Sdkman,
     Remotes,
     Rustup,

@@ -499,14 +499,17 @@ fn run() -> Result<()> {
         )?;
         execute(
             &mut report,
-            "composer",
-            || generic::run_composer_update(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
             "yarn",
             || node::yarn_global_update(run_type),
+            config.no_retry(),
+        )?;
+    }
+
+    if config.should_run(Step::Composer) {
+        execute(
+            &mut report,
+            "composer",
+            || generic::run_composer_update(&base_dirs, run_type),
             config.no_retry(),
         )?;
     }
