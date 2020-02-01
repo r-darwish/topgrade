@@ -186,10 +186,13 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
 
     print_separator("Composer");
 
-    run_type.execute(&composer).args(&["global", "update"]).check_run()?;
-
-    if let Some(valet) = utils::which("valet") {
-        run_type.execute(&valet).arg("install").check_run()?;
+    let output = Command::new(&composer)
+        .args(&["global", "update"])
+        .check_output()?;
+    if output.contains("valet") {
+        if let Some(valet) = utils::which("valet") {
+            run_type.execute(&valet).arg("install").check_run()?;
+        }
     }
 
     Ok(())
