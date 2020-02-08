@@ -167,14 +167,9 @@ pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()>
         .check_run()
 }
 
-pub fn run_custom_command(name: &str, command: &str, execution_context: &ExecutionContext) -> Result<()> {
+pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> Result<()> {
     print_separator(name);
-    execution_context
-        .run_type()
-        .execute(shell())
-        .arg("-c")
-        .arg(command)
-        .check_run()
+    ctx.run_type().execute(shell()).arg("-c").arg(command).check_run()
 }
 
 pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {

@@ -2,6 +2,7 @@
 use crate::config::Config;
 use crate::executor::RunType;
 use directories::BaseDirs;
+#[cfg(unix)]
 use std::path::PathBuf;
 
 pub struct ExecutionContext<'a> {

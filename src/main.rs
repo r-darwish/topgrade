@@ -97,10 +97,10 @@ fn run() -> Result<()> {
     let run_type = executor::RunType::new(config.dry_run());
 
     #[cfg(unix)]
-    let execution_context = execution_context::ExecutionContext::new(run_type, &sudo, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &config, &base_dirs);
 
     #[cfg(not(unix))]
-    let execution_context = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
 
     #[cfg(feature = "self-update")]
     {
@@ -122,7 +122,7 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &execution_context)?;
+            generic::run_custom_command(&name, &command, &ctx)?;
         }
     }
 
@@ -557,7 +557,7 @@ fn run() -> Result<()> {
             execute(
                 &mut report,
                 name,
-                || generic::run_custom_command(&name, &command, &execution_context),
+                || generic::run_custom_command(&name, &command, &ctx),
                 config.no_retry(),
             )?;
         }
