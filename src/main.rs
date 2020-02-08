@@ -2,6 +2,7 @@
 mod config;
 mod ctrlc;
 mod error;
+mod execution_context;
 mod executor;
 mod report;
 #[cfg(feature = "self-update")]
@@ -95,6 +96,12 @@ fn run() -> Result<()> {
     let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
 
+    #[cfg(unix)]
+    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &config, &base_dirs);
+
+    #[cfg(not(unix))]
+    let ctx = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
+
     #[cfg(feature = "self-update")]
     {
         openssl_probe::init_ssl_cert_env_vars();
@@ -115,7 +122,7 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, run_type)?;
+            generic::run_custom_command(&name, &command, &ctx)?;
         }
     }
 
@@ -555,7 +562,7 @@ fn run() -> Result<()> {
             execute(
                 &mut report,
                 name,
-                || generic::run_custom_command(&name, &command, run_type),
+                || generic::run_custom_command(&name, &command, &ctx),
                 config.no_retry(),
             )?;
         }
