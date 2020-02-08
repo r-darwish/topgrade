@@ -66,7 +66,6 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     #[cfg(target_os = "linux")]
     {
         use super::linux::Distribution;
-        use log::debug;
 
         if let Ok(Distribution::NixOS) = Distribution::detect() {
             debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
