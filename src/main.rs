@@ -210,7 +210,7 @@ fn run() -> Result<()> {
                 config.no_retry(),
             )?;
 
-            execute(&mut report, "nix", || unix::run_nix(run_type), config.no_retry())?;
+            execute(&mut report, "nix", || unix::run_nix(&ctx), config.no_retry())?;
             execute(
                 &mut report,
                 "home-manager",
