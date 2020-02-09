@@ -1,11 +1,15 @@
 #[cfg(target_os = "linux")]
 use crate::error::SkipStep;
+use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
-use crate::terminal::print_separator;
+use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
 use anyhow::Result;
 use directories::BaseDirs;
+use log::debug;
 use std::env;
+use std::fs;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -50,16 +54,18 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-pub fn run_nix(run_type: RunType) -> Result<()> {
+pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     let nix = require("nix")?;
     let nix_channel = require("nix-channel")?;
     let nix_env = require("nix-env")?;
     print_separator("Nix");
 
+    let multi_user = fs::metadata(&nix)?.uid() == 0;
+    debug!("Multi user nix: {}", multi_user);
+
     #[cfg(target_os = "linux")]
     {
         use super::linux::Distribution;
-        use log::debug;
 
         if let Ok(Distribution::NixOS) = Distribution::detect() {
             debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
@@ -67,7 +73,17 @@ pub fn run_nix(run_type: RunType) -> Result<()> {
         }
     }
 
-    run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+    let run_type = ctx.run_type();
+
+    if multi_user {
+        if let Some(sudo) = ctx.sudo() {
+            run_type.execute(&sudo).arg("nix").arg("upgrade-nix").check_run()?;
+        } else {
+            print_warning("Need sudo to upgrade Nix");
+        }
+    } else {
+        run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+    }
     run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
