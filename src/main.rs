@@ -5,6 +5,7 @@ mod error;
 mod execution_context;
 mod executor;
 mod report;
+mod runner;
 #[cfg(feature = "self-update")]
 mod self_update;
 mod steps;
@@ -12,59 +13,19 @@ mod terminal;
 mod utils;
 
 use self::config::{CommandLineArgs, Config, Step};
+use self::error::StepFailed;
 #[cfg(all(windows, feature = "self-update"))]
 use self::error::Upgraded;
-use self::error::{SkipStep, StepFailed};
-use self::report::Report;
+
 use self::steps::*;
 use self::terminal::*;
 use anyhow::{anyhow, Result};
-use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
-use std::borrow::Cow;
 use std::env;
-use std::fmt::Debug;
 use std::io;
 use std::process::exit;
 use structopt::StructOpt;
-
-fn execute<'a, F, M>(report: &mut Report<'a>, key: M, func: F, no_retry: bool) -> Result<()>
-where
-    F: Fn() -> Result<()>,
-    M: Into<Cow<'a, str>> + Debug,
-{
-    let key = key.into();
-    debug!("Step {:?}", key);
-
-    loop {
-        match func() {
-            Ok(()) => {
-                report.push_result(Some((key, true)));
-                break;
-            }
-            Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
-                break;
-            }
-            Err(_) => {
-                let interrupted = ctrlc::interrupted();
-                if interrupted {
-                    ctrlc::unset_interrupted();
-                }
-
-                let should_ask = interrupted || !no_retry;
-                let should_retry = should_ask && should_retry(interrupted, key.as_ref())?;
-
-                if !should_retry {
-                    report.push_result(Some((key, false)));
-                    break;
-                }
-            }
-        }
-    }
-
-    Ok(())
-}
 
 fn run() -> Result<()> {
     ctrlc::set_handler();
@@ -90,8 +51,6 @@ fn run() -> Result<()> {
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);
 
-    let mut report = Report::new();
-
     #[cfg(unix)]
     let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
@@ -101,6 +60,8 @@ fn run() -> Result<()> {
 
     #[cfg(not(unix))]
     let ctx = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
+
+    let mut runner = runner::Runner::new(&ctx);
 
     #[cfg(feature = "self-update")]
     {
@@ -130,25 +91,20 @@ fn run() -> Result<()> {
     let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Shell);
 
     #[cfg(windows)]
-    execute(&mut report, "WSL", || windows::run_wsl_topgrade(run_type), true)?;
+    runner.execute("WSL", || windows::run_wsl_topgrade(run_type))?;
 
     if let Some(topgrades) = config.remote_topgrades() {
         if config.should_run(Step::Remotes) {
             for remote_topgrade in topgrades {
-                execute(
-                    &mut report,
-                    remote_topgrade,
-                    || {
-                        generic::run_remote_topgrade(
-                            run_type,
-                            remote_topgrade,
-                            config.ssh_arguments(),
-                            config.run_in_tmux(),
-                            config.tmux_arguments(),
-                        )
-                    },
-                    config.no_retry(),
-                )?;
+                runner.execute(remote_topgrade, || {
+                    generic::run_remote_topgrade(
+                        run_type,
+                        remote_topgrade,
+                        config.ssh_arguments(),
+                        config.run_in_tmux(),
+                        config.tmux_arguments(),
+                    )
+                })?;
             }
         }
     }
@@ -161,86 +117,50 @@ fn run() -> Result<()> {
         if config.should_run(Step::System) {
             match &distribution {
                 Ok(distribution) => {
-                    execute(
-                        &mut report,
-                        "System update",
-                        || distribution.upgrade(&sudo, run_type, &config),
-                        config.no_retry(),
-                    )?;
+                    runner.execute("System update", || distribution.upgrade(&sudo, run_type, &config))?;
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);
                 }
             }
-            execute(
-                &mut report,
-                "etc-update",
-                || linux::run_etc_update(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("etc-update", || linux::run_etc_update(sudo.as_ref(), run_type))?;
         }
     }
 
     #[cfg(windows)]
     {
         if config.should_run(Step::PackageManagers) {
-            execute(
-                &mut report,
-                "Chocolatey",
-                || windows::run_chocolatey(run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("Chocolatey", || windows::run_chocolatey(run_type))?;
 
-            execute(
-                &mut report,
-                "Scoop",
-                || windows::run_scoop(config.cleanup(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("Scoop", || windows::run_scoop(config.cleanup(), run_type))?;
         }
     }
 
     #[cfg(unix)]
     {
         if config.should_run(Step::PackageManagers) {
-            execute(
-                &mut report,
-                "brew",
-                || unix::run_homebrew(config.cleanup(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("brew", || unix::run_homebrew(config.cleanup(), run_type))?;
 
-            execute(&mut report, "nix", || unix::run_nix(&ctx), config.no_retry())?;
-            execute(
-                &mut report,
-                "home-manager",
-                || unix::run_home_manager(run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("nix", || unix::run_nix(&ctx))?;
+            runner.execute("home-manager", || unix::run_home_manager(run_type))?;
         }
     }
 
     #[cfg(target_os = "dragonfly")]
     {
         if config.should_run(Step::PackageManagers) {
-            execute(
-                &mut report,
-                "DragonFly BSD Packages",
-                || dragonfly::upgrade_packages(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("DragonFly BSD Packages", || {
+                dragonfly::upgrade_packages(sudo.as_ref(), run_type)
+            })?;
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
         if config.should_run(Step::PackageManagers) {
-            execute(
-                &mut report,
-                "FreeBSD Packages",
-                || freebsd::upgrade_packages(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("FreeBSD Packages", || {
+                freebsd::upgrade_packages(sudo.as_ref(), run_type)
+            })?;
         }
     }
 
@@ -289,233 +209,105 @@ fn run() -> Result<()> {
                 git_repos.glob_insert(git_repo);
             }
         }
-        execute(
-            &mut report,
-            "Git repositories",
-            || git.multi_pull(&git_repos, run_type, config.git_arguments()),
-            config.no_retry(),
-        )?;
+        runner.execute("Git repositories", || {
+            git.multi_pull(&git_repos, run_type, config.git_arguments())
+        })?;
     }
 
     if should_run_powershell {
-        execute(
-            &mut report,
-            "Powershell Modules Update",
-            || powershell.update_modules(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("Powershell Modules Update", || powershell.update_modules(run_type))?;
     }
 
     #[cfg(unix)]
     {
         if config.should_run(Step::Shell) {
-            execute(
-                &mut report,
-                "zr",
-                || zsh::run_zr(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "antigen",
-                || zsh::run_antigen(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "zplug",
-                || zsh::run_zplug(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "zplugin",
-                || zsh::run_zplugin(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "oh-my-zsh",
-                || zsh::run_oh_my_zsh(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "fisher",
-                || unix::run_fisher(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "tmux",
-                || tmux::run_tpm(&base_dirs, run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("zr", || zsh::run_zr(&base_dirs, run_type))?;
+            runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
+            runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
+            runner.execute("zplugin", || zsh::run_zplugin(&base_dirs, run_type))?;
+            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&base_dirs, run_type))?;
+            runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
+            runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         }
 
         if config.should_run(Step::Tldr) {
-            execute(&mut report, "TLDR", || unix::run_tldr(run_type), config.no_retry())?;
+            runner.execute("TLDR", || unix::run_tldr(run_type))?;
         }
     }
 
     if config.should_run(Step::Rustup) {
-        execute(
-            &mut report,
-            "rustup",
-            || generic::run_rustup(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("rustup", || generic::run_rustup(&base_dirs, run_type))?;
     }
 
     if config.should_run(Step::Cargo) {
-        execute(
-            &mut report,
-            "cargo",
-            || generic::run_cargo_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("cargo", || generic::run_cargo_update(run_type))?;
     }
 
     if config.should_run(Step::Flutter) {
-        execute(
-            &mut report,
-            "Flutter",
-            || generic::run_flutter_upgrade(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("Flutter", || generic::run_flutter_upgrade(run_type))?;
     }
 
     if config.should_run(Step::Go) {
-        execute(
-            &mut report,
-            "Go",
-            || generic::run_go(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("Go", || generic::run_go(&base_dirs, run_type))?;
     }
 
     if config.should_run(Step::Emacs) {
-        execute(&mut report, "Emacs", || emacs.upgrade(run_type), config.no_retry())?;
+        runner.execute("Emacs", || emacs.upgrade(run_type))?;
     }
 
     if config.should_run(Step::Opam) {
-        execute(
-            &mut report,
-            "opam",
-            || generic::run_opam_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("opam", || generic::run_opam_update(run_type))?;
     }
 
     if config.should_run(Step::Vcpkg) {
-        execute(
-            &mut report,
-            "vcpkg",
-            || generic::run_vcpkg_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("vcpkg", || generic::run_vcpkg_update(run_type))?;
     }
 
     if config.should_run(Step::Pipx) {
-        execute(
-            &mut report,
-            "pipx",
-            || generic::run_pipx_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("pipx", || generic::run_pipx_update(run_type))?;
     }
 
     if config.should_run(Step::Stack) {
-        execute(
-            &mut report,
-            "stack",
-            || generic::run_stack_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("stack", || generic::run_stack_update(run_type))?;
     }
 
     if config.should_run(Step::Tlmgr) {
-        execute(
-            &mut report,
-            "tlmgr",
-            || {
-                generic::run_tlmgr_update(
-                    #[cfg(unix)]
-                    &sudo,
-                    #[cfg(windows)]
-                    &None,
-                    run_type,
-                )
-            },
-            config.no_retry(),
-        )?;
+        runner.execute("tlmgr", || {
+            generic::run_tlmgr_update(
+                #[cfg(unix)]
+                &sudo,
+                #[cfg(windows)]
+                &None,
+                run_type,
+            )
+        })?;
     }
 
     if config.should_run(Step::Myrepos) {
-        execute(
-            &mut report,
-            "myrepos",
-            || generic::run_myrepos_update(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("myrepos", || generic::run_myrepos_update(&base_dirs, run_type))?;
     }
 
     #[cfg(unix)]
     {
         if config.should_run(Step::Pearl) {
-            execute(&mut report, "pearl", || unix::run_pearl(run_type), config.no_retry())?;
+            runner.execute("pearl", || unix::run_pearl(run_type))?;
         }
     }
 
     if config.should_run(Step::Jetpack) {
-        execute(
-            &mut report,
-            "jetpak",
-            || generic::run_jetpack(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("jetpak", || generic::run_jetpack(run_type))?;
     }
 
     if config.should_run(Step::Vim) {
-        execute(
-            &mut report,
-            "vim",
-            || vim::upgrade_vim(&base_dirs, run_type, config.cleanup()),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "Neovim",
-            || vim::upgrade_neovim(&base_dirs, run_type, config.cleanup()),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "voom",
-            || vim::run_voom(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("vim", || vim::upgrade_vim(&base_dirs, run_type, config.cleanup()))?;
+        runner.execute("Neovim", || vim::upgrade_neovim(&base_dirs, run_type, config.cleanup()))?;
+        runner.execute("voom", || vim::run_voom(&base_dirs, run_type))?;
     }
 
     if config.should_run(Step::Node) {
-        execute(
-            &mut report,
-            "NPM",
-            || node::run_npm_upgrade(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "composer",
-            || generic::run_composer_update(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
-        execute(
-            &mut report,
-            "yarn",
-            || node::yarn_global_update(run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("NPM", || node::run_npm_upgrade(&base_dirs, run_type))?;
+        runner.execute("composer", || generic::run_composer_update(&base_dirs, run_type))?;
+        runner.execute("yarn", || node::yarn_global_update(run_type))?;
     }
 
     #[cfg(not(any(
@@ -526,135 +318,79 @@ fn run() -> Result<()> {
     )))]
     {
         if config.should_run(Step::Atom) {
-            execute(&mut report, "apm", || generic::run_apm(run_type), config.no_retry())?;
+            runner.execute("apm", || generic::run_apm(run_type))?;
         }
     }
 
     if config.should_run(Step::Gem) {
-        execute(
-            &mut report,
-            "gem",
-            || generic::run_gem(&base_dirs, run_type),
-            config.no_retry(),
-        )?;
+        runner.execute("gem", || generic::run_gem(&base_dirs, run_type))?;
     }
 
     #[cfg(target_os = "linux")]
     {
         if config.should_run(Step::PackageManagers) {
-            execute(
-                &mut report,
-                "Flatpak",
-                || linux::flatpak_update(run_type),
-                config.no_retry(),
-            )?;
-            execute(
-                &mut report,
-                "snap",
-                || linux::run_snap(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("Flatpak", || linux::flatpak_update(run_type))?;
+            runner.execute("snap", || linux::run_snap(sudo.as_ref(), run_type))?;
         }
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            execute(
-                &mut report,
-                name,
-                || generic::run_custom_command(&name, &command, &ctx),
-                config.no_retry(),
-            )?;
+            runner.execute(name, || generic::run_custom_command(&name, &command, &ctx))?;
         }
     }
 
     #[cfg(target_os = "linux")]
     {
         if config.should_run(Step::System) {
-            execute(
-                &mut report,
-                "pihole",
-                || linux::run_pihole_update(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("pihole", || linux::run_pihole_update(sudo.as_ref(), run_type))?;
         }
 
         if config.should_run(Step::Firmware) {
-            execute(
-                &mut report,
-                "Firmware upgrades",
-                || linux::run_fwupdmgr(run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("Firmware upgrades", || linux::run_fwupdmgr(run_type))?;
         }
 
         if config.should_run(Step::Restarts) {
-            execute(
-                &mut report,
-                "Restarts",
-                || linux::run_needrestart(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("Restarts", || linux::run_needrestart(sudo.as_ref(), run_type))?;
         }
     }
 
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
-            execute(&mut report, "App Store", || macos::run_mas(run_type), config.no_retry())?;
-
-            execute(
-                &mut report,
-                "System upgrade",
-                || macos::upgrade_macos(run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("App Store", || macos::run_mas(run_type))?;
+            runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
         }
     }
 
     #[cfg(target_os = "freebsd")]
     {
         if config.should_run(Step::System) {
-            execute(
-                &mut report,
-                "FreeBSD Upgrade",
-                || freebsd::upgrade_freebsd(sudo.as_ref(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("FreeBSD Upgrade", || freebsd::upgrade_freebsd(sudo.as_ref(), run_type))?;
         }
     }
 
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            execute(
-                &mut report,
-                "Windows update",
-                || {
-                    powershell::Powershell::windows_powershell()
-                        .windows_update(run_type, config.accept_all_windows_updates())
-                },
-                config.no_retry(),
-            )?;
+            runner.execute("Windows update", || {
+                powershell::Powershell::windows_powershell()
+                    .windows_update(run_type, config.accept_all_windows_updates())
+            })?;
         }
     }
 
     #[cfg(unix)]
     {
         if config.should_run(Step::Sdkman) {
-            execute(
-                &mut report,
-                "SDKMAN!",
-                || unix::run_sdkman(&base_dirs, config.cleanup(), run_type),
-                config.no_retry(),
-            )?;
+            runner.execute("SDKMAN!", || unix::run_sdkman(&base_dirs, config.cleanup(), run_type))?;
         }
     }
 
-    if !report.data().is_empty() {
+    if !runner.report().data().is_empty() {
         print_separator("Summary");
 
-        for (key, succeeded) in report.data() {
+        for (key, succeeded) in runner.report().data() {
             print_result(key, *succeeded);
         }
 
@@ -691,7 +427,7 @@ fn run() -> Result<()> {
         }
     }
 
-    if report.data().iter().all(|(_, succeeded)| *succeeded) {
+    if runner.report().data().iter().all(|(_, succeeded)| *succeeded) {
         Ok(())
     } else {
         Err(StepFailed.into())
