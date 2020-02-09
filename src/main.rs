@@ -351,9 +351,7 @@ fn run() -> Result<()> {
         }
 
         if config.should_run(Step::Restarts) {
-            runner
-                .runner
-                .execute("Restarts", || linux::run_needrestart(sudo.as_ref(), run_type))?;
+            runner.execute("Restarts", || linux::run_needrestart(sudo.as_ref(), run_type))?;
         }
     }
 

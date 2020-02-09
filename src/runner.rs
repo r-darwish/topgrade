@@ -21,6 +21,14 @@ impl<'a> Runner<'a> {
         }
     }
 
+    pub fn execute_with_ctx<F, M>(&mut self, key: M, func: F) -> Result<()>
+    where
+        F: Fn(&ExecutionContext) -> Result<()>,
+        M: Into<Cow<'a, str>> + Debug,
+    {
+        self.execute(key, || func(&self.ctx))
+    }
+
     pub fn execute<F, M>(&mut self, key: M, func: F) -> Result<()>
     where
         F: Fn() -> Result<()>,
