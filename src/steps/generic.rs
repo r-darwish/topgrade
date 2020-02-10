@@ -198,18 +198,15 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
 }
 
 pub fn run_remote_topgrade(
-    run_type: RunType,
+    ctx: &ExecutionContext,
     hostname: &str,
-    ssh_arguments: &Option<String>,
-    run_in_tmux: bool,
-    _tmux_arguments: &Option<String>,
 ) -> Result<()> {
     let ssh = utils::require("ssh")?;
 
-    if run_in_tmux && !run_type.dry() {
+    if ctx.config().run_in_tmux() && !ctx.run_type().dry() {
         #[cfg(unix)]
         {
-            crate::tmux::run_remote_topgrade(hostname, &ssh, _tmux_arguments)?;
+            crate::tmux::run_remote_topgrade(hostname, &ssh, ctx.config().tmux_arguments())?;
             Err(SkipStep.into())
         }
 
@@ -218,13 +215,13 @@ pub fn run_remote_topgrade(
     } else {
         let mut args = vec!["-t", hostname];
 
-        if let Some(ssh_arguments) = ssh_arguments {
+        if let Some(ssh_arguments) = ctx.config().ssh_arguments() {
             args.extend(ssh_arguments.split_whitespace());
         }
 
         let env = format!("TOPGRADE_PREFIX={}", hostname);
         args.extend(&["env", &env, "topgrade"]);
 
-        run_type.execute(&ssh).args(&args).check_run()
+        ctx.run_type().execute(&ssh).args(&args).check_run()
     }
 }

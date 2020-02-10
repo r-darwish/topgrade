@@ -98,11 +98,8 @@ fn run() -> Result<()> {
             for remote_topgrade in topgrades {
                 runner.execute(remote_topgrade, || {
                     generic::run_remote_topgrade(
-                        run_type,
+                        &ctx,
                         remote_topgrade,
-                        config.ssh_arguments(),
-                        config.run_in_tmux(),
-                        config.tmux_arguments(),
                     )
                 })?;
             }
