@@ -308,7 +308,7 @@ fn run() -> Result<()> {
         runner.execute("NPM", || node::run_npm_upgrade(&base_dirs, run_type))?;
         runner.execute("yarn", || node::yarn_global_update(run_type))?;
     }
-  
+
     if config.should_run(Step::Composer) {
         runner.execute("composer", || generic::run_composer_update(&base_dirs, run_type))?;
     }
