@@ -214,6 +214,7 @@ fn run() -> Result<()> {
     {
         if config.should_run(Step::Shell) {
             runner.execute("zr", || zsh::run_zr(&base_dirs, run_type))?;
+            runner.execute("antibody", || zsh::run_antibody(run_type))?;
             runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
             runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
             runner.execute("zplugin", || zsh::run_zplugin(&base_dirs, run_type))?;

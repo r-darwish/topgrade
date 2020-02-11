@@ -26,6 +26,15 @@ pub fn zshrc(base_dirs: &BaseDirs) -> PathBuf {
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zshrc"))
 }
 
+pub fn run_antibody(run_type: RunType) -> Result<()> {
+    require("zsh")?;
+    let antibody = require("antibody")?;
+
+    print_separator("antibody");
+
+    run_type.execute(antibody).arg("update").check_run()
+}
+
 pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
