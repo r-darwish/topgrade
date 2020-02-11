@@ -96,12 +96,7 @@ fn run() -> Result<()> {
     if let Some(topgrades) = config.remote_topgrades() {
         if config.should_run(Step::Remotes) {
             for remote_topgrade in topgrades {
-                runner.execute(remote_topgrade, || {
-                    generic::run_remote_topgrade(
-                        &ctx,
-                        remote_topgrade,
-                    )
-                })?;
+                runner.execute(remote_topgrade, || generic::run_remote_topgrade(&ctx, remote_topgrade))?;
             }
         }
     }

@@ -197,10 +197,7 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
     Ok(())
 }
 
-pub fn run_remote_topgrade(
-    ctx: &ExecutionContext,
-    hostname: &str,
-) -> Result<()> {
+pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
     let ssh = utils::require("ssh")?;
 
     if ctx.config().run_in_tmux() && !ctx.run_type().dry() {
