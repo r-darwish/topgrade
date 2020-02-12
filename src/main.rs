@@ -217,7 +217,7 @@ fn run() -> Result<()> {
             runner.execute("antibody", || zsh::run_antibody(run_type))?;
             runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
             runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
-            runner.execute("zplugin", || zsh::run_zplugin(&base_dirs, run_type))?;
+            runner.execute("zinit", || zsh::run_zinit(&base_dirs, run_type))?;
             runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&base_dirs, run_type))?;
             runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
             runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
