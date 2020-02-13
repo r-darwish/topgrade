@@ -64,21 +64,18 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
-pub fn run_zplugin(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
-    env::var("ZPLGM[HOME_DIR]")
+    env::var("ZPFX")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zplugin"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zinit"))
         .require()?;
 
-    print_separator("zplugin");
+    print_separator("zinit");
 
-    let cmd = format!(
-        "source {} && zplugin self-update && zplugin update --all",
-        zshrc.display()
-    );
+    let cmd = format!("source {} && zinit self-update && zinit update --all", zshrc.display());
     run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
