@@ -328,6 +328,7 @@ impl Config {
     }
 
     /// Extra Tmux arguments
+    #[allow(dead_code)]
     pub fn tmux_arguments(&self) -> &Option<String> {
         &self.config_file.tmux_arguments
     }
