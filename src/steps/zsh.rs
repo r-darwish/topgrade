@@ -73,12 +73,11 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("zinit");
 
     // Check whether this is a pre- or post- renaming installation
-    let zcommand;
-    if Path::new(&base_dirs.home_dir().join(".zinit")).exists() {
-        zcommand = "zinit";
+    let zcommand = if Path::new(&base_dirs.home_dir().join(".zinit")).exists() {
+        "zinit"
     } else {
-        zcommand = "zplugin";
-    }
+        "zplugin"
+    };
 
     let cmd = format!(
         "source {} && {} self-update && {} update --all",
