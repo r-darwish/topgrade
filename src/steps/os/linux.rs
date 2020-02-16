@@ -403,12 +403,13 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
 
     print_separator("Firmware upgrades");
 
-    run_type.execute(&fwupdmgr).arg("refresh").check_run()?;
-    let exit_status = run_type.execute(&fwupdmgr).arg("get-updates").spawn()?.wait()?;
+    for argument in vec!["refresh", "get-updates"].into_iter() {
+        let exit_status = run_type.execute(&fwupdmgr).arg(argument).spawn()?.wait()?;
 
-    if let ExecutorExitStatus::Wet(e) = exit_status {
-        if !(e.success() || e.code().map(|c| c == 2).unwrap_or(false)) {
-            return Err(TopgradeError::ProcessFailed(e).into());
+        if let ExecutorExitStatus::Wet(e) = exit_status {
+            if !(e.success() || e.code().map(|c| c == 2).unwrap_or(false)) {
+                return Err(TopgradeError::ProcessFailed(e).into());
+            }
         }
     }
 
