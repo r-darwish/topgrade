@@ -238,12 +238,15 @@ fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
 
 fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     if let Some(sudo) = &sudo {
-        for _ in 0..2 {
-            run_type
-                .execute(&sudo)
-                .args(&["/usr/bin/xbps-install", "-Su"])
-                .check_run()?;
-        }
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/xbps-install", "-Su", "xbps"])
+            .check_run()?;
+
+        run_type
+            .execute(&sudo)
+            .args(&["/usr/bin/xbps-install", "-u"])
+            .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
