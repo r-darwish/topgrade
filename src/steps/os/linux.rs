@@ -60,7 +60,7 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("anarchy") => Distribution::Arch,
+            Some("arch") | Some("anarchy") | Some("manjaro-arm") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
@@ -524,6 +524,11 @@ mod tests {
     #[test]
     fn test_manjaro() {
         test_template(&include_str!("os_release/manjaro"), Distribution::Arch);
+    }
+
+    #[test]
+    fn test_manjaro_arm() {
+        test_template(&include_str!("os_release/manjaro-arm"), Distribution::Arch);
     }
 
     #[test]
