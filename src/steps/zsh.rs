@@ -68,12 +68,15 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
-    env::var("ZPFX").map(PathBuf::from).unwrap().require()?;
+    let zinit_exists = env::var("ZPFX")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zinit"))
+        .exists();
 
     print_separator("zinit");
 
     // Check whether this is a pre- or post- renaming installation
-    let zcommand = if Path::new(&base_dirs.home_dir().join(".zinit")).exists() {
+    let zcommand = if zinit_exists {
         "zinit"
     } else {
         "zplugin"
