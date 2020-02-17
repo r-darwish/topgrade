@@ -79,8 +79,6 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         .unwrap_or_else(|_| base_dirs.home_dir().join("zplug"))
         .exists();
 
-    print_separator("zinit");
-
     // Check whether this is a pre- or post- renaming installation
     let zcommand = if zinit_exists {
         "zinit"
@@ -89,6 +87,8 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     } else {
         return Err(SkipStep.into());
     };
+
+    print_separator("zinit");
 
     let cmd = format!(
         "source {} && {} self-update && {} update --all",
