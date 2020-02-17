@@ -1,3 +1,4 @@
+use crate::error::SkipStep;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
