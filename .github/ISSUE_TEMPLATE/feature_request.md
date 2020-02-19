@@ -14,7 +14,6 @@ labels: is:new
 ***Are you suggesting some general feature?***
 Go ahead and tell me
 
-**System information**
-<details><pre>
-Place the output of `M-x doom/info` or `~/.emacs.d/bin/doom info` here.
-</pre></details>
+**More information**
+- Assuming that someone else implements the feature, please state if you know
+  how to test it from a side branch of Topgrade
