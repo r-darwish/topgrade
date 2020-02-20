@@ -74,15 +74,15 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zinit"))
         .exists();
 
-    let zplug_exists = env::var("ZPLUG_HOME")
+    let zplugin_exists = env::var("ZPLUG_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join("zplug"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zplugin"))
         .exists();
 
     // Check whether this is a pre- or post- renaming installation
     let zcommand = if zinit_exists {
         "zinit"
-    } else if zplug_exists {
+    } else if zplugin_exists {
         "zplugin"
     } else {
         return Err(SkipStep.into());
