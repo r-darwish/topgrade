@@ -1,4 +1,3 @@
-use crate::error::SkipStep;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
@@ -69,33 +68,14 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
-    let zinit_exists = env::var("ZPFX")
+    env::var("ZPFX")
         .map(PathBuf::from)
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zinit"))
-        .exists();
-
-    let zplugin_exists = env::var("ZPLUG_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zplugin"))
-        .exists();
-
-    // Check whether this is a pre- or post- renaming installation
-    let zcommand = if zinit_exists {
-        "zinit"
-    } else if zplugin_exists {
-        "zplugin"
-    } else {
-        return Err(SkipStep.into());
-    };
+        .require()?;
 
     print_separator("zinit");
 
-    let cmd = format!(
-        "source {} && {} self-update && {} update --all",
-        zshrc.display(),
-        zcommand,
-        zcommand
-    );
+    let cmd = format!("source {} && zinit self-update && zinit update --all", zshrc.display(),);
     run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
