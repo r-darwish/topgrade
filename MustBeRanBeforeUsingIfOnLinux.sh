@@ -11,6 +11,8 @@ echo Boom, the man topgrade command now works on your current machine. Thanks fo
 
 echo Adding the TopgradeTime command
 
-chmod 777 ./TimeTopgrade
+chmod 777 TimeTopgrade
 
 export PATH=$PATH:.
+
+echo Thanks for downloading this package.
