@@ -1,0 +1,26 @@
+.\" Manpage for topgrade.
+.\" Contact github/Linux4Life531 to correct errors or typos.
+.TH man 8 "22 Febuary 2020" "1.0" " Topgrade Manpage"
+.SH NAME
+topgrade - upgrade everything on your computer
+.SH SYNOPSIS
+topgrade - updates everything
+.SH DESCRIPTION
+Keeping your system up to date mostly involves invoking more than a single package manager. This usually results in big shell one-liners saved in your shell history. Topgrade tries to solve this problem by detecting which tools you use and run their appropriate package managers.
+.SH OPTIONS
+--only <only> - Topgrade will only update whatever you specify
+--disable <disable> - Topgrade will not update whatever you specify
+-c, --cleanup        Cleanup temporary or old files
+-n, --dry-run        Print what would be done
+--edit-config    Edit the configuration file
+-h, --help           Prints help information
+-k, --keep           Prompt for a key before exiting
+--no-retry       Do not ask to retry failed steps
+-t, --tmux           Run inside tmux
+-V, --version        Prints version information
+-v, --verbose        Output logs
+-y, --yes            Say yes to package manager's prompt (experimental)
+.SH BUGS
+For a list of bugs see https://github.com/r-darwish/topgrade/issues.
+.SH AUTHOR
+James Ashwood (To contact I'm at github/Linux4Life531)
