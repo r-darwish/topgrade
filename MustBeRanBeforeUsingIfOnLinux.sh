@@ -1,6 +1,8 @@
 
 echo This will place the man page in its folder
 
+gzip topgrade.8
+
 cd /usr/local/man/
 mkdir man8
 
