@@ -8,3 +8,9 @@ cd -
 sudo cp topgrade.8.gz /usr/local/man/man8/
 
 echo Boom, the man topgrade command now works on your current machine. Thanks for downloading this package.
+
+echo Adding the TopgradeTime command
+
+chmod 777 ./TimeTopgrade
+
+export PATH=$PATH:.
