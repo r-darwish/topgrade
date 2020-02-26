@@ -25,6 +25,7 @@ use openssl_probe;
 use std::env;
 use std::io;
 use std::process::exit;
+use structopt::clap::crate_version;
 use structopt::StructOpt;
 
 fn run() -> Result<()> {
@@ -40,6 +41,12 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+
+    debug!("Version: {}", crate_version!());
+    debug!("OS: {}", env!("TARGET"));
+    debug!("{:?}", std::env::args());
+    debug!("Binary path: {:?}", std::env::current_exe());
+    debug!("Self Update: {:?}", cfg!(feature = "self-update"));
 
     if config.run_in_tmux() && env::var("TOPGRADE_INSIDE_TMUX").is_err() {
         #[cfg(unix)]
