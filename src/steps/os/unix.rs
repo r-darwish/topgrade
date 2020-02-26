@@ -88,6 +88,14 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
 
+pub fn run_asdf(run_type: RunType) -> Result<()> {
+    let asdf = require("asdf")?;
+
+    print_separator("asdf");
+    run_type.execute(&asdf).arg("update").check_run()?;
+    run_type.execute(&asdf).args(&["plugin", "update", "--all"]).check_run()
+}
+
 pub fn run_home_manager(run_type: RunType) -> Result<()> {
     let home_manager = require("home-manager")?;
 
