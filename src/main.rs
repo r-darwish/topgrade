@@ -20,12 +20,12 @@ use self::error::Upgraded;
 use self::steps::*;
 use self::terminal::*;
 use anyhow::{anyhow, Result};
+use log::debug;
 #[cfg(feature = "self-update")]
 use openssl_probe;
 use std::env;
 use std::io;
 use std::process::exit;
-use log::debug;
 use structopt::clap::crate_version;
 use structopt::StructOpt;
 
