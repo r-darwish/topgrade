@@ -25,6 +25,7 @@ use openssl_probe;
 use std::env;
 use std::io;
 use std::process::exit;
+use log::debug;
 use structopt::clap::crate_version;
 use structopt::StructOpt;
 
