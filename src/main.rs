@@ -362,6 +362,7 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
+            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("App Store", || macos::run_mas(run_type))?;
             runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
         }
