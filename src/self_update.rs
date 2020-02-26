@@ -3,7 +3,8 @@ use super::terminal::*;
 use crate::error::Upgraded;
 use anyhow::{bail, Result};
 use self_update_crate;
-use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
+use self_update_crate::backends::github::Update;
+use self_update_crate::update::UpdateStatus;
 use std::env;
 #[cfg(unix)]
 use std::os::unix::process::CommandExt;
@@ -23,12 +24,12 @@ pub fn self_update() -> Result<()> {
         .show_download_progress(true)
         .current_version(self_update_crate::cargo_crate_version!())
         .no_confirm(true)
-        .build()
-        .and_then(Update::update_extended)?;
+        .build()?
+        .update_extended()?;
 
-    if let GitHubUpdateStatus::Updated(release) = &result {
-        println!("\nTopgrade upgraded to {}:\n", release.version());
-        println!("{}", release.body);
+    if let UpdateStatus::Updated(release) = &result {
+        println!("\nTopgrade upgraded to {}:\n", release.version);
+        println!("{}", release.name);
     } else {
         println!("Topgrade is up-to-date");
     }
