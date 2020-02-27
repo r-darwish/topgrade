@@ -15,6 +15,25 @@ pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(msupdate).arg("--install").check_run()
 }
 
+pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
+    require("port")?;
+    let sudo = ctx.sudo().as_ref().unwrap();
+    print_separator("MacPorts");
+    ctx.run_type().execute(sudo).args(&["port", "selfupdate"]).check_run()?;
+    ctx.run_type()
+        .execute(sudo)
+        .args(&["port", "-u", "upgrade", "outdated"])
+        .check_run()?;
+    if ctx.config().cleanup() {
+        ctx.run_type()
+            .execute(sudo)
+            .args(&["port", "-N", "reclaim"])
+            .check_run()?;
+    }
+
+    Ok(())
+}
+
 pub fn run_mas(run_type: RunType) -> Result<()> {
     let mas = require("mas")?;
     print_separator("macOS App Store");
