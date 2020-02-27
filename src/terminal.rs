@@ -64,14 +64,18 @@ impl Terminal {
             self.term
                 .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
         }
-        if self.desktop_notification {
-            Notification::new()
-                .summary("Topgrade")
-                .body(message.as_ref())
-                .appname("topgrade")
-                .timeout(5)
-                .show()
-                .ok();
+
+        #[cfg(target_os = "macos")]
+        {
+            if self.desktop_notification {
+                Notification::new()
+                    .summary("Topgrade")
+                    .body(message.as_ref())
+                    .appname("topgrade")
+                    .timeout(5)
+                    .show()
+                    .ok();
+            }
         }
 
         let now = Local::now();
