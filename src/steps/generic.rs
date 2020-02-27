@@ -172,7 +172,7 @@ pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> 
     ctx.run_type().execute(shell()).arg("-c").arg(command).check_run()
 }
 
-pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)
         .args(&["global", "config", "--absolute", "--quiet", "home"])
@@ -181,16 +181,27 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
         .map(|s| PathBuf::from(s.trim()))?
         .require()?;
 
-    if !composer_home.is_descendant_of(base_dirs.home_dir()) {
+    if !composer_home.is_descendant_of(ctx.base_dirs().home_dir()) {
         return Err(SkipStep.into());
     }
 
     print_separator("Composer");
 
+    if ctx.config().composer_self_update() {
+        #[cfg(unix)]
+        Command::new(ctx.sudo().unwrap())
+            .arg(&composer)
+            .arg("self-update")
+            .check_output()?;
+
+        #[cfg(not(unix))]
+        Command::new(&composer).arg("self-update").check_output()?;
+    }
+
     let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
     if output.contains("valet") {
         if let Some(valet) = utils::which("valet") {
-            run_type.execute(&valet).arg("install").check_run()?;
+            ctx.run_type().execute(&valet).arg("install").check_run()?;
         }
     }
 
