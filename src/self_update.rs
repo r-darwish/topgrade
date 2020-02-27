@@ -29,7 +29,9 @@ pub fn self_update() -> Result<()> {
 
     if let UpdateStatus::Updated(release) = &result {
         println!("\nTopgrade upgraded to {}:\n", release.version);
-        println!("{}", release.name);
+        if let Some(body) = &release.body {
+            println!("{}", body);
+        }
     } else {
         println!("Topgrade is up-to-date");
     }
