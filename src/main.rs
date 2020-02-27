@@ -140,7 +140,7 @@ fn run() -> Result<()> {
     {
         if config.should_run(Step::PackageManagers) {
             runner.execute("brew", || unix::run_homebrew(config.cleanup(), run_type))?;
-
+            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("nix", || unix::run_nix(&ctx))?;
             runner.execute("home-manager", || unix::run_home_manager(run_type))?;
         }
@@ -362,7 +362,6 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
-            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("App Store", || macos::run_mas(run_type))?;
             runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
         }
