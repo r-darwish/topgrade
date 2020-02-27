@@ -189,7 +189,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 
     if ctx.config().composer_self_update() {
         #[cfg(unix)]
-        Command::new(ctx.sudo().unwrap())
+        Command::new(ctx.sudo().as_ref().unwrap())
             .arg(&composer)
             .arg("self-update")
             .check_output()?;
