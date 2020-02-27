@@ -70,6 +70,7 @@ pub struct ConfigFile {
     no_retry: Option<bool>,
     run_in_tmux: Option<bool>,
     cleanup: Option<bool>,
+    notify_each_step: Option<bool>,
     accept_all_windows_updates: Option<bool>,
     only: Option<Vec<Step>>,
 }
@@ -353,6 +354,12 @@ impl Config {
     #[allow(dead_code)]
     pub fn accept_all_windows_updates(&self) -> bool {
         self.config_file.accept_all_windows_updates.unwrap_or(true)
+    }
+
+    /// Whether to send a desktop notification at the beginning of every step
+    #[allow(dead_code)]
+    pub fn notify_each_step(&self) -> bool {
+        self.config_file.notify_each_step.unwrap_or(false)
     }
 
     /// Extra yay arguments

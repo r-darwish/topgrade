@@ -42,6 +42,7 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+    terminal::set_desktop_notifications(config.notify_each_step());
 
     debug!("Version: {}", crate_version!());
     debug!("OS: {}", env!("TARGET"));
