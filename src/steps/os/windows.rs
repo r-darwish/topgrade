@@ -1,5 +1,7 @@
 use crate::error::SkipStep;
+use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
+use crate::powershell;
 use crate::terminal::print_separator;
 use crate::utils::require;
 use anyhow::Result;
@@ -39,6 +41,22 @@ pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {
         .args(&["bash", "-c"])
         .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade))
         .check_run()
+}
+
+pub fn windows_update(ctx: &ExecutionContext) -> Result<()> {
+    let powershell = powershell::Powershell::windows_powershell();
+
+    if powershell.supports_windows_update() {
+        print_separator("Windows Update");
+        return powershell.windows_update(ctx);
+    }
+
+    let usoclient = require("UsoClient")?;
+
+    print_separator("Windows Update");
+    println!("Running Windows Update. Check the control panel for progress.");
+    ctx.run_type().execute(&usoclient).arg("ScanInstallWait").check_run()?;
+    ctx.run_type().execute(&usoclient).arg("StartInstall").check_run()
 }
 
 pub fn reboot() {

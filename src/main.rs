@@ -380,10 +380,7 @@ fn run() -> Result<()> {
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            runner.execute("Windows update", || {
-                powershell::Powershell::windows_powershell()
-                    .windows_update(run_type, config.accept_all_windows_updates())
-            })?;
+            runner.execute("Windows update", || windows::windows_update(&ctx))?;
         }
     }
 

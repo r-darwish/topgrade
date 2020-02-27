@@ -1,5 +1,5 @@
 #[cfg(windows)]
-use crate::error::SkipStep;
+use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
@@ -65,21 +65,30 @@ impl Powershell {
     }
 
     #[cfg(windows)]
-    pub fn windows_update(&self, run_type: RunType, accept_all_updates: bool) -> Result<()> {
+    pub fn supports_windows_update(&self) -> bool {
+        self.path
+            .as_ref()
+            .map(|p| Self::has_module(&p, "PSWindowsUpdate"))
+            .unwrap_or(false)
+    }
+
+    #[cfg(windows)]
+    pub fn windows_update(&self, ctx: &ExecutionContext) -> Result<()> {
         let powershell = require_option(self.path.as_ref())?;
 
-        if !Self::has_module(&powershell, "PSWindowsUpdate") {
-            return Err(SkipStep.into());
-        }
-        print_separator("Windows Update");
+        debug_assert!(self.supports_windows_update());
 
-        run_type
+        ctx.run_type()
             .execute(&powershell)
             .args(&[
                 "-Command",
                 &format!(
                     "Import-Module PSWindowsUpdate; Install-WindowsUpdate -MicrosoftUpdate {} -Verbose",
-                    if accept_all_updates { "-AcceptAll" } else { "" }
+                    if ctx.config().accept_all_windows_updates() {
+                        "-AcceptAll"
+                    } else {
+                        ""
+                    }
                 ),
             ])
             .check_run()
