@@ -1,7 +1,7 @@
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 use notify_rust::Notification;
 use std::cmp::{max, min};
 use std::env;
@@ -65,14 +65,14 @@ impl Terminal {
                 .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
         }
 
-        #[cfg(target_os = "macos")]
+        #[cfg(any(target_os = "macos", target_os = "linux"))]
         {
             if self.desktop_notification {
                 Notification::new()
                     .summary("Topgrade")
                     .body(message.as_ref())
                     .appname("topgrade")
-                    .timeout(5)
+                    .timeout(if cfg!(macos) { 5 } else { 5000 })
                     .show()
                     .ok();
             }

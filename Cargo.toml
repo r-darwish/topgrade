@@ -36,6 +36,9 @@ rust-ini = "0.14.0"
 [target.'cfg(target_os = "macos")'.dependencies]
 notify-rust = "3.6.3"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+notify-rust = "3.6.3"
+
 [target.'cfg(unix)'.dependencies]
 nix = "0.17.0"
 
