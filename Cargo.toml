@@ -16,7 +16,7 @@ directories = "2.0.1"
 serde = { version = "1.0.92", features = ["derive"] }
 toml = "0.5.1"
 which_crate = { version = "3.1.0", package = "which" }
-shellexpand = "1.0.0"
+shellexpand = "2.0.0"
 structopt = "0.3.0"
 log = "0.4.6"
 walkdir = "2.2.7"
@@ -31,13 +31,15 @@ strum = { version = "0.17.1", features = ["derive"] }
 thiserror = "1.0.9"
 anyhow = "1.0.25"
 tempfile = "3.1.0"
-rust-ini = "0.14.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 notify-rust = "3.6.3"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.17.0"
+
+[target.'cfg(linux)'.dependencies]
+rust-ini = "0.15.0"
 
 [profile.release]
 lto = true
