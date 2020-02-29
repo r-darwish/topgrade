@@ -101,6 +101,21 @@ impl Executor {
         self
     }
 
+    /// See `std::process::Command::remove_env`
+    pub fn env_remove<K>(&mut self, key: K) -> &mut Executor
+    where
+        K: AsRef<OsStr>,
+    {
+        match self {
+            Executor::Wet(c) => {
+                c.env_remove(key);
+            }
+            Executor::Dry(_) => (),
+        }
+
+        self
+    }
+
     #[allow(dead_code)]
     /// See `std::process::Command::env`
     pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Executor

@@ -36,7 +36,11 @@ pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         .require()?;
 
     print_separator("Go");
-    run_type.execute(&go).arg("get").arg("-u").arg("all").check_run()
+    run_type
+        .execute(&go)
+        .args(&["get", "-u", "all"])
+        .env_remove("GO111MODLE")
+        .check_run()
 }
 
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
