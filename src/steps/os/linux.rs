@@ -39,10 +39,8 @@ pub enum Distribution {
 impl Distribution {
     fn parse_os_release(os_release: &ini::Ini) -> Result<Self> {
         let section = os_release.general_section();
-        let id = section.get("ID").map(String::as_str);
-        let id_like: Option<Vec<&str>> = section
-            .get("ID_LIKE")
-            .map(|s| String::as_str(s).split_whitespace().collect());
+        let id = section.get("ID");
+        let id_like: Option<Vec<&str>> = section.get("ID_LIKE").map(|s| s.split_whitespace().collect());
 
         if let Some(id_like) = id_like {
             if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
