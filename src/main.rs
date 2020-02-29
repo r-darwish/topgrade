@@ -145,6 +145,7 @@ fn run() -> Result<()> {
             runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("nix", || unix::run_nix(&ctx))?;
             runner.execute("home-manager", || unix::run_home_manager(run_type))?;
+            runner.execute("asdf", || unix::run_asdf(run_type))?;
         }
     }
 
