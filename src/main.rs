@@ -42,6 +42,7 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+    terminal::set_desktop_notifications(config.notify_each_step());
 
     debug!("Version: {}", crate_version!());
     debug!("OS: {}", env!("TARGET"));
@@ -140,9 +141,11 @@ fn run() -> Result<()> {
     {
         if config.should_run(Step::PackageManagers) {
             runner.execute("brew", || unix::run_homebrew(config.cleanup(), run_type))?;
-
+            #[cfg(target_os = "macos")]
+            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("nix", || unix::run_nix(&ctx))?;
             runner.execute("home-manager", || unix::run_home_manager(run_type))?;
+            runner.execute("asdf", || unix::run_asdf(run_type))?;
         }
     }
 
@@ -362,6 +365,7 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
+            runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
             runner.execute("App Store", || macos::run_mas(run_type))?;
             runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
         }
@@ -377,10 +381,7 @@ fn run() -> Result<()> {
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            runner.execute("Windows update", || {
-                powershell::Powershell::windows_powershell()
-                    .windows_update(run_type, config.accept_all_windows_updates())
-            })?;
+            runner.execute("Windows update", || windows::windows_update(&ctx))?;
         }
     }
 

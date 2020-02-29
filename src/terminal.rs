@@ -34,6 +34,7 @@ struct Terminal {
     prefix: String,
     term: Term,
     set_title: bool,
+    desktop_notification: bool,
 }
 
 impl Terminal {
@@ -46,7 +47,12 @@ impl Terminal {
                 .map(|prefix| format!("({}) ", prefix))
                 .unwrap_or_else(|_| String::new()),
             set_title: true,
+            desktop_notification: false,
         }
+    }
+
+    fn set_desktop_notifications(&mut self, desktop_notifications: bool) {
+        self.desktop_notification = desktop_notifications
     }
 
     fn set_title(&mut self, set_title: bool) {
@@ -58,6 +64,20 @@ impl Terminal {
             self.term
                 .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
         }
+
+        #[cfg(target_os = "macos")]
+        {
+            if self.desktop_notification {
+                Notification::new()
+                    .summary("Topgrade")
+                    .body(message.as_ref())
+                    .appname("topgrade")
+                    .timeout(5)
+                    .show()
+                    .ok();
+            }
+        }
+
         let now = Local::now();
         let message = format!(
             "{}{:02}:{:02}:{:02} - {}",
@@ -224,4 +244,11 @@ pub fn get_char() -> char {
 
 pub fn set_title(set_title: bool) {
     TERMINAL.lock().unwrap().set_title(set_title);
+}
+
+pub fn set_desktop_notifications(desktop_notifications: bool) {
+    TERMINAL
+        .lock()
+        .unwrap()
+        .set_desktop_notifications(desktop_notifications);
 }

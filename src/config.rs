@@ -75,6 +75,7 @@ pub struct ConfigFile {
     no_retry: Option<bool>,
     run_in_tmux: Option<bool>,
     cleanup: Option<bool>,
+    notify_each_step: Option<bool>,
     accept_all_windows_updates: Option<bool>,
     only: Option<Vec<Step>>,
     composer: Option<Composer>,
@@ -368,6 +369,12 @@ impl Config {
             .as_ref()
             .and_then(|c| c.self_update)
             .unwrap_or(false)
+    }
+
+    /// Whether to send a desktop notification at the beginning of every step
+    #[allow(dead_code)]
+    pub fn notify_each_step(&self) -> bool {
+        self.config_file.notify_each_step.unwrap_or(false)
     }
 
     /// Extra yay arguments

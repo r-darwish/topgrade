@@ -1,26 +1,77 @@
-.\" Manpage for topgrade.
-.\" Contact github/Linux4Life531 to correct errors or typos.
-.TH man 8 "22 Febuary 2020" "1.0" " Topgrade Manpage"
+.hy
+.TH "topgrade" "8" "29 Febuary 2020" "topgrade 4.1.1"
 .SH NAME
-topgrade - upgrade everything on your computer
+.PP
+topgrade \- upgrade everything
 .SH SYNOPSIS
-topgrade - updates everything
+.PP
+topgrade [\fIoptions\f[]]
 .SH DESCRIPTION
-Keeping your system up to date mostly involves invoking more than a single package manager. This usually results in big shell one-liners saved in your shell history. Topgrade tries to solve this problem by detecting which tools you use and run their appropriate package managers.
+.PP
+Keeping your system up to date mostly involves invoking more than a single package manager.
+This usually results in big shell one-liners saved in your shell history.
+\fBtopgrade\fR tries to solve this problem by detecting which tools you use and run their appropriate package managers.
 .SH OPTIONS
---only <only> - Topgrade will only update whatever you specify
---disable <disable> - Topgrade will not update whatever you specify
--c, --cleanup        Cleanup temporary or old files
--n, --dry-run        Print what would be done
---edit-config    Edit the configuration file
--h, --help           Prints help information
--k, --keep           Prompt for a key before exiting
---no-retry       Do not ask to retry failed steps
--t, --tmux           Run inside tmux
--V, --version        Prints version information
--v, --verbose        Output logs
--y, --yes            Say yes to package manager's prompt (experimental)
+.TP
+.B \-\-only <only>
+Run specific steps
+.RS
+.RE
+.TP
+.B \-\-disable <disable>
+Disable specific steps
+.RS
+.RE
+.TP
+.B \-c, \-\-cleanup
+Cleanup temporary or old files
+.RS
+.RE
+.TP
+.B \-n, \-\-dry\-run
+Outputs steps simulation
+.RS
+.RE
+.TP
+.B \-\-edit\-config
+Edit the configuration file
+.RS
+.RE
+.TP
+.B \-h, \-\-help
+Prints help information
+.RS
+.RE
+.TP
+.B \-k, \-\-keep
+Prompt for a key before exiting
+.RS
+.RE
+.TP
+.B \-\-no\-retry
+Do not ask to retry failed steps
+.RS
+.RE
+.TP
+.B \-t, \-\-tmux
+Run inside tmux
+.RS
+.RE
+.TP
+.B \-V, \-\-version
+Prints version information
+.RS
+.RE
+.TP
+.B \-v, \-\-verbose
+Output logs
+.RS
+.RE
+.B \-y, \-\-yes
+Say yes to package manager's prompt (experimental)
 .SH BUGS
-For a list of bugs see https://github.com/r-darwish/topgrade/issues.
+For a list of bugs see <\fIhttps://github.com/r-darwish/topgrade/issues\fR>.
 .SH AUTHOR
-James Ashwood (To contact I'm at github/Linux4Life531)
+\fBtopgrade\fR is maintained by Roey Dror (\[aq]r\-darwish\[aq]) and many other contributors.
+You can view the full list at
+<\fIhttps://github.com/r-darwish/topgrade/graphs/contributors\fR>
