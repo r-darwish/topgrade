@@ -38,7 +38,7 @@ notify-rust = "3.6.3"
 [target.'cfg(unix)'.dependencies]
 nix = "0.17.0"
 
-[target.'cfg(linux)'.dependencies]
+[target.'cfg(target_os = "linux")'.dependencies]
 rust-ini = "0.15.0"
 
 [profile.release]
