@@ -1,10 +1,11 @@
+#[cfg(target_os = "linux")]
 use crate::utils::which;
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
 use log::debug;
 #[cfg(target_os = "macos")]
-use notify_rust::Notification;
+use notify_rust::{Notification, Timeout};
 use std::cmp::{max, min};
 use std::env;
 use std::io::{self, Write};
@@ -72,13 +73,13 @@ impl Terminal {
         debug!("Desktop notification: {}", message.as_ref());
         cfg_if::cfg_if! {
             if #[cfg(target_os = "macos")] {
-                let mut notification = Notification::new()
-                    .summary("Topgrade")
+                let mut notification = Notification::new();
+                notification.summary("Topgrade")
                     .body(message.as_ref())
                     .appname("topgrade");
 
                 if let Some(timeout) = timeout {
-                    notification.timeout(timeout.as_secs());
+                    notification.timeout(Timeout::Milliseconds(timeout.as_millis() as u32));
                 }
                 notification.show().ok();
             } else if #[cfg(target_os = "linux")] {
