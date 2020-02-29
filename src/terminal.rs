@@ -1,13 +1,18 @@
+use crate::utils::which;
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
+use log::debug;
 #[cfg(target_os = "macos")]
 use notify_rust::Notification;
 use std::cmp::{max, min};
 use std::env;
 use std::io::{self, Write};
+#[cfg(target_os = "linux")]
+use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
+use std::time::Duration;
 #[cfg(windows)]
 use which_crate::which;
 
@@ -35,6 +40,8 @@ struct Terminal {
     term: Term,
     set_title: bool,
     desktop_notification: bool,
+    #[cfg(target_os = "linux")]
+    notify_send: Option<PathBuf>,
 }
 
 impl Terminal {
@@ -48,6 +55,8 @@ impl Terminal {
                 .unwrap_or_else(|_| String::new()),
             set_title: true,
             desktop_notification: false,
+            #[cfg(target_os = "linux")]
+            notify_send: which("notify-send"),
         }
     }
 
@@ -59,23 +68,40 @@ impl Terminal {
         self.set_title = set_title
     }
 
+    fn notify_desktop<P: AsRef<str>>(&self, message: P, timeout: Option<Duration>) {
+        debug!("Desktop notification: {}", message.as_ref());
+        cfg_if::cfg_if! {
+            if #[cfg(target_os = "macos")] {
+                let mut notification = Notification::new()
+                    .summary("Topgrade")
+                    .body(message.as_ref())
+                    .appname("topgrade");
+
+                if let Some(timeout) = timeout {
+                    notification.timeout(timeout.as_secs());
+                }
+                notification.show().ok();
+            } else if #[cfg(target_os = "linux")] {
+                if let Some(ns) = self.notify_send.as_ref() {
+                    let mut command = Command::new(ns);
+                    if let Some(timeout) = timeout {
+                        command.arg("-t");
+                        command.arg(format!("{}", timeout.as_millis()));
+                    }
+                    command.output().ok();
+                }
+            }
+        }
+    }
+
     fn print_separator<P: AsRef<str>>(&mut self, message: P) {
         if self.set_title {
             self.term
                 .set_title(format!("{}Topgrade - {}", self.prefix, message.as_ref()));
         }
 
-        #[cfg(target_os = "macos")]
-        {
-            if self.desktop_notification {
-                Notification::new()
-                    .summary("Topgrade")
-                    .body(message.as_ref())
-                    .appname("topgrade")
-                    .timeout(5)
-                    .show()
-                    .ok();
-            }
+        if self.desktop_notification {
+            self.notify_desktop(message.as_ref(), Some(Duration::from_secs(5)));
         }
 
         let now = Local::now();
@@ -156,14 +182,7 @@ impl Terminal {
             self.term.set_title("Topgrade - Awaiting user");
         }
 
-        #[cfg(target_os = "macos")]
-        Notification::new()
-            .summary("Topgrade")
-            .body(&format!("{} failed", step_name))
-            .appname("topgrade")
-            .timeout(0)
-            .show()
-            .ok();
+        self.notify_desktop(&format!("{} failed", step_name), None);
 
         self.term
             .write_fmt(format_args!(
