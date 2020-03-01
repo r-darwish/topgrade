@@ -69,6 +69,7 @@ impl Terminal {
         self.set_title = set_title
     }
 
+    #[allow(unused_variables)]
     fn notify_desktop<P: AsRef<str>>(&self, message: P, timeout: Option<Duration>) {
         debug!("Desktop notification: {}", message.as_ref());
         cfg_if::cfg_if! {
