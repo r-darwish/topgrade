@@ -51,7 +51,7 @@ pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
-    let zshrc = zshrc(base_dirs).require()?;
+    zshrc(base_dirs).require()?;
 
     env::var("ZPLUG_HOME")
         .map(PathBuf::from)
@@ -60,8 +60,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
     print_separator("zplug");
 
-    let cmd = format!("source {} && zplug update", zshrc.display());
-    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-i", "-c", "zplug update"]).check_run()
 }
 
 pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
