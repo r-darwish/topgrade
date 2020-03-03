@@ -195,7 +195,7 @@ fn run() -> Result<()> {
         }
 
         #[cfg(windows)]
-        git_repos.insert(
+        git_repos.insert_if_repo(
             base_dirs
                 .data_local_dir()
                 .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
