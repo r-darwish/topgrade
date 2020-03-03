@@ -172,26 +172,26 @@ fn run() -> Result<()> {
         if config.should_run(Step::Emacs) {
             if !emacs.is_doom() {
                 if let Some(directory) = emacs.directory() {
-                    git_repos.insert(directory);
+                    git_repos.insert_if_repo(directory);
                 }
             }
-            git_repos.insert(base_dirs.home_dir().join(".doom.d"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".doom.d"));
         }
 
         if config.should_run(Step::Vim) {
-            git_repos.insert(base_dirs.home_dir().join(".vim"));
-            git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".vim"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".config/nvim"));
         }
 
         #[cfg(unix)]
         {
-            git_repos.insert(zsh::zshrc(&base_dirs));
-            git_repos.insert(base_dirs.home_dir().join(".tmux"));
-            git_repos.insert(base_dirs.home_dir().join(".config/fish"));
-            git_repos.insert(base_dirs.config_dir().join("openbox"));
-            git_repos.insert(base_dirs.config_dir().join("bspwm"));
-            git_repos.insert(base_dirs.config_dir().join("i3"));
-            git_repos.insert(base_dirs.config_dir().join("sway"));
+            git_repos.insert_if_repo(zsh::zshrc(&base_dirs));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".tmux"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".config/fish"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("openbox"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("bspwm"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("i3"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("sway"));
         }
 
         #[cfg(windows)]
@@ -202,7 +202,7 @@ fn run() -> Result<()> {
         );
 
         if let Some(profile) = powershell.profile() {
-            git_repos.insert(profile);
+            git_repos.insert_if_repo(profile);
         }
     }
 

@@ -1,7 +1,7 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
-use crate::utils::which;
+use crate::utils::{which, PathExt};
 use anyhow::Result;
 use console::style;
 use glob::{glob_with, MatchOptions};
@@ -221,17 +221,35 @@ impl<'a> Repositories<'a> {
         }
     }
 
-    pub fn insert<P: AsRef<Path>>(&mut self, path: P) {
+    pub fn insert_if_repo<P: AsRef<Path>>(&mut self, path: P) -> bool {
         if let Some(repo) = self.git.get_repo_root(path) {
             self.repositories.insert(repo);
+            true
+        } else {
+            false
         }
     }
 
     pub fn glob_insert(&mut self, pattern: &str) {
         if let Ok(glob) = glob_with(pattern, self.glob_match_options) {
+            let mut last_git_repo: Option<PathBuf> = None;
             for entry in glob {
                 match entry {
-                    Ok(path) => self.insert(path),
+                    Ok(path) => {
+                        if let Some(last_git_repo) = &last_git_repo {
+                            if path.is_descendant_of(&last_git_repo) {
+                                debug!(
+                                    "Skipping {} because it's a decendant of last known repo {}",
+                                    path.display(),
+                                    last_git_repo.display()
+                                );
+                                continue;
+                            }
+                        }
+                        if self.insert_if_repo(&path) {
+                            last_git_repo = Some(path);
+                        }
+                    }
                     Err(e) => {
                         error!("Error in path {}", e);
                     }
