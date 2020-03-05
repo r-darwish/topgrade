@@ -75,7 +75,7 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("zinit");
 
     let cmd = format!("source {} && zinit self-update && zinit update --all", zshrc.display(),);
-    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
+    run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
 }
 
 pub fn run_oh_my_zsh(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
