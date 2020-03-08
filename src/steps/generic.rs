@@ -1,6 +1,6 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
+use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use anyhow::Result;
@@ -192,15 +192,25 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     print_separator("Composer");
 
     if ctx.config().composer_self_update() {
-        #[cfg(unix)]
-        ctx.run_type()
-            .execute(ctx.sudo().as_ref().unwrap())
-            .arg(&composer)
-            .arg("self-update")
-            .check_run()?;
+        cfg_if::cfg_if! {
+            if #[cfg(unix)] {
+                // If self-update fails without sudo then there's probably an update
+                let has_update = match ctx.run_type().execute(&composer).arg("self-update").output()? {
+                    ExecutorOutput::Wet(output) => !output.status.success(),
+                    _ => false
+                };
 
-        #[cfg(not(unix))]
-        ctx.run_type().execute(&composer).arg("self-update").check_output()?;
+                if has_update {
+                    ctx.run_type()
+                        .execute(ctx.sudo().as_ref().unwrap())
+                        .arg(&composer)
+                        .arg("self-update")
+                        .check_run()?;
+                }
+            } else {
+                ctx.run_type().execute(&composer).arg("self-update").check_run()?;
+            }
+        }
     }
 
     let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
