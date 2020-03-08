@@ -258,10 +258,12 @@ impl<'a> Repositories<'a> {
         }
     }
 
+    #[cfg(unix)]
     pub fn is_empty(&self) -> bool {
         self.repositories.is_empty()
     }
 
+    #[cfg(unix)]
     pub fn remove(&mut self, path: &str) {
         let _removed = self.repositories.remove(path);
         debug_assert!(_removed);
