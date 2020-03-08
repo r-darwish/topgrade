@@ -34,7 +34,10 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
     print_separator("Brew");
 
     run_type.execute(&brew).arg("update").check_run()?;
-    run_type.execute(&brew).arg("upgrade").check_run()?;
+    run_type
+        .execute(&brew)
+        .args(&["upgrade", "--ignore-pinned"])
+        .check_run()?;
 
     let cask_upgrade_exists = Command::new(&brew)
         .args(&["--repository", "buo/cask-upgrade"])
