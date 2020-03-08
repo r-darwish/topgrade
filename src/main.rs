@@ -314,7 +314,7 @@ fn run() -> Result<()> {
     }
 
     if config.should_run(Step::Composer) {
-        runner.execute("composer", || generic::run_composer_update(&base_dirs, run_type))?;
+        runner.execute("composer", || generic::run_composer_update(&ctx))?;
     }
 
     #[cfg(not(any(
