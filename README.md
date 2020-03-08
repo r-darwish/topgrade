@@ -40,7 +40,7 @@ See `config.example.toml` for an example configuration file.
 
 The configuration should be placed in the following paths depending by the operating system:
 
-* **macOS** - `~/Library/Preferences/topgrade.toml`
+* **macOS** - `~/.config/topgrade.toml`
 * **Windows** - `%APPDATA%/topgrade.toml`
 * **Other Unix systems** - `~/.config/topgrade.toml`
 
