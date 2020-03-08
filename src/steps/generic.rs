@@ -189,13 +189,14 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 
     if ctx.config().composer_self_update() {
         #[cfg(unix)]
-        Command::new(ctx.sudo().as_ref().unwrap())
+        ctx.run_type()
+            .execute(ctx.sudo().as_ref().unwrap())
             .arg(&composer)
             .arg("self-update")
-            .check_output()?;
+            .check_run()?;
 
         #[cfg(not(unix))]
-        Command::new(&composer).arg("self-update").check_output()?;
+        ctx.run_type().execute(&composer).arg("self-update").check_output()?;
     }
 
     let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
