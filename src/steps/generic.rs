@@ -1,5 +1,6 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
+#[allow(unused_imports)]
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
