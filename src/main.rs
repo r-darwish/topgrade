@@ -65,10 +65,10 @@ fn run() -> Result<()> {
     let run_type = executor::RunType::new(config.dry_run());
 
     #[cfg(unix)]
-    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &git, &config, &base_dirs);
 
     #[cfg(not(unix))]
-    let ctx = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &git, &config, &base_dirs);
 
     let mut runner = runner::Runner::new(&ctx);
 
@@ -212,9 +212,7 @@ fn run() -> Result<()> {
                 git_repos.glob_insert(git_repo);
             }
         }
-        runner.execute("Git repositories", || {
-            git.multi_pull(&git_repos, run_type, config.git_arguments())
-        })?;
+        runner.execute("Git repositories", || git.multi_pull_step(&git_repos, &ctx))?;
     }
 
     if should_run_powershell {
@@ -229,7 +227,7 @@ fn run() -> Result<()> {
             runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
             runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
             runner.execute("zinit", || zsh::run_zinit(&base_dirs, run_type))?;
-            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&base_dirs, run_type))?;
+            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
             runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
             runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         }

@@ -1,4 +1,5 @@
 use crate::error::{SkipStep, TopgradeError};
+use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, PathExt};
@@ -95,22 +96,19 @@ impl Git {
 
         None
     }
-
-    pub fn multi_pull(
-        &self,
-        repositories: &Repositories,
-        run_type: RunType,
-        extra_arguments: &Option<String>,
-    ) -> Result<()> {
+    pub fn multi_pull_step(&self, repositories: &Repositories, ctx: &ExecutionContext) -> Result<()> {
         if repositories.repositories.is_empty() {
             return Err(SkipStep.into());
         }
 
+        print_separator("Git repositories");
+        self.multi_pull(repositories, ctx)
+    }
+
+    pub fn multi_pull(&self, repositories: &Repositories, ctx: &ExecutionContext) -> Result<()> {
         let git = self.git.as_ref().unwrap();
 
-        print_separator("Git repositories");
-
-        if let RunType::Dry = run_type {
+        if let RunType::Dry = ctx.run_type() {
             repositories
                 .repositories
                 .iter()
@@ -133,7 +131,7 @@ impl Git {
 
                 command.args(&["pull", "--ff-only"]).current_dir(&repo);
 
-                if let Some(extra_arguments) = extra_arguments {
+                if let Some(extra_arguments) = ctx.config().git_arguments() {
                     command.args(extra_arguments.split_whitespace());
                 }
 
@@ -258,5 +256,16 @@ impl<'a> Repositories<'a> {
         } else {
             error!("Bad glob pattern: {}", pattern);
         }
+    }
+
+    #[cfg(unix)]
+    pub fn is_empty(&self) -> bool {
+        self.repositories.is_empty()
+    }
+
+    #[cfg(unix)]
+    pub fn remove(&mut self, path: &str) {
+        let _removed = self.repositories.remove(path);
+        debug_assert!(_removed);
     }
 }
