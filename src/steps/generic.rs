@@ -40,7 +40,7 @@ pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type
         .execute(&go)
         .args(&["get", "-u", "all"])
-        .env_remove("GO111MODLE")
+        .env_remove("GO111MODULE")
         .check_run()
 }
 
