@@ -53,7 +53,7 @@ impl Distribution {
         }
 
         Ok(match id {
-            Some("centos") | Some("ol") => Distribution::CentOS,
+            Some("centos") | Some("rhel") | Some("ol") => Distribution::CentOS,
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
