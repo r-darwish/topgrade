@@ -483,6 +483,11 @@ mod tests {
     }
 
     #[test]
+    fn test_rhel() {
+        test_template(&include_str!("os_release/rhel"), Distribution::CentOS);
+    }
+
+    #[test]
     fn test_clearlinux() {
         test_template(&include_str!("os_release/clearlinux"), Distribution::ClearLinux);
     }
