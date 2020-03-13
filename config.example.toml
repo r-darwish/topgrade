@@ -39,6 +39,13 @@
 
 # Do not set the terminal title
 #set_title = false
+
+# Cleanup temporary or old files
+#cleanup = true
+
+#[composer]
+#self_update = true
+
 # Commands to run before anything
 #[pre_commands]
 #"Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
@@ -46,6 +53,3 @@
 # Custom commands
 #[commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
-
-# Cleanup temporary or old files
-#cleanup = true

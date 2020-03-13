@@ -42,6 +42,7 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+    terminal::set_desktop_notifications(config.notify_each_step());
 
     debug!("Version: {}", crate_version!());
     debug!("OS: {}", env!("TARGET"));
@@ -64,10 +65,10 @@ fn run() -> Result<()> {
     let run_type = executor::RunType::new(config.dry_run());
 
     #[cfg(unix)]
-    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &git, &config, &base_dirs);
 
     #[cfg(not(unix))]
-    let ctx = execution_context::ExecutionContext::new(run_type, &config, &base_dirs);
+    let ctx = execution_context::ExecutionContext::new(run_type, &git, &config, &base_dirs);
 
     let mut runner = runner::Runner::new(&ctx);
 
@@ -140,9 +141,11 @@ fn run() -> Result<()> {
     {
         if config.should_run(Step::PackageManagers) {
             runner.execute("brew", || unix::run_homebrew(config.cleanup(), run_type))?;
-
+            #[cfg(target_os = "macos")]
+            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("nix", || unix::run_nix(&ctx))?;
             runner.execute("home-manager", || unix::run_home_manager(run_type))?;
+            runner.execute("asdf", || unix::run_asdf(run_type))?;
         }
     }
 
@@ -169,37 +172,37 @@ fn run() -> Result<()> {
         if config.should_run(Step::Emacs) {
             if !emacs.is_doom() {
                 if let Some(directory) = emacs.directory() {
-                    git_repos.insert(directory);
+                    git_repos.insert_if_repo(directory);
                 }
             }
-            git_repos.insert(base_dirs.home_dir().join(".doom.d"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".doom.d"));
         }
 
         if config.should_run(Step::Vim) {
-            git_repos.insert(base_dirs.home_dir().join(".vim"));
-            git_repos.insert(base_dirs.home_dir().join(".config/nvim"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".vim"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".config/nvim"));
         }
 
         #[cfg(unix)]
         {
-            git_repos.insert(zsh::zshrc(&base_dirs));
-            git_repos.insert(base_dirs.home_dir().join(".tmux"));
-            git_repos.insert(base_dirs.home_dir().join(".config/fish"));
-            git_repos.insert(base_dirs.config_dir().join("openbox"));
-            git_repos.insert(base_dirs.config_dir().join("bspwm"));
-            git_repos.insert(base_dirs.config_dir().join("i3"));
-            git_repos.insert(base_dirs.config_dir().join("sway"));
+            git_repos.insert_if_repo(zsh::zshrc(&base_dirs));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".tmux"));
+            git_repos.insert_if_repo(base_dirs.home_dir().join(".config/fish"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("openbox"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("bspwm"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("i3"));
+            git_repos.insert_if_repo(base_dirs.config_dir().join("sway"));
         }
 
         #[cfg(windows)]
-        git_repos.insert(
+        git_repos.insert_if_repo(
             base_dirs
                 .data_local_dir()
                 .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
         );
 
         if let Some(profile) = powershell.profile() {
-            git_repos.insert(profile);
+            git_repos.insert_if_repo(profile);
         }
     }
 
@@ -209,9 +212,7 @@ fn run() -> Result<()> {
                 git_repos.glob_insert(git_repo);
             }
         }
-        runner.execute("Git repositories", || {
-            git.multi_pull(&git_repos, run_type, config.git_arguments())
-        })?;
+        runner.execute("Git repositories", || git.multi_pull_step(&git_repos, &ctx))?;
     }
 
     if should_run_powershell {
@@ -226,7 +227,7 @@ fn run() -> Result<()> {
             runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
             runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
             runner.execute("zinit", || zsh::run_zinit(&base_dirs, run_type))?;
-            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&base_dirs, run_type))?;
+            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
             runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
             runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         }
@@ -311,7 +312,7 @@ fn run() -> Result<()> {
     }
 
     if config.should_run(Step::Composer) {
-        runner.execute("composer", || generic::run_composer_update(&base_dirs, run_type))?;
+        runner.execute("composer", || generic::run_composer_update(&ctx))?;
     }
 
     #[cfg(not(any(
@@ -362,6 +363,7 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
+            runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
             runner.execute("App Store", || macos::run_mas(run_type))?;
             runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
         }
@@ -377,10 +379,7 @@ fn run() -> Result<()> {
     #[cfg(windows)]
     {
         if config.should_run(Step::System) {
-            runner.execute("Windows update", || {
-                powershell::Powershell::windows_powershell()
-                    .windows_update(run_type, config.accept_all_windows_updates())
-            })?;
+            runner.execute("Windows update", || windows::windows_update(&ctx))?;
         }
     }
 

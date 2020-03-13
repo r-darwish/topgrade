@@ -1,7 +1,38 @@
+use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::require;
+use crate::utils::{require, PathExt};
 use anyhow::Result;
+use std::path::Path;
+
+pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
+    let msupdate =
+        Path::new("/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate")
+            .require()?;
+    print_separator("Microsoft AutoUpdate");
+
+    ctx.run_type().execute(msupdate).arg("--list").check_run()?;
+    ctx.run_type().execute(msupdate).arg("--install").check_run()
+}
+
+pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
+    require("port")?;
+    let sudo = ctx.sudo().as_ref().unwrap();
+    print_separator("MacPorts");
+    ctx.run_type().execute(sudo).args(&["port", "selfupdate"]).check_run()?;
+    ctx.run_type()
+        .execute(sudo)
+        .args(&["port", "-u", "upgrade", "outdated"])
+        .check_run()?;
+    if ctx.config().cleanup() {
+        ctx.run_type()
+            .execute(sudo)
+            .args(&["port", "-N", "reclaim"])
+            .check_run()?;
+    }
+
+    Ok(())
+}
 
 pub fn run_mas(run_type: RunType) -> Result<()> {
     let mas = require("mas")?;

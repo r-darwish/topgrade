@@ -1,6 +1,7 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
+#[allow(unused_imports)]
+use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
 use anyhow::Result;
@@ -36,7 +37,11 @@ pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         .require()?;
 
     print_separator("Go");
-    run_type.execute(&go).arg("get").arg("-u").arg("all").check_run()
+    run_type
+        .execute(&go)
+        .args(&["get", "-u", "all"])
+        .env_remove("GO111MODULE")
+        .check_run()
 }
 
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -172,7 +177,7 @@ pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> 
     ctx.run_type().execute(shell()).arg("-c").arg(command).check_run()
 }
 
-pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)
         .args(&["global", "config", "--absolute", "--quiet", "home"])
@@ -181,16 +186,38 @@ pub fn run_composer_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()
         .map(|s| PathBuf::from(s.trim()))?
         .require()?;
 
-    if !composer_home.is_descendant_of(base_dirs.home_dir()) {
+    if !composer_home.is_descendant_of(ctx.base_dirs().home_dir()) {
         return Err(SkipStep.into());
     }
 
     print_separator("Composer");
 
+    if ctx.config().composer_self_update() {
+        cfg_if::cfg_if! {
+            if #[cfg(unix)] {
+                // If self-update fails without sudo then there's probably an update
+                let has_update = match ctx.run_type().execute(&composer).arg("self-update").output()? {
+                    ExecutorOutput::Wet(output) => !output.status.success(),
+                    _ => false
+                };
+
+                if has_update {
+                    ctx.run_type()
+                        .execute(ctx.sudo().as_ref().unwrap())
+                        .arg(&composer)
+                        .arg("self-update")
+                        .check_run()?;
+                }
+            } else {
+                ctx.run_type().execute(&composer).arg("self-update").check_run()?;
+            }
+        }
+    }
+
     let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
     if output.contains("valet") {
         if let Some(valet) = utils::which("valet") {
-            run_type.execute(&valet).arg("install").check_run()?;
+            ctx.run_type().execute(&valet).arg("install").check_run()?;
         }
     }
 

@@ -2,7 +2,7 @@
 use crate::error::TopgradeError;
 use crate::utils::Check;
 use anyhow::Result;
-use log::trace;
+use log::{debug, trace};
 use std::ffi::{OsStr, OsString};
 use std::path::Path;
 use std::process::{Child, Command, ExitStatus};
@@ -101,6 +101,21 @@ impl Executor {
         self
     }
 
+    /// See `std::process::Command::remove_env`
+    pub fn env_remove<K>(&mut self, key: K) -> &mut Executor
+    where
+        K: AsRef<OsStr>,
+    {
+        match self {
+            Executor::Wet(c) => {
+                c.env_remove(key);
+            }
+            Executor::Dry(_) => (),
+        }
+
+        self
+    }
+
     #[allow(dead_code)]
     /// See `std::process::Command::env`
     pub fn env<K, V>(&mut self, key: K, val: V) -> &mut Executor
@@ -121,7 +136,10 @@ impl Executor {
     /// See `std::process::Command::spawn`
     pub fn spawn(&mut self) -> Result<ExecutorChild> {
         let result = match self {
-            Executor::Wet(c) => c.spawn().map(ExecutorChild::Wet)?,
+            Executor::Wet(c) => {
+                debug!("Running {:?}", c);
+                c.spawn().map(ExecutorChild::Wet)?
+            }
             Executor::Dry(c) => {
                 c.dry_run();
                 ExecutorChild::Dry

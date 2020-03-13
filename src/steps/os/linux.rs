@@ -39,10 +39,8 @@ pub enum Distribution {
 impl Distribution {
     fn parse_os_release(os_release: &ini::Ini) -> Result<Self> {
         let section = os_release.general_section();
-        let id = section.get("ID").map(String::as_str);
-        let id_like: Option<Vec<&str>> = section
-            .get("ID_LIKE")
-            .map(|s| String::as_str(s).split_whitespace().collect());
+        let id = section.get("ID");
+        let id_like: Option<Vec<&str>> = section.get("ID_LIKE").map(|s| s.split_whitespace().collect());
 
         if let Some(id_like) = id_like {
             if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
@@ -55,7 +53,7 @@ impl Distribution {
         }
 
         Ok(match id {
-            Some("centos") | Some("ol") => Distribution::CentOS,
+            Some("centos") | Some("rhel") | Some("ol") => Distribution::CentOS,
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
@@ -482,6 +480,11 @@ mod tests {
     #[test]
     fn test_centos() {
         test_template(&include_str!("os_release/centos"), Distribution::CentOS);
+    }
+
+    #[test]
+    fn test_rhel() {
+        test_template(&include_str!("os_release/rhel"), Distribution::CentOS);
     }
 
     #[test]

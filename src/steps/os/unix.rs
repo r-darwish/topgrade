@@ -34,7 +34,10 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
     print_separator("Brew");
 
     run_type.execute(&brew).arg("update").check_run()?;
-    run_type.execute(&brew).arg("upgrade").check_run()?;
+    run_type
+        .execute(&brew)
+        .args(&["upgrade", "--ignore-pinned"])
+        .check_run()?;
 
     let cask_upgrade_exists = Command::new(&brew)
         .args(&["--repository", "buo/cask-upgrade"])
@@ -86,6 +89,14 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     }
     run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
+}
+
+pub fn run_asdf(run_type: RunType) -> Result<()> {
+    let asdf = require("asdf")?;
+
+    print_separator("asdf");
+    run_type.execute(&asdf).arg("update").check_run()?;
+    run_type.execute(&asdf).args(&["plugin", "update", "--all"]).check_run()
 }
 
 pub fn run_home_manager(run_type: RunType) -> Result<()> {
