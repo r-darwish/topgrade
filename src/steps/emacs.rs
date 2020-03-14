@@ -3,7 +3,7 @@ use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use anyhow::Result;
 use directories::BaseDirs;
-#[cfg(windows)]
+#[cfg(any(windows, target_os = "macos"))]
 use std::env;
 use std::path::{Path, PathBuf};
 
@@ -21,7 +21,22 @@ pub struct Emacs {
 impl Emacs {
     fn directory_path(base_dirs: &BaseDirs) -> Option<PathBuf> {
         #[cfg(unix)]
-        return base_dirs.home_dir().join(".emacs.d").if_exists();
+        cfg_if::cfg_if! {
+            if #[cfg(target_os = "macos")] {
+                let emacs_xdg_dir = env::var("XDG_CONFIG_HOME")
+                    .ok()
+                    .and_then(|config| PathBuf::from(config).join("emacs").if_exists())
+                    .or_else(|| base_dirs.home_dir().join(".config/emacs").if_exists());
+            } else {
+                let emacs_xdg_dir = base_dirs.config_dir().join("emacs").if_exists();
+            }
+        }
+        #[cfg(unix)]
+        return base_dirs
+            .home_dir()
+            .join(".emacs.d")
+            .if_exists()
+            .or_else(|| emacs_xdg_dir);
 
         #[cfg(windows)]
         return env::var("HOME")
