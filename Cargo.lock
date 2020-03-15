@@ -1515,9 +1515,9 @@ dependencies = [
 
 [[package]]
 name = "self_update"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c505727b982d8c85ea1b3345a3a3c2712ba3d8417708ebacc960e4f8f84e3dbc"
+checksum = "e0881a950f4b11e5f6d0aa916884842f9ddd1d5ebcf6ff960a14cc9e151c011a"
 dependencies = [
  "either",
  "flate2",
@@ -1858,7 +1858,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "4.1.0"
+version = "4.2.0"
 dependencies = [
  "anyhow",
  "cfg-if",
