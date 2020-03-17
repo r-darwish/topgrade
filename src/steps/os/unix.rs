@@ -1,7 +1,8 @@
 #[cfg(target_os = "linux")]
 use crate::error::SkipStep;
+use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
+use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
 use anyhow::Result;
@@ -95,7 +96,13 @@ pub fn run_asdf(run_type: RunType) -> Result<()> {
     let asdf = require("asdf")?;
 
     print_separator("asdf");
-    run_type.execute(&asdf).arg("update").check_run()?;
+    let exit_status = run_type.execute(&asdf).arg("update").spawn()?.wait()?;
+
+    if let ExecutorExitStatus::Wet(e) = exit_status {
+        if !(e.success() || e.code().map(|c| c == 42).unwrap_or(false)) {
+            return Err(TopgradeError::ProcessFailed(e).into());
+        }
+    }
     run_type.execute(&asdf).args(&["plugin", "update", "--all"]).check_run()
 }
 
