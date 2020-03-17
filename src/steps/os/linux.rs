@@ -446,6 +446,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
 pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let pihole = require("pihole")?;
+    Path::new("/opt/pihole/update.sh").require()?;
 
     print_separator("pihole");
 
