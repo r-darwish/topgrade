@@ -9,9 +9,9 @@ use std::path::{Path, PathBuf};
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 #[cfg(windows)]
-const DDOM_PATH: &str = "bin/doom.cmd";
+const DOOM_PATH: &str = "bin/doom.cmd";
 #[cfg(unix)]
-const DDOM_PATH: &str = "bin/doom";
+const DOOM_PATH: &str = "bin/doom";
 
 pub struct Emacs {
     directory: Option<PathBuf>,
@@ -47,7 +47,7 @@ impl Emacs {
 
     pub fn new(base_dirs: &BaseDirs) -> Self {
         let directory = Emacs::directory_path(base_dirs);
-        let doom = directory.as_ref().and_then(|d| d.join(DDOM_PATH).if_exists());
+        let doom = directory.as_ref().and_then(|d| d.join(DOOM_PATH).if_exists());
         Self { directory, doom }
     }
 
