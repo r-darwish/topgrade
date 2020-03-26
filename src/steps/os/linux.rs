@@ -45,6 +45,8 @@ impl Distribution {
         if let Some(id_like) = id_like {
             if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
                 return Ok(Distribution::Debian);
+            } else if id_like.contains(&"centos") {
+                return Ok(Distribution::CentOS);
             } else if id_like.contains(&"suse") {
                 return Ok(Distribution::Suse);
             } else if id_like.contains(&"arch") || id_like.contains(&"archlinux") {
@@ -551,6 +553,11 @@ mod tests {
     #[test]
     fn test_exherbo() {
         test_template(&include_str!("os_release/exherbo"), Distribution::Exherbo);
+    }
+
+    #[test]
+    fn test_amazon_linux() {
+        test_template(&include_str!("os_release/amazon_linux"), Distribution::CentOS);
     }
 
     #[test]
