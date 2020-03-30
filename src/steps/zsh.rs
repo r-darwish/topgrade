@@ -98,17 +98,18 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
 
     debug!("oh-my-zsh custom dir: {}", custom_dir.display());
 
-    let mut custom_plugins = Repositories::new(ctx.git());
-    for entry in fs::read_dir(custom_dir)? {
-        let entry = entry?;
-        custom_plugins.insert_if_repo(entry.path());
-    }
+    if let Ok(custom_plugins_dir) = fs::read_dir(custom_dir) {
+        let mut custom_plugins = Repositories::new(ctx.git());
 
-    custom_plugins.remove(&oh_my_zsh.to_string_lossy());
-
-    if !custom_plugins.is_empty() {
-        println!("Pulling custom plugins");
-        ctx.git().multi_pull(&custom_plugins, ctx)?;
+        for entry in custom_plugins_dir? {
+            let entry = entry?;
+            custom_plugins.insert_if_repo(entry.path());
+        }
+        custom_plugins.remove(&oh_my_zsh.to_string_lossy());
+        if !custom_plugins.is_empty() {
+            println!("Pulling custom plugins");
+            ctx.git().multi_pull(&custom_plugins, ctx)?;
+        }
     }
 
     ctx.run_type()
