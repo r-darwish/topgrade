@@ -101,7 +101,7 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
     if let Ok(custom_plugins_dir) = fs::read_dir(custom_dir) {
         let mut custom_plugins = Repositories::new(ctx.git());
 
-        for entry in custom_plugins_dir? {
+        for entry in custom_plugins_dir {
             let entry = entry?;
             custom_plugins.insert_if_repo(entry.path());
         }
