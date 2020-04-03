@@ -274,7 +274,7 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
         run_type
             .execute(&sudo)
             .arg("/usr/bin/emerge")
-            .args(&["-uDNa", "world"])
+            .args(&["-uDNa", "--with-bdeps=y", "world"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
