@@ -3,6 +3,7 @@ use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
+use log::debug;
 use anyhow::Result;
 
 use directories::BaseDirs;
@@ -50,6 +51,12 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
 pub fn yarn_global_update(run_type: RunType) -> Result<()> {
     let yarn = require("yarn")?;
+
+    let output = Command::new(&yarn).arg("version").check_output()?;
+    if output.contains("Hadoop") {
+        debug!("Yarn is Hadoop yarn");
+        return Err(SkipStep.into());
+    }
 
     print_separator("Yarn");
     run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()
