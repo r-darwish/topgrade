@@ -1,10 +1,11 @@
 #![allow(unused_imports)]
+
 use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
-use log::debug;
 use anyhow::Result;
+use log::debug;
 
 use directories::BaseDirs;
 use std::path::PathBuf;
