@@ -7,6 +7,7 @@ pub enum TopgradeError {
     ProcessFailed(ExitStatus),
 
     #[error("Sudo is required for this step")]
+    #[allow(dead_code)]
     SudoRequired,
 
     #[error("Unknown Linux Distribution")]

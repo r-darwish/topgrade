@@ -1,6 +1,6 @@
+#![allow(unused_imports)]
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
-#[allow(unused_imports)]
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
@@ -117,6 +117,7 @@ pub fn run_stack_update(run_type: RunType) -> Result<()> {
     run_type.execute(&stack).arg("upgrade").check_run()
 }
 
+#[cfg(not(target_os = "linux"))]
 pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     let tlmgr = utils::require("tlmgr")?;
     let kpsewhich = utils::require("kpsewhich")?;
