@@ -7,7 +7,6 @@ use std::ffi::OsStr;
 use std::fmt::Debug;
 use std::path::{Path, PathBuf};
 use std::process::{ExitStatus, Output};
-use which_crate;
 
 pub trait Check {
     fn check(self) -> Result<()>;
