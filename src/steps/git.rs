@@ -49,6 +49,19 @@ fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
         .ok()
 }
 
+fn has_remotes(git: &Path, repo: &str) -> Option<bool> {
+    Command::new(git)
+        .args(&["remote", "show"])
+        .current_dir(repo)
+        .check_output()
+        .map(|output| output.lines().count() > 0)
+        .map_err(|e| {
+            error!("Error getting remotes for {}: {}", repo, e);
+            e
+        })
+        .ok()
+}
+
 impl Git {
     pub fn new() -> Self {
         Self { git: which("git") }
@@ -120,6 +133,17 @@ impl Git {
         let mut processes: Vec<_> = repositories
             .repositories
             .iter()
+            .filter(|repo| match has_remotes(git, repo) {
+                Some(false) => {
+                    println!(
+                        "{} {} because it has no remotes",
+                        style("Skipping").yellow().bold(),
+                        repo
+                    );
+                    false
+                }
+                _ => true, // repo has remotes or command to check for remotes has failed. proceed to pull anyway.
+            })
             .filter_map(|repo| {
                 let repo = repo.clone();
                 let path = repo.to_string();
