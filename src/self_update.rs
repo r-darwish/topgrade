@@ -2,7 +2,6 @@ use super::terminal::*;
 #[cfg(windows)]
 use crate::error::Upgraded;
 use anyhow::{bail, Result};
-use self_update_crate;
 use self_update_crate::backends::github::{GitHubUpdateStatus, Update};
 use std::env;
 #[cfg(unix)]

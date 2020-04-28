@@ -6,7 +6,6 @@ use directories::BaseDirs;
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use serde::Deserialize;
-use shellexpand;
 use std::collections::BTreeMap;
 use std::fs::write;
 use std::path::PathBuf;
@@ -14,7 +13,6 @@ use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
-use toml;
 
 type Commands = BTreeMap<String, String>;
 
