@@ -291,7 +291,7 @@ impl Config {
         let disabled_steps: Vec<Step> = if !opt.disable.is_empty() {
             opt.disable.clone()
         } else {
-            config_file.disable.as_ref().map_or_else(|| vec![], |v| v.clone())
+            config_file.disable.as_ref().map_or_else(Vec::new, |v| v.clone())
         };
 
         enabled_steps.retain(|e| !disabled_steps.contains(e));
