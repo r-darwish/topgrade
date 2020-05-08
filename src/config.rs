@@ -118,8 +118,8 @@ impl ConfigFile {
     /// Read the configuration file.
     ///
     /// If the configuration file does not exist the function returns the default ConfigFile.
-    fn read(base_dirs: &BaseDirs) -> Result<ConfigFile> {
-        let config_path = Self::ensure(base_dirs)?;
+    fn read(base_dirs: &BaseDirs, config_path: Option<PathBuf>) -> Result<ConfigFile> {
+        let config_path = config_path.unwrap_or_else(|| Self::ensure(base_dirs).unwrap());
 
         let contents = fs::read_to_string(&config_path).map_err(|e| {
             log::error!("Unable to read {}", config_path.display());
@@ -202,6 +202,10 @@ pub struct CommandLineArgs {
     /// Don't pull the predefined git repos
     #[structopt(long = "disable-predefined-git-repos")]
     disable_predefined_git_repos: bool,
+
+    /// Alternative configuration file
+    #[structopt(long = "config")]
+    config: Option<PathBuf>,
 }
 
 impl CommandLineArgs {
@@ -234,7 +238,7 @@ impl Config {
 
         builder.init();
 
-        let config_file = ConfigFile::read(base_dirs).unwrap_or_else(|e| {
+        let config_file = ConfigFile::read(base_dirs, opt.config.clone()).unwrap_or_else(|e| {
             // Inform the user about errors when loading the configuration,
             // but fallback to the default config to at least attempt to do something
             log::error!("failed to load configuration: {}", e);
