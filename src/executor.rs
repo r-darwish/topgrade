@@ -236,6 +236,7 @@ impl Check for ExecutorExitStatus {
 pub trait CommandExt {
     /// Run the command, wait for it to complete, check the return code and decode the output as UTF-8.
     fn check_output(&mut self) -> Result<String>;
+    fn string_output(&mut self) -> Result<String>;
 }
 
 impl CommandExt for Command {
@@ -246,6 +247,12 @@ impl CommandExt for Command {
         if !status.success() {
             return Err(TopgradeError::ProcessFailed(status).into());
         }
+        Ok(String::from_utf8(output.stdout)?)
+    }
+
+    fn string_output(&mut self) -> Result<String> {
+        let output = self.output()?;
+        trace!("Output of {:?}: {:?}", self, output);
         Ok(String::from_utf8(output.stdout)?)
     }
 }
