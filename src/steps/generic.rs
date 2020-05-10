@@ -216,6 +216,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     }
 
     let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
+    print!("{}", output);
     if output.contains("valet") {
         if let Some(valet) = utils::which("valet") {
             ctx.run_type().execute(&valet).arg("install").check_run()?;
