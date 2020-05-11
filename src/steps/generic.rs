@@ -215,8 +215,16 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
         }
     }
 
-    let output = Command::new(&composer).args(&["global", "update"]).check_output()?;
-    if output.contains("valet") {
+    let output = Command::new(&composer).args(&["global", "update"]).output()?;
+    let status = output.status;
+    if !status.success() {
+        return Err(TopgradeError::ProcessFailed(status).into());
+    }
+    let stdout = String::from_utf8(output.stdout)?;
+    let stderr = String::from_utf8(output.stderr)?;
+    print!("{}\n{}", stdout, stderr);
+
+    if stdout.contains("valet") || stderr.contains("valet") {
         if let Some(valet) = utils::which("valet") {
             ctx.run_type().execute(&valet).arg("install").check_run()?;
         }
