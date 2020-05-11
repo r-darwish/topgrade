@@ -224,7 +224,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let stderr = String::from_utf8(output.stderr)?;
     print!("{}\n{}", stdout, stderr);
 
-    if stdout.contains("valet") {
+    if stdout.contains("valet") || stderr.contains("valet") {
         if let Some(valet) = utils::which("valet") {
             ctx.run_type().execute(&valet).arg("install").check_run()?;
         }
