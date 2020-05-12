@@ -52,6 +52,11 @@ pub enum Step {
 }
 
 #[derive(Deserialize, Default, Debug)]
+pub struct Brew {
+    greedy_cask: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
 pub struct Composer {
     self_update: Option<bool>,
 }
@@ -79,6 +84,7 @@ pub struct ConfigFile {
     accept_all_windows_updates: Option<bool>,
     only: Option<Vec<Step>>,
     composer: Option<Composer>,
+    brew: Option<Brew>,
 }
 
 impl ConfigFile {
@@ -364,6 +370,15 @@ impl Config {
     #[allow(dead_code)]
     pub fn accept_all_windows_updates(&self) -> bool {
         self.config_file.accept_all_windows_updates.unwrap_or(true)
+    }
+
+    /// Whether Brew cask should be greedy
+    pub fn brew_cask_greedy(&self) -> bool {
+        self.config_file
+            .brew
+            .as_ref()
+            .and_then(|c| c.greedy_cask)
+            .unwrap_or(false)
     }
 
     /// Whether Composer should update itself

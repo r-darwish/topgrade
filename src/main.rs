@@ -141,7 +141,7 @@ fn run() -> Result<()> {
     #[cfg(unix)]
     {
         if config.should_run(Step::PackageManagers) {
-            runner.execute("brew", || unix::run_homebrew(config.cleanup(), run_type))?;
+            runner.execute("brew", || unix::run_homebrew(&ctx))?;
             #[cfg(target_os = "macos")]
             runner.execute("MacPorts", || macos::run_macports(&ctx))?;
             runner.execute("nix", || unix::run_nix(&ctx))?;

@@ -30,9 +30,11 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
-pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
+pub fn run_homebrew(ctx: &ExecutionContext) -> Result<()> {
     let brew = require("brew")?;
     print_separator("Brew");
+    let run_type = ctx.run_type();
+    let config = ctx.config();
 
     run_type.execute(&brew).arg("update").check_run()?;
     run_type
@@ -45,13 +47,22 @@ pub fn run_homebrew(cleanup: bool, run_type: RunType) -> Result<()> {
         .check_output()
         .map(|p| Path::new(p.trim()).exists())?;
 
-    if cask_upgrade_exists {
-        run_type.execute(&brew).args(&["cu", "-ay"]).check_run()?;
+    let cask_args = if cask_upgrade_exists {
+        let mut args = vec!["cu", "-y"];
+        if config.brew_cask_greedy() {
+            args.push("-a");
+        }
+        args
     } else {
-        run_type.execute(&brew).args(&["cask", "upgrade"]).check_run()?;
-    }
+        let mut args = vec!["cask", "upgrade"];
+        if config.brew_cask_greedy() {
+            args.push("--greedy");
+        }
+        args
+    };
+    run_type.execute(&brew).args(&cask_args).check_run()?;
 
-    if cleanup {
+    if ctx.config().cleanup() {
         run_type.execute(&brew).arg("cleanup").check_run()?;
     }
 
