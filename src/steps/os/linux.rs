@@ -1,5 +1,5 @@
-use crate::config::Config;
 use crate::error::{SkipStep, TopgradeError};
+use crate::execution_context::ExecutionContext;
 use crate::executor::{ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
@@ -79,15 +79,16 @@ impl Distribution {
         Err(TopgradeError::UnknownLinuxDistribution.into())
     }
 
-    pub fn upgrade(self, sudo: &Option<PathBuf>, run_type: RunType, config: &Config) -> Result<()> {
+    pub fn upgrade(self, ctx: &ExecutionContext) -> Result<()> {
         print_separator("System update");
-
-        let yes = config.yes();
-        let cleanup = config.cleanup();
+        let sudo = ctx.sudo();
+        let run_type = ctx.run_type();
+        let yes = ctx.config().yes();
+        let cleanup = ctx.config().cleanup();
 
         match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &config.yay_arguments()),
-            Distribution::CentOS | Distribution::Fedora => upgrade_redhat(&sudo, run_type, yes),
+            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &ctx.config().yay_arguments()),
+            Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
             Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
@@ -196,9 +197,9 @@ fn upgrade_arch_linux(
     Ok(())
 }
 
-fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        let mut command = run_type.execute(&sudo);
+fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = &ctx.sudo() {
+        let mut command = ctx.run_type().execute(&sudo);
         command
             .arg(Path::new("/usr/bin/dnf").if_exists().unwrap_or_else(|| {
                 Path::new("/usr/bin/yum")
@@ -206,7 +207,12 @@ fn upgrade_redhat(sudo: &Option<PathBuf>, run_type: RunType, yes: bool) -> Resul
                     .unwrap_or_else(|| Path::new("/usr/bin/rpm-ostree"))
             }))
             .arg("upgrade");
-        if yes {
+
+        if let Some(args) = ctx.config().dnf_arguments() {
+            command.args(args.split_whitespace());
+        }
+
+        if ctx.config().yes() {
             command.arg("-y");
         }
 

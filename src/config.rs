@@ -59,6 +59,7 @@ pub struct Brew {
 #[derive(Deserialize, Default, Debug)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    dnf_arguments: Option<String>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -416,6 +417,15 @@ impl Config {
         })
             .or_else(|| self.config_file.linux.as_ref().and_then(|s| s.yay_arguments.as_deref()))
             .unwrap_or("--devel")
+    }
+
+    /// Extra yay arguments
+    #[allow(dead_code)]
+    pub fn dnf_arguments(&self) -> Option<&str> {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.dnf_arguments.as_deref())
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {
