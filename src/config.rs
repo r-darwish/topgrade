@@ -1,5 +1,5 @@
 use super::utils::editor;
-#[cfg(target_os = "macos")]
+#[cfg(unix)]
 use crate::terminal::print_warning;
 use anyhow::Result;
 use directories::BaseDirs;
@@ -57,6 +57,11 @@ pub struct Brew {
 }
 
 #[derive(Deserialize, Default, Debug)]
+pub struct Linux {
+    yay_arguments: Option<String>,
+}
+
+#[derive(Deserialize, Default, Debug)]
 pub struct Composer {
     self_update: Option<bool>,
 }
@@ -85,6 +90,7 @@ pub struct ConfigFile {
     only: Option<Vec<Step>>,
     composer: Option<Composer>,
     brew: Option<Brew>,
+    linux: Option<Linux>,
 }
 
 impl ConfigFile {
@@ -402,12 +408,14 @@ impl Config {
     }
 
     /// Extra yay arguments
-    #[cfg(target_os = "linux")]
+    #[allow(dead_code)]
     pub fn yay_arguments(&self) -> &str {
-        match &self.config_file.yay_arguments {
-            Some(args) => args.as_str(),
-            None => "--devel",
-        }
+        &self.config_file.yay_arguments.as_deref().map(|p| {
+            print_warning("Putting --yay-arguments in the top section is deprecated and will be removed in the future. Please move it to the [linux] section");
+            p
+        })
+            .or_else(|| self.config_file.linux.as_ref().and_then(|s| s.yay_arguments.as_deref()))
+            .unwrap_or("--devel")
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {
