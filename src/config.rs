@@ -126,7 +126,11 @@ impl ConfigFile {
     ///
     /// If the configuration file does not exist the function returns the default ConfigFile.
     fn read(base_dirs: &BaseDirs, config_path: Option<PathBuf>) -> Result<ConfigFile> {
-        let config_path = config_path.unwrap_or_else(|| Self::ensure(base_dirs).unwrap());
+        let config_path = if let Some(path) = config_path {
+            path
+        } else {
+            Self::ensure(base_dirs)?
+        };
 
         let contents = fs::read_to_string(&config_path).map_err(|e| {
             log::error!("Unable to read {}", config_path.display());
