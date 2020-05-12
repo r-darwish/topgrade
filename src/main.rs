@@ -187,7 +187,9 @@ fn run() -> Result<()> {
         #[cfg(unix)]
         {
             git_repos.insert_if_repo(zsh::zshrc(&base_dirs));
-            git_repos.insert_if_repo(base_dirs.home_dir().join(".tmux"));
+            if config.should_run(Step::Tmux) {
+                git_repos.insert_if_repo(base_dirs.home_dir().join(".tmux"));
+            }
             git_repos.insert_if_repo(base_dirs.home_dir().join(".config/fish"));
             git_repos.insert_if_repo(base_dirs.config_dir().join("openbox"));
             git_repos.insert_if_repo(base_dirs.config_dir().join("bspwm"));
@@ -230,6 +232,9 @@ fn run() -> Result<()> {
             runner.execute("zinit", || zsh::run_zinit(&base_dirs, run_type))?;
             runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
             runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
+        }
+
+        if config.should_run(Step::Tmux) {
             runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         }
 

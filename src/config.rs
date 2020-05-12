@@ -48,6 +48,7 @@ pub enum Step {
     Restarts,
     Tldr,
     Wsl,
+    Tmux,
 }
 
 #[derive(Deserialize, Default, Debug)]
