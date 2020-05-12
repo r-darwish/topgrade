@@ -373,6 +373,7 @@ impl Config {
     }
 
     /// Whether Brew cask should be greedy
+    #[allow(dead_code)]
     pub fn brew_cask_greedy(&self) -> bool {
         self.config_file
             .brew
