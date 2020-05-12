@@ -1,5 +1,4 @@
 use super::utils::editor;
-#[cfg(unix)]
 use crate::terminal::print_warning;
 use anyhow::Result;
 use directories::BaseDirs;
