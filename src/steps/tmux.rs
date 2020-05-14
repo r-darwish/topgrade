@@ -63,7 +63,7 @@ impl Tmux {
 
     fn run_in_session(&self, command: &str) -> Result<()> {
         self.build()
-            .args(&["new-window", "-a", "-t", "topgrade:1", command])
+            .args(&["new-window", "-t", "topgrade:1", command])
             .spawn()?
             .wait()?
             .check()?;
