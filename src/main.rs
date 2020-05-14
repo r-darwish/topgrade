@@ -119,7 +119,7 @@ fn run() -> Result<()> {
         if config.should_run(Step::System) {
             match &distribution {
                 Ok(distribution) => {
-                    runner.execute("System update", || distribution.upgrade(&sudo, run_type, &config))?;
+                    runner.execute("System update", || distribution.upgrade(&ctx))?;
                 }
                 Err(e) => {
                     println!("Error detecting current distribution: {}", e);

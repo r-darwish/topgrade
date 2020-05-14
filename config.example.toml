@@ -31,9 +31,6 @@
 # Arguments to pass tmux when pulling Repositories
 #tmux_arguments = "-S /var/tmux.sock"
 
-# Arguments to pass yay when updating packages
-#yay_arguments = "--nodevel"
-
 # Manually select Windows updates
 # accept_all_windows_updates = false
 
@@ -56,3 +53,7 @@
 
 #[brew]
 #greedy_cask = true
+
+#[linux]
+# Arguments to pass yay when updating packages
+#yay_arguments = "--nodevel"
