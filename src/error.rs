@@ -13,9 +13,6 @@ pub enum TopgradeError {
     #[error("Unknown Linux Distribution")]
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
-
-    #[error("A pull action was failed")]
-    PullFailed,
 }
 
 #[derive(Error, Debug)]

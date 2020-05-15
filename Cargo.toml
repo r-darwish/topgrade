@@ -30,6 +30,8 @@ thiserror = "1.0.9"
 anyhow = "1.0.25"
 tempfile = "3.1.0"
 cfg-if = "0.1.10"
+tokio = { version = "0.2", features = ["rt-core", "process"] }
+futures = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 notify-rust = "3.6.3"
