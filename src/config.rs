@@ -58,6 +58,7 @@ pub struct Brew {
 #[derive(Deserialize, Default, Debug)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
 }
 
@@ -405,6 +406,17 @@ impl Config {
     #[allow(dead_code)]
     pub fn notify_each_step(&self) -> bool {
         self.config_file.notify_each_step.unwrap_or(false)
+    }
+
+    /// Extra trizen arguments
+    #[allow(dead_code)]
+    pub fn trizen_arguments(&self) -> &str {
+        &self
+            .config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.trizen_arguments.as_deref())
+            .unwrap_or("")
     }
 
     /// Extra yay arguments
