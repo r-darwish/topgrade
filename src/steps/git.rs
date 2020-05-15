@@ -11,7 +11,7 @@ use log::{debug, error};
 use std::collections::HashSet;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Output};
 use tokio::process::Command as AsyncCommand;
 use tokio::runtime;
 
@@ -29,6 +29,15 @@ pub struct Repositories<'a> {
     glob_match_options: MatchOptions,
 }
 
+fn check_output(output: Output) -> std::result::Result<(), String> {
+    if !(output.status.success()) {
+        let stderr = String::from_utf8(output.stderr).unwrap();
+        Err(stderr)
+    } else {
+        Ok(())
+    }
+}
+
 async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>) -> Result<()> {
     let path = repo.to_string();
     let before_revision = get_head_revision(git, &repo);
@@ -43,9 +52,18 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
         command.args(extra_arguments.split_whitespace());
     }
 
-    let output = command.output().await?;
+    let pull_output = command.output().await?;
+    let submodule_output = AsyncCommand::new(git)
+        .args(&["submodule", "update", "--recursive"])
+        .current_dir(&repo)
+        .output()
+        .await?;
+    let result = check_output(pull_output).and_then(|_| check_output(submodule_output));
 
-    if output.status.success() {
+    if let Err(message) = result {
+        println!("{} pulling {}", style("Failed").red().bold(), &repo);
+        print!("{}", message);
+    } else {
         let after_revision = get_head_revision(&git, &repo);
 
         match (&before_revision, &after_revision) {
@@ -70,12 +88,6 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
             _ => {
                 println!("{} {}", style("Up-to-date").green().bold(), &repo);
             }
-        }
-    } else {
-        println!("{} pulling {}", style("Failed").red().bold(), &repo);
-        let stderr = String::from_utf8(output.stderr);
-        if let Ok(msg) = stderr {
-            print!("{}", msg);
         }
     }
 
