@@ -53,7 +53,7 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 pub fn yarn_global_update(run_type: RunType) -> Result<()> {
     let yarn = require("yarn")?;
 
-    let output = Command::new(&yarn).arg("version").string_output()?;
+    let output = Command::new(&yarn).arg("--version").string_output()?;
     if output.contains("Hadoop") {
         debug!("Yarn is Hadoop yarn");
         return Err(SkipStep.into());
