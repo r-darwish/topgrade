@@ -36,7 +36,7 @@ impl<'a> ExecutionContext<'a> {
     pub fn new(run_type: RunType, git: &'a Git, config: &'a Config, base_dirs: &'a BaseDirs) -> ExecutionContext<'a> {
         ExecutionContext {
             run_type,
-            sudo: None,
+            sudo: &None,
             config,
             git,
             base_dirs,
