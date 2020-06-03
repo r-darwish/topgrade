@@ -280,7 +280,6 @@ fn run() -> Result<()> {
     }
 
     if config.should_run(Step::Tlmgr) {
-        #[cfg(not(target_os = "linux"))]
         runner.execute("tlmgr", || generic::run_tlmgr_update(&ctx))?;
     }
 
