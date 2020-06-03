@@ -3,7 +3,6 @@ use crate::config::Config;
 use crate::executor::RunType;
 use crate::git::Git;
 use directories::BaseDirs;
-#[cfg(unix)]
 use std::path::PathBuf;
 
 pub struct ExecutionContext<'a> {
@@ -51,14 +50,8 @@ impl<'a> ExecutionContext<'a> {
         &self.git
     }
 
-    #[cfg(unix)]
     pub fn sudo(&self) -> &Option<PathBuf> {
         &self.sudo
-    }
-
-    #[cfg(windows)]
-    pub fn sudo(&self) -> &Option<PathBuf> {
-        None
     }
 
     pub fn config(&self) -> &Config {
