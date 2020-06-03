@@ -8,7 +8,6 @@ use std::path::PathBuf;
 
 pub struct ExecutionContext<'a> {
     run_type: RunType,
-    #[cfg(unix)]
     sudo: &'a Option<PathBuf>,
     git: &'a Git,
     config: &'a Config,
@@ -54,6 +53,11 @@ impl<'a> ExecutionContext<'a> {
     #[cfg(unix)]
     pub fn sudo(&self) -> &Option<PathBuf> {
         &self.sudo
+    }
+
+    #[cfg(windows)]
+    pub fn sudo(&self) -> &Option<PathBuf> {
+        None
     }
 
     pub fn config(&self) -> &Config {
