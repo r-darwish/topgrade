@@ -117,8 +117,15 @@ pub fn run_stack_update(run_type: RunType) -> Result<()> {
     run_type.execute(&stack).arg("upgrade").check_run()
 }
 
-#[cfg(not(target_os = "linux"))]
-pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
+pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
+    cfg_if::cfg_if! {
+        if #[cfg(target_os = "linux")] {
+            if !ctx.config().enable_tlmgr_linux() {
+                return Err(SkipStep.into());
+            }
+        }
+    }
+
     let tlmgr = utils::require("tlmgr")?;
     let kpsewhich = utils::require("kpsewhich")?;
     let tlmgr_directory = {
@@ -142,9 +149,11 @@ pub fn run_tlmgr_update(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()>
     print_separator("TeX Live package manager");
 
     let mut command = if directory_writable {
-        run_type.execute(&tlmgr)
+        ctx.run_type().execute(&tlmgr)
     } else {
-        let mut c = run_type.execute(sudo.as_ref().ok_or(TopgradeError::SudoRequired)?);
+        let mut c = ctx
+            .run_type()
+            .execute(ctx.sudo().as_ref().ok_or(TopgradeError::SudoRequired)?);
         c.arg(&tlmgr);
         c
     };
