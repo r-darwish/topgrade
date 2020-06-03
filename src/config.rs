@@ -60,6 +60,7 @@ pub struct Linux {
     yay_arguments: Option<String>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
+    enable_tlmgr: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -437,6 +438,16 @@ impl Config {
             .linux
             .as_ref()
             .and_then(|linux| linux.dnf_arguments.as_deref())
+    }
+
+    /// Extra yay arguments
+    #[allow(dead_code)]
+    pub fn enable_tlmgr_linux(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.enable_tlmgr)
+            .unwrap_or(false)
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {
