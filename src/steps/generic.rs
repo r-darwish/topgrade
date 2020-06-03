@@ -149,9 +149,11 @@ pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
     print_separator("TeX Live package manager");
 
     let mut command = if directory_writable {
-        run_type.execute(&tlmgr)
+        ctx.run_type().execute(&tlmgr)
     } else {
-        let mut c = run_type.execute(ctx.sudo().as_ref().ok_or(TopgradeError::SudoRequired)?);
+        let mut c = ctx
+            .run_type()
+            .execute(ctx.sudo().as_ref().ok_or(TopgradeError::SudoRequired)?);
         c.arg(&tlmgr);
         c
     };
