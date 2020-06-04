@@ -63,7 +63,9 @@ pub struct Brew {
 #[derive(Deserialize, Default, Debug)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
+    enable_tlmgr: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -413,6 +415,17 @@ impl Config {
         self.config_file.notify_each_step.unwrap_or(false)
     }
 
+    /// Extra trizen arguments
+    #[allow(dead_code)]
+    pub fn trizen_arguments(&self) -> &str {
+        &self
+            .config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.trizen_arguments.as_deref())
+            .unwrap_or("")
+    }
+
     /// Extra yay arguments
     #[allow(dead_code)]
     pub fn yay_arguments(&self) -> &str {
@@ -436,6 +449,16 @@ impl Config {
     /// Concurrency limit for git
     pub fn git_concurrency_limit(&self) -> Option<usize> {
         self.config_file.git.as_ref().and_then(|git| git.max_concurrency)
+    }
+  
+    /// Extra yay arguments
+    #[allow(dead_code)]
+    pub fn enable_tlmgr_linux(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.enable_tlmgr)
+            .unwrap_or(false)
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {
