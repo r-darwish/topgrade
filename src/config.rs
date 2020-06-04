@@ -51,6 +51,11 @@ pub enum Step {
 }
 
 #[derive(Deserialize, Default, Debug)]
+pub struct Git {
+    max_concurrency: Option<usize>,
+}
+
+#[derive(Deserialize, Default, Debug)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
@@ -425,6 +430,11 @@ impl Config {
             .linux
             .as_ref()
             .and_then(|linux| linux.dnf_arguments.as_deref())
+    }
+
+    /// Concurrency limit for git
+    pub fn git_concurrency_limit(&self) -> Option<usize> {
+        self.config_file.git.as_ref().and_then(|git| git.max_concurrency)
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {

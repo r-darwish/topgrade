@@ -1,19 +1,22 @@
+use std::collections::HashSet;
+use std::io;
+use std::path::{Path, PathBuf};
+use std::process::{Command, Output};
+
+use anyhow::Result;
+use console::style;
+use futures::stream::futures_unordered::FuturesUnordered;
+use futures::StreamExt;
+use glob::{glob_with, MatchOptions};
+use log::{debug, error};
+use tokio::process::Command as AsyncCommand;
+use tokio::runtime;
+
 use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, PathExt};
-use anyhow::Result;
-use console::style;
-use futures::future::try_join_all;
-use glob::{glob_with, MatchOptions};
-use log::{debug, error};
-use std::collections::HashSet;
-use std::io;
-use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
-use tokio::process::Command as AsyncCommand;
-use tokio::runtime;
 
 #[cfg(windows)]
 static PATH_PREFIX: &str = "\\\\?\\";
@@ -189,7 +192,7 @@ impl Git {
             return Ok(());
         }
 
-        let futures: Vec<_> = repositories
+        let mut stream = repositories
             .repositories
             .iter()
             .filter(|repo| match has_remotes(git, repo) {
@@ -204,12 +207,18 @@ impl Git {
                 _ => true, // repo has remotes or command to check for remotes has failed. proceed to pull anyway.
             })
             .map(|repo| pull_repository(repo.clone(), &git, ctx))
-            .collect();
+            .collect::<FuturesUnordered<_>>()
+            .boxed();
+
+        if let Some(limit) = ctx.config().git_concurrency_limit() {
+            stream = stream.buffer_unordered(limit).boxed();
+        }
 
         let mut basic_rt = runtime::Runtime::new()?;
-        basic_rt.block_on(async { try_join_all(futures).await })?;
+        let results = basic_rt.block_on(async { stream.collect::<Vec<Result<()>>>().await });
 
-        Ok(())
+        let error = results.into_iter().find(|r| r.is_err());
+        error.unwrap_or(Ok(()))
     }
 }
 
