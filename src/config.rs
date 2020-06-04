@@ -450,7 +450,7 @@ impl Config {
     pub fn git_concurrency_limit(&self) -> Option<usize> {
         self.config_file.git.as_ref().and_then(|git| git.max_concurrency)
     }
-  
+
     /// Extra yay arguments
     #[allow(dead_code)]
     pub fn enable_tlmgr_linux(&self) -> bool {
