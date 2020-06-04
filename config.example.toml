@@ -57,3 +57,6 @@
 #[linux]
 # Arguments to pass yay when updating packages
 #yay_arguments = "--nodevel"
+
+#[git]
+#max_concurrency = 5

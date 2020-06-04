@@ -5,7 +5,7 @@ use std::process::{Command, Output};
 
 use anyhow::Result;
 use console::style;
-use futures::stream::futures_unordered::FuturesUnordered;
+use futures::stream::{iter, FuturesUnordered};
 use futures::StreamExt;
 use glob::{glob_with, MatchOptions};
 use log::{debug, error};
@@ -192,7 +192,7 @@ impl Git {
             return Ok(());
         }
 
-        let mut stream = repositories
+        let futures_iterator = repositories
             .repositories
             .iter()
             .filter(|repo| match has_remotes(git, repo) {
@@ -206,16 +206,16 @@ impl Git {
                 }
                 _ => true, // repo has remotes or command to check for remotes has failed. proceed to pull anyway.
             })
-            .map(|repo| pull_repository(repo.clone(), &git, ctx))
-            .collect::<FuturesUnordered<_>>()
-            .boxed();
+            .map(|repo| pull_repository(repo.clone(), &git, ctx));
 
-        if let Some(limit) = ctx.config().git_concurrency_limit() {
-            stream = stream.buffer_unordered(limit).boxed();
-        }
+        let stream_of_futures = if let Some(limit) = ctx.config().git_concurrency_limit() {
+            iter(futures_iterator).buffer_unordered(limit).boxed()
+        } else {
+            futures_iterator.collect::<FuturesUnordered<_>>().boxed()
+        };
 
         let mut basic_rt = runtime::Runtime::new()?;
-        let results = basic_rt.block_on(async { stream.collect::<Vec<Result<()>>>().await });
+        let results = basic_rt.block_on(async { stream_of_futures.collect::<Vec<Result<()>>>().await });
 
         let error = results.into_iter().find(|r| r.is_err());
         error.unwrap_or(Ok(()))

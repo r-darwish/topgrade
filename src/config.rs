@@ -96,6 +96,7 @@ pub struct ConfigFile {
     composer: Option<Composer>,
     brew: Option<Brew>,
     linux: Option<Linux>,
+    git: Option<Git>,
 }
 
 impl ConfigFile {
