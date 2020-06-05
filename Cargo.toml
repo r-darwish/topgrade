@@ -36,7 +36,7 @@ notify-rust = "3.6.3"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.17.0"
-self_update_crate = { version = "0.14.0", optional = true, package =  "self_update", features = ["archive-tar", "compression-flate2", "rustls"] }
+self_update_crate = { version = "0.14.0", optional = true, package =  "self_update", features = ["archive-tar", "compression-flate2"] }
 
 [target.'cfg(windows)'.dependencies]
 self_update_crate = { version = "0.14.0", optional = true, package =  "self_update", features = ["archive-zip", "compression-zip-deflate", "rustls"] }
