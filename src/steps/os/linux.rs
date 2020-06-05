@@ -87,7 +87,7 @@ impl Distribution {
         let cleanup = ctx.config().cleanup();
 
         match self {
-            Distribution::Arch => upgrade_arch_linux(&sudo, cleanup, run_type, yes, &ctx.config().yay_arguments()),
+            Distribution::Arch => upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
@@ -128,14 +128,12 @@ pub fn show_pacnew() {
     }
 }
 
-fn upgrade_arch_linux(
-    sudo: &Option<PathBuf>,
-    cleanup: bool,
-    run_type: RunType,
-    yes: bool,
-    yay_arguments: &str,
-) -> Result<()> {
+fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
     let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
+    let yes = ctx.config().yes();
+    let sudo = ctx.sudo();
+    let run_type = ctx.run_type();
+    let cleanup = ctx.config().cleanup();
 
     let path = {
         let mut path = OsString::from("/usr/bin:");
@@ -158,7 +156,7 @@ fn upgrade_arch_linux(
             .arg("--pacman")
             .arg(&pacman)
             .arg("-Syu")
-            .args(yay_arguments.split_whitespace())
+            .args(ctx.config().yay_arguments().split_whitespace())
             .env("PATH", path);
 
         if yes {
@@ -169,6 +167,27 @@ fn upgrade_arch_linux(
         if cleanup {
             let mut command = run_type.execute(&yay);
             command.arg("--pacman").arg(&pacman).arg("-Scc");
+            if yes {
+                command.arg("--noconfirm");
+            }
+            command.check_run()?;
+        }
+    } else if let Some(trizen) = which("trizen") {
+        let mut command = run_type.execute(&trizen);
+
+        command
+            .arg("-Syu")
+            .args(ctx.config().trizen_arguments().split_whitespace())
+            .env("PATH", path);
+
+        if yes {
+            command.arg("--noconfirm");
+        }
+        command.check_run()?;
+
+        if cleanup {
+            let mut command = run_type.execute(&trizen);
+            command.arg("-Sc");
             if yes {
                 command.arg("--noconfirm");
             }

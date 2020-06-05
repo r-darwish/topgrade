@@ -3,12 +3,10 @@ use crate::config::Config;
 use crate::executor::RunType;
 use crate::git::Git;
 use directories::BaseDirs;
-#[cfg(unix)]
 use std::path::PathBuf;
 
 pub struct ExecutionContext<'a> {
     run_type: RunType,
-    #[cfg(unix)]
     sudo: &'a Option<PathBuf>,
     git: &'a Git,
     config: &'a Config,
@@ -37,6 +35,7 @@ impl<'a> ExecutionContext<'a> {
     pub fn new(run_type: RunType, git: &'a Git, config: &'a Config, base_dirs: &'a BaseDirs) -> ExecutionContext<'a> {
         ExecutionContext {
             run_type,
+            sudo: &None,
             config,
             git,
             base_dirs,
@@ -51,7 +50,6 @@ impl<'a> ExecutionContext<'a> {
         &self.git
     }
 
-    #[cfg(unix)]
     pub fn sudo(&self) -> &Option<PathBuf> {
         &self.sudo
     }
