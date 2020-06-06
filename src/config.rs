@@ -51,6 +51,11 @@ pub enum Step {
 }
 
 #[derive(Deserialize, Default, Debug)]
+pub struct Git {
+    max_concurrency: Option<usize>,
+}
+
+#[derive(Deserialize, Default, Debug)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
@@ -93,6 +98,7 @@ pub struct ConfigFile {
     composer: Option<Composer>,
     brew: Option<Brew>,
     linux: Option<Linux>,
+    git: Option<Git>,
 }
 
 impl ConfigFile {
@@ -438,6 +444,11 @@ impl Config {
             .linux
             .as_ref()
             .and_then(|linux| linux.dnf_arguments.as_deref())
+    }
+
+    /// Concurrency limit for git
+    pub fn git_concurrency_limit(&self) -> Option<usize> {
+        self.config_file.git.as_ref().and_then(|git| git.max_concurrency)
     }
 
     /// Extra yay arguments
