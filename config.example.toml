@@ -1,12 +1,3 @@
-# Additional git repositories to pull
-#git_repos = [
-#    "~/src/*/",
-#    "~/.config/something"
-#]
-
-# Don't pull the predefined git repos
-# predefined_git_repos = false
-
 # Disable specific steps - same options as the command line flag
 #disable = ["system", "emacs"]
 
@@ -25,20 +16,28 @@
 # Arguments to pass SSH when upgrading remote systems
 #ssh_arguments = "-o ConnectTimeout=2"
 
-# Arguments to pass Git when pulling Repositories
-#git_arguments = "--rebase --autostash"
-
 # Arguments to pass tmux when pulling Repositories
 #tmux_arguments = "-S /var/tmux.sock"
-
-# Manually select Windows updates
-# accept_all_windows_updates = false
 
 # Do not set the terminal title
 #set_title = false
 
 # Cleanup temporary or old files
 #cleanup = true
+
+#[git]
+#max_concurrency = 5
+# Additional git repositories to pull
+#repos = [
+#    "~/src/*/",
+#    "~/.config/something"
+#]
+
+# Don't pull the predefined git repos
+# predefined_repos = false
+
+# Arguments to pass Git when pulling Repositories
+#arguments = "--rebase --autostash"
 
 #[composer]
 #self_update = true
@@ -60,5 +59,7 @@
 #trizen_arguments = "--devel"
 #enable_tlmgr = true
 
-#[git]
-#max_concurrency = 5
+#[windows]
+# Manually select Windows updates
+# accept_all_updates = false
+

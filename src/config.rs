@@ -1,5 +1,4 @@
 use super::utils::editor;
-use crate::terminal::print_warning;
 use anyhow::Result;
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
@@ -12,6 +11,35 @@ use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+
+macro_rules! check_deprecated {
+    ($config:expr, $old:ident, $section:ident, $new:ident) => {
+        if $config.$old.is_some() {
+            println!(concat!(
+                "'",
+                stringify!($old),
+                "' configuration option is deprecated. Rename it to '",
+                stringify!($new),
+                "' and put it under the section [",
+                stringify!($section),
+                "]",
+            ));
+        }
+    };
+}
+macro_rules! get_deprecated {
+    ($config:expr, $old:ident, $section:ident, $new:ident) => {
+        if $config.$old.is_some() {
+            &$config.$old
+        } else {
+            if let Some(section) = &$config.$section {
+                &section.$new
+            } else {
+                &None
+            }
+        }
+    };
+}
 
 type Commands = BTreeMap<String, String>;
 
@@ -53,6 +81,14 @@ pub enum Step {
 #[derive(Deserialize, Default, Debug)]
 pub struct Git {
     max_concurrency: Option<usize>,
+    arguments: Option<String>,
+    repos: Option<Vec<String>>,
+    pull_predefined: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+pub struct Windows {
+    accept_all_updates: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -99,6 +135,7 @@ pub struct ConfigFile {
     brew: Option<Brew>,
     linux: Option<Linux>,
     git: Option<Git>,
+    windows: Option<Windows>,
 }
 
 impl ConfigFile {
@@ -270,6 +307,12 @@ impl Config {
             ConfigFile::default()
         });
 
+        check_deprecated!(config_file, git_arguments, git, arguments);
+        check_deprecated!(config_file, git_repos, git, repos);
+        check_deprecated!(config_file, predefined_git_repos, git, pull_predefined);
+        check_deprecated!(config_file, yay_arguments, linux, yay_arguments);
+        check_deprecated!(config_file, accept_all_windows_updates, windows, accept_all_updates);
+
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
         Ok(Self {
@@ -296,7 +339,7 @@ impl Config {
 
     /// The list of additional git repositories to pull.
     pub fn git_repos(&self) -> &Option<Vec<String>> {
-        &self.config_file.git_repos
+        get_deprecated!(&self.config_file, git_repos, git, repos)
     }
 
     /// Tell whether the specified step should run.
@@ -359,7 +402,7 @@ impl Config {
 
     /// Extra Git arguments
     pub fn git_arguments(&self) -> &Option<String> {
-        &self.config_file.git_arguments
+        get_deprecated!(&self.config_file, git_arguments, git, arguments)
     }
 
     /// Extra Tmux arguments
@@ -387,7 +430,13 @@ impl Config {
     /// Whether to accept all Windows updates
     #[allow(dead_code)]
     pub fn accept_all_windows_updates(&self) -> bool {
-        self.config_file.accept_all_windows_updates.unwrap_or(true)
+        get_deprecated!(
+            self.config_file,
+            accept_all_windows_updates,
+            windows,
+            accept_all_updates
+        )
+        .unwrap_or(true)
     }
 
     /// Whether Brew cask should be greedy
@@ -429,11 +478,8 @@ impl Config {
     /// Extra yay arguments
     #[allow(dead_code)]
     pub fn yay_arguments(&self) -> &str {
-        &self.config_file.yay_arguments.as_deref().map(|p| {
-            print_warning("Putting --yay-arguments in the top section is deprecated and will be removed in the future. Please move it to the [linux] section");
-            p
-        })
-            .or_else(|| self.config_file.linux.as_ref().and_then(|s| s.yay_arguments.as_deref()))
+        get_deprecated!(self.config_file, yay_arguments, linux, yay_arguments)
+            .as_deref()
             .unwrap_or("--devel")
     }
 
@@ -462,6 +508,7 @@ impl Config {
     }
 
     pub fn use_predefined_git_repos(&self) -> bool {
-        !self.opt.disable_predefined_git_repos && self.config_file.predefined_git_repos.unwrap_or(true)
+        !self.opt.disable_predefined_git_repos
+            && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
 }
