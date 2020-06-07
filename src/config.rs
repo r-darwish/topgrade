@@ -144,17 +144,7 @@ impl ConfigFile {
         let config_path = base_dirs.config_dir().join("topgrade.toml");
 
         #[cfg(target_os = "macos")]
-        let config_path = {
-            let deprecated_path = base_dirs.config_dir().join("topgrade.toml");
-            let new_path = base_dirs.home_dir().join(".config/topgrade.toml");
-            if deprecated_path.exists() {
-                print_warning(format!("Storing configuration file at {old} is deprecated. Please move it to {new} by executing `mv \"{old}\" \"{new}\"`",
-                              old=deprecated_path.display(), new=new_path.display()));
-                deprecated_path
-            } else {
-                new_path
-            }
-        };
+        let config_path = base_dirs.home_dir().join(".config/topgrade.toml");
 
         if !config_path.exists() {
             debug!("No configuration exists");
