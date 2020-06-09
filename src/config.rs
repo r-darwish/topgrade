@@ -76,6 +76,7 @@ pub enum Step {
     Tldr,
     Wsl,
     Tmux,
+    Vagrant,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -84,6 +85,12 @@ pub struct Git {
     arguments: Option<String>,
     repos: Option<Vec<String>>,
     pull_predefined: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+pub struct Vagrant {
+    directories: Option<Vec<String>>,
+    power_on: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -136,6 +143,7 @@ pub struct ConfigFile {
     linux: Option<Linux>,
     git: Option<Git>,
     windows: Option<Windows>,
+    vagrant: Option<Vagrant>,
 }
 
 impl ConfigFile {
@@ -485,6 +493,19 @@ impl Config {
     /// Concurrency limit for git
     pub fn git_concurrency_limit(&self) -> Option<usize> {
         self.config_file.git.as_ref().and_then(|git| git.max_concurrency)
+    }
+
+    /// Should we power on vagrant boxes if needed
+    pub fn vagrant_power_on(&self) -> Option<bool> {
+        self.config_file.vagrant.as_ref().and_then(|vagrant| vagrant.power_on)
+    }
+
+    /// Vagrant directories
+    pub fn vagrant_directories(&self) -> Option<&Vec<String>> {
+        self.config_file
+            .vagrant
+            .as_ref()
+            .and_then(|vagrant| vagrant.directories.as_ref())
     }
 
     /// Extra yay arguments
