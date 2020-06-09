@@ -4,7 +4,7 @@ use crate::terminal::print_separator;
 use crate::utils;
 use anyhow::Result;
 use log::debug;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::str::FromStr;
 use strum::EnumString;
@@ -29,7 +29,7 @@ struct Vagrant {
     path: PathBuf,
 }
 
-impl Vagrant {
+impl<'a> Vagrant {
     fn get_box_status(&self, directory: &str) -> Result<Vec<(String, BoxStatus)>> {
         let output = Command::new(&self.path)
             .arg("status")
@@ -53,6 +53,53 @@ impl Vagrant {
 
         Ok(boxes)
     }
+
+    fn temporary_power_on(
+        &'a self,
+        directory: &'a str,
+        vagrant_box: &'a str,
+        ctx: &'a ExecutionContext,
+    ) -> Result<TemporaryPowerOn<'a>> {
+        TemporaryPowerOn::create(&self.path, directory, vagrant_box, ctx)
+    }
+}
+
+struct TemporaryPowerOn<'a> {
+    vagrant: &'a Path,
+    directory: &'a str,
+    vagrant_box: &'a str,
+    ctx: &'a ExecutionContext<'a>,
+}
+
+impl<'a> TemporaryPowerOn<'a> {
+    fn create(
+        vagrant: &'a Path,
+        directory: &'a str,
+        vagrant_box: &'a str,
+        ctx: &'a ExecutionContext<'a>,
+    ) -> Result<TemporaryPowerOn<'a>> {
+        println!("Powering on {} @ {}", vagrant_box, directory);
+        ctx.run_type().execute(vagrant).args(&["up", vagrant_box]).check_run()?;
+        Ok(TemporaryPowerOn {
+            vagrant,
+            directory,
+            vagrant_box,
+            ctx,
+        })
+    }
+}
+
+impl<'a> Drop for TemporaryPowerOn<'a> {
+    fn drop(&mut self) {
+        println!("Powering off {} @ {}", self.vagrant_box, self.directory);
+        self.ctx
+            .run_type()
+            .execute(self.vagrant)
+            .args(&["halt", self.vagrant_box])
+            .current_dir(self.directory)
+            .check_run()
+            .ok();
+    }
 }
 
 pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
@@ -67,13 +114,22 @@ pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
         let boxes = vagrant.get_box_status(directory)?;
         debug!("{:?}", boxes);
         for (vagrant_box, status) in boxes {
-            if !status.powered_on() && !(ctx.config().vagrant_power_on().unwrap_or(false)) {
-                debug!("Skipping powered off box {}", vagrant_box);
-                continue;
+            let mut _poweron = None;
+            if !status.powered_on() {
+                if !(ctx.config().vagrant_power_on().unwrap_or(true)) {
+                    debug!("Skipping powered off box {}", vagrant_box);
+                    continue;
+                } else {
+                    _poweron = Some(vagrant.temporary_power_on(directory, &vagrant_box, ctx)?);
+                }
             }
 
             println!("Running Topgrade in {} @ {}", vagrant_box, directory);
-            let command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box);
+            let mut command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box);
+            if ctx.config().yes() {
+                command.push_str(" -y");
+            }
+
             ctx.run_type()
                 .execute(&vagrant.path)
                 .args(&["ssh", "-c", &command])
