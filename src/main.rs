@@ -388,6 +388,10 @@ fn run() -> Result<()> {
         }
     }
 
+    if config.should_run(Step::Vagrant) {
+        runner.execute("Vagrant", || vagrant::topgrade_vagrant_boxes(&ctx))?;
+    }
+
     if !runner.report().data().is_empty() {
         print_separator("Summary");
 

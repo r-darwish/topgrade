@@ -6,6 +6,7 @@ pub mod os;
 pub mod powershell;
 #[cfg(unix)]
 pub mod tmux;
+pub mod vagrant;
 pub mod vim;
 #[cfg(unix)]
 pub mod zsh;
