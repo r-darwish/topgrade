@@ -197,6 +197,12 @@ impl ConfigFile {
             }
         }
 
+        if let Some(paths) = result.git.as_mut().and_then(|git| git.repos.as_mut()) {
+            for path in paths.iter_mut() {
+                *path = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
+            }
+        }
+
         debug!("Loaded configuration: {:?}", result);
 
         Ok(result)
