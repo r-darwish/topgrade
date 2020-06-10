@@ -29,7 +29,7 @@ struct Vagrant {
     path: PathBuf,
 }
 
-impl<'a> Vagrant {
+impl Vagrant {
     fn get_box_status(&self, directory: &str) -> Result<Vec<(String, BoxStatus)>> {
         let output = Command::new(&self.path)
             .arg("status")
@@ -54,7 +54,7 @@ impl<'a> Vagrant {
         Ok(boxes)
     }
 
-    fn temporary_power_on(
+    fn temporary_power_on<'a>(
         &'a self,
         directory: &'a str,
         vagrant_box: &'a str,
