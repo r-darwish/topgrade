@@ -1,6 +1,6 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
-use crate::executor::{ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use anyhow::Result;
@@ -10,6 +10,7 @@ use serde::Deserialize;
 use std::env::var_os;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use walkdir::WalkDir;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
@@ -105,6 +106,12 @@ impl Distribution {
             show_pacnew();
         }
     }
+}
+
+fn is_wsl() -> Result<bool> {
+    let output = Command::new("uname").arg("-r").check_output()?;
+    debug!("Uname output: {}", output);
+    Ok(output.contains("microsoft"))
 }
 
 pub fn show_pacnew() {
@@ -428,6 +435,10 @@ pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> 
 
 pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
     let fwupdmgr = require("fwupdmgr")?;
+
+    if is_wsl()? {
+        return Err(SkipStep.into());
+    }
 
     print_separator("Firmware upgrades");
 
