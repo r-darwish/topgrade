@@ -135,7 +135,7 @@ pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
                 }
             }
 
-            println!("Running Topgrade in {} @ {}", vagrant_box, directory);
+            println!("Running Topgrade in {}", vagrant_box);
             let mut command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box.name);
             if ctx.config().yes() {
                 command.push_str(" -y");
