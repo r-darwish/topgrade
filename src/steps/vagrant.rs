@@ -14,12 +14,13 @@ use strum::EnumString;
 enum BoxStatus {
     PowerOff,
     Running,
+    Saved,
 }
 
 impl BoxStatus {
     fn powered_on(self) -> bool {
         match self {
-            BoxStatus::PowerOff => false,
+            BoxStatus::PowerOff | BoxStatus::Saved => false,
             BoxStatus::Running => true,
         }
     }
@@ -72,29 +73,43 @@ impl Vagrant {
     fn temporary_power_on<'a>(
         &'a self,
         vagrant_box: &'a VagrantBox,
+        status: BoxStatus,
         ctx: &'a ExecutionContext,
     ) -> Result<TemporaryPowerOn<'a>> {
-        TemporaryPowerOn::create(&self.path, vagrant_box, ctx)
+        TemporaryPowerOn::create(&self.path, vagrant_box, status, ctx)
     }
 }
 
 struct TemporaryPowerOn<'a> {
     vagrant: &'a Path,
     vagrant_box: &'a VagrantBox<'a>,
+    status: BoxStatus,
     ctx: &'a ExecutionContext<'a>,
 }
 
 impl<'a> TemporaryPowerOn<'a> {
-    fn create(vagrant: &'a Path, vagrant_box: &'a VagrantBox<'a>, ctx: &'a ExecutionContext<'a>) -> Result<Self> {
+    fn create(
+        vagrant: &'a Path,
+        vagrant_box: &'a VagrantBox<'a>,
+        status: BoxStatus,
+        ctx: &'a ExecutionContext<'a>,
+    ) -> Result<Self> {
+        let subcommand = match status {
+            BoxStatus::PowerOff => "up",
+            BoxStatus::Saved => "resume",
+            _ => unreachable!(),
+        };
         println!("Powering on {}", vagrant_box);
+
         ctx.run_type()
             .execute(vagrant)
-            .args(&["up", &vagrant_box.name])
+            .args(&[subcommand, &vagrant_box.name])
             .current_dir(vagrant_box.path)
             .check_run()?;
         Ok(TemporaryPowerOn {
             vagrant,
             vagrant_box,
+            status,
             ctx,
         })
     }
@@ -102,11 +117,17 @@ impl<'a> TemporaryPowerOn<'a> {
 
 impl<'a> Drop for TemporaryPowerOn<'a> {
     fn drop(&mut self) {
+        let subcommand = match self.status {
+            BoxStatus::PowerOff => "halt",
+            BoxStatus::Saved => "suspend",
+            _ => unreachable!(),
+        };
+
         println!("Powering off {}", self.vagrant_box);
         self.ctx
             .run_type()
             .execute(self.vagrant)
-            .args(&["halt", &self.vagrant_box.name])
+            .args(&[subcommand, &self.vagrant_box.name])
             .current_dir(self.vagrant_box.path)
             .check_run()
             .ok();
@@ -131,7 +152,7 @@ pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
                     debug!("Skipping powered off box {}", vagrant_box);
                     continue;
                 } else {
-                    _poweron = Some(vagrant.temporary_power_on(&vagrant_box, ctx)?);
+                    _poweron = Some(vagrant.temporary_power_on(&vagrant_box, status, ctx)?);
                 }
             }
 
