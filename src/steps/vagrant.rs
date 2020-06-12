@@ -143,6 +143,7 @@ pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
 
             ctx.run_type()
                 .execute(&vagrant.path)
+                .current_dir(directory)
                 .args(&["ssh", "-c", &command])
                 .check_run()?;
         }
