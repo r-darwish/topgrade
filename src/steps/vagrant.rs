@@ -15,13 +15,14 @@ enum BoxStatus {
     PowerOff,
     Running,
     Saved,
+    Aborted,
 }
 
 impl BoxStatus {
     fn powered_on(self) -> bool {
         match self {
-            BoxStatus::PowerOff | BoxStatus::Saved => false,
             BoxStatus::Running => true,
+            _ => false,
         }
     }
 }
@@ -95,9 +96,9 @@ impl<'a> TemporaryPowerOn<'a> {
         ctx: &'a ExecutionContext<'a>,
     ) -> Result<Self> {
         let subcommand = match status {
-            BoxStatus::PowerOff => "up",
+            BoxStatus::PowerOff | BoxStatus::Aborted => "up",
             BoxStatus::Saved => "resume",
-            _ => unreachable!(),
+            BoxStatus::Running => unreachable!(),
         };
         println!("Powering on {}", vagrant_box);
 
@@ -118,9 +119,9 @@ impl<'a> TemporaryPowerOn<'a> {
 impl<'a> Drop for TemporaryPowerOn<'a> {
     fn drop(&mut self) {
         let subcommand = match self.status {
-            BoxStatus::PowerOff => "halt",
+            BoxStatus::PowerOff | BoxStatus::Aborted => "halt",
             BoxStatus::Saved => "suspend",
-            _ => unreachable!(),
+            BoxStatus::Running => unreachable!(),
         };
 
         println!("Powering off {}", self.vagrant_box);
