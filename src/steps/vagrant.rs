@@ -157,7 +157,14 @@ pub fn topgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
             }
 
             println!("Running Topgrade in {}", vagrant_box);
-            let mut command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box.name);
+            let pathbuf = PathBuf::from(directory);
+            let prefix = if vagrant_box.name == "default" {
+                pathbuf.file_name().unwrap().to_str().unwrap()
+            } else {
+                &vagrant_box.name
+            };
+
+            let mut command = format!("env TOPGRADE_PREFIX={} topgrade", prefix);
             if ctx.config().yes() {
                 command.push_str(" -y");
             }
