@@ -91,6 +91,7 @@ pub struct Git {
 pub struct Vagrant {
     directories: Option<Vec<String>>,
     power_on: Option<bool>,
+    always_suspend: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -516,6 +517,14 @@ impl Config {
             .vagrant
             .as_ref()
             .and_then(|vagrant| vagrant.directories.as_ref())
+    }
+
+    /// Always suspend vagrant boxes instead of powering off
+    pub fn vagrant_always_suspend(&self) -> Option<bool> {
+        self.config_file
+            .vagrant
+            .as_ref()
+            .and_then(|vagrant| vagrant.always_suspend)
     }
 
     /// Extra yay arguments

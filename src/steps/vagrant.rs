@@ -118,10 +118,14 @@ impl<'a> TemporaryPowerOn<'a> {
 
 impl<'a> Drop for TemporaryPowerOn<'a> {
     fn drop(&mut self) {
-        let subcommand = match self.status {
-            BoxStatus::PowerOff | BoxStatus::Aborted => "halt",
-            BoxStatus::Saved => "suspend",
-            BoxStatus::Running => unreachable!(),
+        let subcommand = if self.ctx.config().vagrant_always_suspend().unwrap_or(false) {
+            "suspend"
+        } else {
+            match self.status {
+                BoxStatus::PowerOff | BoxStatus::Aborted => "halt",
+                BoxStatus::Saved => "suspend",
+                BoxStatus::Running => unreachable!(),
+            }
         };
 
         println!("Powering off {}", self.vagrant_box);
