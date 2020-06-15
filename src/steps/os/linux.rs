@@ -43,18 +43,6 @@ impl Distribution {
         let id = section.get("ID");
         let id_like: Option<Vec<&str>> = section.get("ID_LIKE").map(|s| s.split_whitespace().collect());
 
-        if let Some(id_like) = id_like {
-            if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
-                return Ok(Distribution::Debian);
-            } else if id_like.contains(&"centos") {
-                return Ok(Distribution::CentOS);
-            } else if id_like.contains(&"suse") {
-                return Ok(Distribution::Suse);
-            } else if id_like.contains(&"arch") || id_like.contains(&"archlinux") {
-                return Ok(Distribution::Arch);
-            }
-        }
-
         Ok(match id {
             Some("centos") | Some("rhel") | Some("ol") => Distribution::CentOS,
             Some("clear-linux-os") => Distribution::ClearLinux,
@@ -66,7 +54,22 @@ impl Distribution {
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
             Some("nixos") => Distribution::NixOS,
-            _ => return Err(TopgradeError::UnknownLinuxDistribution.into()),
+            _ => {
+                if let Some(id_like) = id_like {
+                    if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
+                        return Ok(Distribution::Debian);
+                    } else if id_like.contains(&"centos") {
+                        return Ok(Distribution::CentOS);
+                    } else if id_like.contains(&"suse") {
+                        return Ok(Distribution::Suse);
+                    } else if id_like.contains(&"arch") || id_like.contains(&"archlinux") {
+                        return Ok(Distribution::Arch);
+                    } else if id_like.contains(&"fedora") {
+                        return Ok(Distribution::Fedora);
+                    }
+                }
+                return Err(TopgradeError::UnknownLinuxDistribution.into());
+            }
         })
     }
 
@@ -599,5 +602,15 @@ mod tests {
     #[test]
     fn test_nixos() {
         test_template(&include_str!("os_release/nixos"), Distribution::NixOS);
+    }
+
+    #[test]
+    fn test_fedoraremixonwsl() {
+        test_template(&include_str!("os_release/fedoraremixforwsl"), Distribution::Fedora);
+    }
+
+    #[test]
+    fn test_pengwinonwsl() {
+        test_template(&include_str!("os_release/pengwinonwsl"), Distribution::Debian);
     }
 }

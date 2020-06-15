@@ -1,0 +1,14 @@
+NAME="Fedora Remix for WSL"
+VERSION="31"
+ID=fedoraremixforwsl
+ID_LIKE=fedora
+VERSION_ID=31
+PLATFORM_ID="platform:f31"
+PRETTY_NAME="Fedora Remix for WSL"
+ANSI_COLOR="0;34"
+CPE_NAME="cpe:/o:fedoraproject:fedora:31"
+HOME_URL="https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL"
+SUPPORT_URL="https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL"
+BUG_REPORT_URL="https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/issues"
+PRIVACY_POLICY_URL="https://github.com/WhitewaterFoundry/Fedora-Remix-for-WSL/blob/master/PRIVACY.md"
+FEDORA_REMIX_VERSION=31.5.0
