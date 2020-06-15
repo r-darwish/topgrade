@@ -293,6 +293,7 @@ pub fn set_desktop_notifications(desktop_notifications: bool) {
         .set_desktop_notifications(desktop_notifications);
 }
 
+#[allow(dead_code)]
 pub fn prompt_yesno(question: &str) -> Result<bool, io::Error> {
     TERMINAL.lock().unwrap().prompt_yesno(question)
 }
