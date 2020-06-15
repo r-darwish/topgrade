@@ -1,9 +1,13 @@
 use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
-use crate::terminal::print_separator;
-use crate::utils::{require, PathExt};
+use crate::terminal::{print_separator, prompt_yesno};
+use crate::{
+    error::{SkipStep, TopgradeError},
+    utils::{require, PathExt},
+};
 use anyhow::Result;
-use std::path::Path;
+use log::debug;
+use std::{path::Path, process::Command};
 
 pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
     let msupdate =
@@ -41,11 +45,43 @@ pub fn run_mas(run_type: RunType) -> Result<()> {
     run_type.execute(mas).arg("upgrade").check_run()
 }
 
-pub fn upgrade_macos(run_type: RunType) -> Result<()> {
+pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
     print_separator("macOS system update");
 
-    run_type
-        .execute("softwareupdate")
-        .args(&["--install", "--all"])
-        .check_run()
+    let should_ask = !(ctx.config().yes()) || (ctx.config().dry_run());
+    if should_ask {
+        println!("Finding available software");
+        if system_update_available()? {
+            let answer = prompt_yesno("A system update is available. Do you wish to install it?")?;
+            if !answer {
+                return Err(SkipStep.into());
+            }
+            println!();
+        } else {
+            println!("No new software available.");
+            return Err(SkipStep.into());
+        }
+    }
+
+    let mut command = ctx.run_type().execute("softwareupdate");
+    command.args(&["--install", "--all"]);
+
+    if should_ask {
+        command.arg("--no-scan");
+    }
+
+    command.check_run()
+}
+
+fn system_update_available() -> Result<bool> {
+    let output = Command::new("softwareupdate").arg("--list").output()?;
+    debug!("{:?}", output);
+
+    let status = output.status;
+    if !status.success() {
+        return Err(TopgradeError::ProcessFailed(status).into());
+    }
+    let string_output = String::from_utf8(output.stderr)?;
+    debug!("{:?}", string_output);
+    Ok(!string_output.contains("No new software available"))
 }
