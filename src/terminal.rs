@@ -176,6 +176,23 @@ impl Terminal {
             .ok();
     }
 
+    #[allow(dead_code)]
+    fn prompt_yesno(&mut self, question: &str) -> Result<bool, io::Error> {
+        self.term
+            .write_fmt(format_args!(
+                "{}",
+                style(format!("{} (y)es/(N)o", question,)).yellow().bold()
+            ))
+            .ok();
+
+        loop {
+            match self.term.read_char()? {
+                'y' | 'Y' => break Ok(true),
+                'n' | 'N' | '\r' | '\n' => break Ok(false),
+                _ => (),
+            }
+        }
+    }
     #[allow(unused_variables)]
     fn should_retry(&mut self, interrupted: bool, step_name: &str) -> Result<bool, io::Error> {
         if self.width.is_none() {
@@ -274,4 +291,9 @@ pub fn set_desktop_notifications(desktop_notifications: bool) {
         .lock()
         .unwrap()
         .set_desktop_notifications(desktop_notifications);
+}
+
+#[allow(dead_code)]
+pub fn prompt_yesno(question: &str) -> Result<bool, io::Error> {
+    TERMINAL.lock().unwrap().prompt_yesno(question)
 }

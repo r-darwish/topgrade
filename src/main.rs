@@ -141,6 +141,8 @@ fn run() -> Result<()> {
     #[cfg(unix)]
     {
         if config.should_run(Step::PackageManagers) {
+            #[cfg(target_os = "macos")]
+            runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
             runner.execute("brew", || unix::run_homebrew(&ctx))?;
             #[cfg(target_os = "macos")]
             runner.execute("MacPorts", || macos::run_macports(&ctx))?;
@@ -361,9 +363,8 @@ fn run() -> Result<()> {
     #[cfg(target_os = "macos")]
     {
         if config.should_run(Step::System) {
-            runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
             runner.execute("App Store", || macos::run_mas(run_type))?;
-            runner.execute("System upgrade", || macos::upgrade_macos(run_type))?;
+            runner.execute("System upgrade", || macos::upgrade_macos(&ctx))?;
         }
     }
 
