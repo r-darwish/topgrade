@@ -12,6 +12,7 @@ use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
 
+#[allow(unused_macros)]
 macro_rules! str_value {
     ($section:ident, $value:ident) => {
         pub fn $value(&self) -> Option<&str> {
@@ -555,6 +556,9 @@ impl Config {
             && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
 
+    #[cfg(target_os = "linux")]
     str_value!(linux, emerge_sync_flags);
+
+    #[cfg(target_os = "linux")]
     str_value!(linux, emerge_update_flags);
 }
