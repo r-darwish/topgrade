@@ -390,7 +390,13 @@ fn run() -> Result<()> {
     }
 
     if config.should_run(Step::Vagrant) {
-        runner.execute("Vagrant", || vagrant::topgrade_vagrant_boxes(&ctx))?;
+        if let Ok(boxes) = vagrant::collect_boxes(&ctx) {
+            for vagrant_box in boxes {
+                runner.execute(format!("Vagrant ({})", vagrant_box.smart_name()), || {
+                    vagrant::topgrade_vagrant_box(&ctx, &vagrant_box)
+                })?;
+            }
+        }
     }
 
     if !runner.report().data().is_empty() {
