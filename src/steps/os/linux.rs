@@ -95,7 +95,7 @@ impl Distribution {
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
             Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
-            Distribution::Gentoo => upgrade_gentoo(&sudo, run_type),
+            Distribution::Gentoo => upgrade_gentoo(ctx),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
             Distribution::Solus => upgrade_solus(&sudo, run_type),
@@ -289,8 +289,10 @@ fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
+fn upgrade_gentoo(ctx: &ExecutionContext) -> Result<()> {
+    let run_type = ctx.run_type();
+
+    if let Some(sudo) = &ctx.sudo() {
         if let Some(layman) = which("layman") {
             run_type.execute(&sudo).arg(layman).args(&["-s", "ALL"]).check_run()?;
         }
@@ -298,8 +300,13 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
         println!("Syncing portage");
         run_type
             .execute(&sudo)
-            .arg("/usr/bin/emerge")
-            .args(&["-q", "--sync"])
+            .args(&["/usr/bin/emerge", "--sync"])
+            .args(
+                ctx.config()
+                    .emerge_sync_flags()
+                    .map(|s| s.split_whitespace().collect())
+                    .unwrap_or_else(|| vec!["-q"]),
+            )
             .check_run()?;
 
         if let Some(eix_update) = which("eix-update") {
@@ -309,7 +316,12 @@ fn upgrade_gentoo(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
         run_type
             .execute(&sudo)
             .arg("/usr/bin/emerge")
-            .args(&["-uDNa", "--with-bdeps=y", "world"])
+            .args(
+                ctx.config()
+                    .emerge_update_flags()
+                    .map(|s| s.split_whitespace().collect())
+                    .unwrap_or_else(|| vec!["-uDNa", "--with-bdeps=y", "world"]),
+            )
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
