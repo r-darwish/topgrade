@@ -147,13 +147,19 @@ pub struct ConfigFile {
     vagrant: Option<Vagrant>,
 }
 
+fn config_directory(base_dirs: &BaseDirs) -> PathBuf {
+    #[cfg(not(target_os = "macos"))]
+    return base_dirs.config_dir().to_owned();
+
+    #[cfg(target_os = "macos")]
+    return base_dirs.home_dir().join(".config");
+}
+
 impl ConfigFile {
     fn ensure(base_dirs: &BaseDirs) -> Result<PathBuf> {
-        #[cfg(not(target_os = "macos"))]
-        let config_path = base_dirs.config_dir().join("topgrade.toml");
+        let config_directory = config_directory(base_dirs);
 
-        #[cfg(target_os = "macos")]
-        let config_path = base_dirs.home_dir().join(".config/topgrade.toml");
+        let config_path = config_directory.join("topgrade.toml");
 
         if !config_path.exists() {
             debug!("No configuration exists");
@@ -309,12 +315,18 @@ impl Config {
 
         builder.init();
 
-        let config_file = ConfigFile::read(base_dirs, opt.config.clone()).unwrap_or_else(|e| {
-            // Inform the user about errors when loading the configuration,
-            // but fallback to the default config to at least attempt to do something
-            log::error!("failed to load configuration: {}", e);
+        let config_directory = config_directory(base_dirs);
+        let config_file = if config_directory.is_dir() {
+            ConfigFile::read(base_dirs, opt.config.clone()).unwrap_or_else(|e| {
+                // Inform the user about errors when loading the configuration,
+                // but fallback to the default config to at least attempt to do something
+                log::error!("failed to load configuration: {}", e);
+                ConfigFile::default()
+            })
+        } else {
+            log::debug!("Configuration directory {} does not exist", config_directory.display());
             ConfigFile::default()
-        });
+        };
 
         check_deprecated!(config_file, git_arguments, git, arguments);
         check_deprecated!(config_file, git_repos, git, repos);
