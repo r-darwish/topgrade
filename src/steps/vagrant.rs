@@ -136,6 +136,7 @@ impl<'a> Drop for TemporaryPowerOn<'a> {
             }
         };
 
+        println!();
         self.ctx
             .run_type()
             .execute(self.vagrant)
