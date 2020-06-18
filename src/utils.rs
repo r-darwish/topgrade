@@ -73,8 +73,8 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
             Some(path)
         }
         Err(e) => {
-            match e.kind() {
-                which_crate::ErrorKind::CannotFindBinaryPath => {
+            match e {
+                which_crate::Error::CannotFindBinaryPath => {
                     debug!("Cannot find {:?}", &binary_name);
                 }
                 _ => {
@@ -102,8 +102,8 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
             debug!("Detected {:?} as {:?}", &path, &binary_name);
             Ok(path)
         }
-        Err(e) => match e.kind() {
-            which_crate::ErrorKind::CannotFindBinaryPath => {
+        Err(e) => match e {
+            which_crate::Error::CannotFindBinaryPath => {
                 debug!("Cannot find {:?}", &binary_name);
                 Err(SkipStep.into())
             }

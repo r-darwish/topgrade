@@ -15,7 +15,7 @@ readme = "README.md"
 directories = "2.0.1"
 serde = { version = "1.0.92", features = ["derive"] }
 toml = "0.5.1"
-which_crate = { version = "3.1.0", package = "which" }
+which_crate = { version = "4.0.0", package = "which" }
 shellexpand = "2.0.0"
 structopt = "0.3.0"
 log = "0.4.6"
@@ -34,14 +34,14 @@ tokio = { version = "0.2", features = ["rt-core", "process"] }
 futures = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-notify-rust = "3.6.3"
+notify-rust = "4.0.0"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.17.0"
-self_update_crate = { version = "0.14.0", optional = true, package =  "self_update", features = ["archive-tar", "compression-flate2"] }
+self_update_crate = { version = "0.16.0", optional = true, package =  "self_update", features = ["archive-tar", "compression-flate2"] }
 
 [target.'cfg(windows)'.dependencies]
-self_update_crate = { version = "0.14.0", optional = true, package =  "self_update", features = ["archive-zip", "compression-zip-deflate"] }
+self_update_crate = { version = "0.16.0", optional = true, package =  "self_update", features = ["archive-zip", "compression-zip-deflate"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
 rust-ini = "0.15.0"
