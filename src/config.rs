@@ -92,6 +92,7 @@ pub enum Step {
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Git {
     max_concurrency: Option<usize>,
     arguments: Option<String>,
@@ -100,6 +101,7 @@ pub struct Git {
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Vagrant {
     directories: Option<Vec<String>>,
     power_on: Option<bool>,
@@ -107,16 +109,19 @@ pub struct Vagrant {
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Windows {
     accept_all_updates: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Linux {
     yay_arguments: Option<String>,
     trizen_arguments: Option<String>,
@@ -127,6 +132,7 @@ pub struct Linux {
 }
 
 #[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Composer {
     self_update: Option<bool>,
 }
