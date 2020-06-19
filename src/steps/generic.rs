@@ -264,6 +264,10 @@ pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()>
         let env = format!("TOPGRADE_PREFIX={}", hostname);
         args.extend(&["env", &env, "topgrade"]);
 
+        if ctx.config().yes() {
+            args.push("-y");
+        }
+
         ctx.run_type().execute(&ssh).args(&args).check_run()
     }
 }
