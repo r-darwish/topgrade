@@ -12,6 +12,18 @@ use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
 
+#[allow(unused_macros)]
+macro_rules! str_value {
+    ($section:ident, $value:ident) => {
+        pub fn $value(&self) -> Option<&str> {
+            self.config_file
+                .$section
+                .as_ref()
+                .and_then(|section| section.$value.as_deref())
+        }
+    };
+}
+
 macro_rules! check_deprecated {
     ($config:expr, $old:ident, $section:ident, $new:ident) => {
         if $config.$old.is_some() {
@@ -110,6 +122,8 @@ pub struct Linux {
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
+    emerge_sync_flags: Option<String>,
+    emerge_update_flags: Option<String>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -553,4 +567,10 @@ impl Config {
         !self.opt.disable_predefined_git_repos
             && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
+
+    #[cfg(target_os = "linux")]
+    str_value!(linux, emerge_sync_flags);
+
+    #[cfg(target_os = "linux")]
+    str_value!(linux, emerge_update_flags);
 }
