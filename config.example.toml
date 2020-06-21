@@ -58,8 +58,8 @@
 #yay_arguments = "--nodevel"
 #trizen_arguments = "--devel"
 #enable_tlmgr = true
-emerge_sync_flags = "-q"
-emerge_update_flags = "-uDNa --with-bdeps=y world"
+#emerge_sync_flags = "-q"
+#emerge_update_flags = "-uDNa --with-bdeps=y world"
 
 #[windows]
 # Manually select Windows updates
