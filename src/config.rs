@@ -61,7 +61,6 @@ type Commands = BTreeMap<String, String>;
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
     System,
-    PackageManagers,
     GitRepos,
     Vim,
     Emacs,
@@ -90,6 +89,12 @@ pub enum Step {
     Wsl,
     Tmux,
     Vagrant,
+    MicrosoftAutoUpdate,
+    Brew,
+    MacPorts,
+    Nix,
+    HomeManager,
+    Asdf,
 }
 
 #[derive(Deserialize, Default, Debug)]

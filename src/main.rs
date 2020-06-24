@@ -142,14 +142,27 @@ fn run() -> Result<()> {
 
     #[cfg(unix)]
     {
-        if config.should_run(Step::PackageManagers) {
-            #[cfg(target_os = "macos")]
-            runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
+        if config.should_run(Step::Brew) {
             runner.execute("brew", || unix::run_homebrew(&ctx))?;
-            #[cfg(target_os = "macos")]
-            runner.execute("MacPorts", || macos::run_macports(&ctx))?;
+        }
+        #[cfg(target_os = "macos")]
+        {
+            if config.should_run(Step::MacPorts) {
+                runner.execute("MacPorts", || macos::run_macports(&ctx))?;
+            }
+            if config.should_run(Step::MicrosoftAutoUpdate) {
+                runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
+            }
+        }
+        if config.should_run(Step::Nix) {
             runner.execute("nix", || unix::run_nix(&ctx))?;
+        }
+
+        if config.should_run(Step::HomeManager) {
             runner.execute("home-manager", || unix::run_home_manager(run_type))?;
+        }
+
+        if config.should_run(Step::Asdf) {
             runner.execute("asdf", || unix::run_asdf(run_type))?;
         }
     }
