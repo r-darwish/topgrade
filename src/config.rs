@@ -11,6 +11,7 @@ use std::process::Command;
 use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+use which_crate::which;
 
 #[allow(unused_macros)]
 macro_rules! str_value {
@@ -243,8 +244,11 @@ impl ConfigFile {
         let config_path = Self::ensure(base_dirs)?;
         let editor = editor();
 
-        debug!("Editing {} with {}", config_path.display(), editor);
-        Command::new(editor)
+        let command = which(&editor[0])?;
+        let args: Vec<&String> = editor.iter().skip(1).collect();
+
+        Command::new(command)
+            .args(args)
             .arg(config_path)
             .spawn()
             .and_then(|mut p| p.wait())?;
