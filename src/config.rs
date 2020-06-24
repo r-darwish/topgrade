@@ -95,6 +95,11 @@ pub enum Step {
     Nix,
     HomeManager,
     Asdf,
+    Chocolatey,
+    Scoop,
+    Flatpak,
+    Snap,
+    Pkg,
 }
 
 #[derive(Deserialize, Default, Debug)]
