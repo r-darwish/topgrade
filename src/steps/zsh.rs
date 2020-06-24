@@ -90,9 +90,8 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
     print_separator("oh-my-zsh");
 
     let mut custom_dir = PathBuf::from(
-        Command::new("zsh")
-            .args(&["-i", "-c", "echo -n $ZSH_CUSTOM"])
-            .check_output()?,
+        env::var::<_>("ZSH_CUSTOM")
+            .or_else(|_| Command::new("zsh").args(&["-c", "echo -n $ZSH_CUSTOM"]).check_output())?,
     );
     custom_dir.push("plugins");
 
