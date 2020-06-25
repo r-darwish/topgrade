@@ -3,7 +3,7 @@ use crate::executor::CommandExt;
 use crate::terminal::print_separator;
 use crate::{error::SkipStep, utils};
 use anyhow::Result;
-use log::debug;
+use log::{debug, error};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fmt::Display, rc::Rc, str::FromStr};
@@ -159,8 +159,12 @@ pub fn collect_boxes(ctx: &ExecutionContext) -> Result<Vec<VagrantBox>> {
     let mut result = Vec::new();
 
     for directory in directories {
-        let mut boxes = vagrant.get_boxes(directory)?;
-        result.append(&mut boxes);
+        match vagrant.get_boxes(directory) {
+            Ok(mut boxes) => {
+                result.append(&mut boxes);
+            }
+            Err(e) => error!("Error collecting vagrant boxes from {}: {}", directory, e),
+        };
     }
 
     Ok(result)

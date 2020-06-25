@@ -6,6 +6,9 @@ pub enum TopgradeError {
     #[error("{0}")]
     ProcessFailed(ExitStatus),
 
+    #[error("{0}: {1}")]
+    ProcessFailedWithOutput(ExitStatus, String),
+
     #[error("Sudo is required for this step")]
     #[allow(dead_code)]
     SudoRequired,

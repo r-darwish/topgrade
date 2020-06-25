@@ -245,7 +245,8 @@ impl CommandExt for Command {
         trace!("Output of {:?}: {:?}", self, output);
         let status = output.status;
         if !status.success() {
-            return Err(TopgradeError::ProcessFailed(status).into());
+            let stderr = String::from_utf8(output.stderr).unwrap_or_default();
+            return Err(TopgradeError::ProcessFailedWithOutput(status, stderr).into());
         }
         Ok(String::from_utf8(output.stdout)?)
     }
