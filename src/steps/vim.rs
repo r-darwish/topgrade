@@ -63,7 +63,7 @@ pub fn vimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 
 fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     #[cfg(unix)]
-    return base_dirs.config_dir().join("nvim/init.vim").if_exists();
+    return base_dirs.home_dir().join(".config/nvim/init.vim").if_exists();
 
     #[cfg(windows)]
     return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
