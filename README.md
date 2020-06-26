@@ -15,11 +15,7 @@ problem by detecting which tools you use and run their appropriate package manag
 ## Installation
 Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
 
-On NixOS, use the `topgrade` package in `nixpkgs`:
-
-```sh
-nix-env -iA topgrade
-```
+On NixOS, use the `topgrade` package in `nixpkgs`.
 
 macOS users can install topgrade via Homebrew.
 
