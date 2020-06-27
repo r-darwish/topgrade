@@ -1,6 +1,6 @@
 if exists(":NeoBundleUpdate")
     echo NeoBundle
-    :NeoBundleUpdate
+    NeoBundleUpdate
 endif
 
 if exists(":PluginUpdate")
