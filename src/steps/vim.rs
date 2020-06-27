@@ -30,11 +30,15 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 }
 
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, run_type: RunType) -> Result<()> {
+    let mut tempfile = tempfile::NamedTempFile::new()?;
+    tempfile.write_all(UPGRADE_VIM.as_bytes())?;
+
     let output = run_type
         .execute(&vim)
-        .args(&["-N", "-u"])
+        .args(&["-u"])
         .arg(vimrc)
-        .args(&["-c", UPGRADE_VIM, "-c", "quitall", "-e", "-s", "-V1"])
+        .args(&["-U", "NONE", "-V1", "-nNesS"])
+        .arg(tempfile.path())
         .output()?;
 
     if let ExecutorOutput::Wet(output) = output {
