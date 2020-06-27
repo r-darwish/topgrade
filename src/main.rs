@@ -318,8 +318,8 @@ fn run() -> Result<()> {
     }
 
     if config.should_run(Step::Vim) {
-        runner.execute("vim", || vim::upgrade_vim(&base_dirs, run_type, config.cleanup()))?;
-        runner.execute("Neovim", || vim::upgrade_neovim(&base_dirs, run_type, config.cleanup()))?;
+        runner.execute("vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
+        runner.execute("Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
         runner.execute("voom", || vim::run_voom(&base_dirs, run_type))?;
     }
 
