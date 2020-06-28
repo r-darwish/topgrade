@@ -3,55 +3,19 @@ use anyhow::Result;
 
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{require, require_option, PathExt};
+use crate::{
+    execution_context::ExecutionContext,
+    utils::{require, require_option, PathExt},
+};
 use directories::BaseDirs;
+use log::debug;
 use std::path::PathBuf;
 use std::{
-    fs,
     io::{self, Write},
     process::Command,
 };
 
-#[derive(Debug, Clone, Copy)]
-pub enum PluginFramework {
-    Plug,
-    Vundle,
-    NeoBundle,
-    Dein,
-}
-
-impl PluginFramework {
-    pub fn detect(vimrc: &PathBuf) -> Option<PluginFramework> {
-        let content = fs::read_to_string(vimrc).ok()?;
-
-        if content.contains("NeoBundle") {
-            Some(PluginFramework::NeoBundle)
-        } else if content.contains("Vundle") {
-            Some(PluginFramework::Vundle)
-        } else if content.contains("plug#begin") {
-            Some(PluginFramework::Plug)
-        } else if content.contains("dein#begin") {
-            Some(PluginFramework::Dein)
-        } else {
-            None
-        }
-    }
-
-    pub fn upgrade_command(self, cleanup: bool) -> &'static str {
-        match self {
-            PluginFramework::NeoBundle => "NeoBundleUpdate",
-            PluginFramework::Vundle => "PluginUpdate",
-            PluginFramework::Plug => {
-                if cleanup {
-                    "PlugUpgrade | PlugClean | PlugUpdate"
-                } else {
-                    "PlugUpgrade | PlugUpdate"
-                }
-            }
-            PluginFramework::Dein => "call dein#install() | call dein#update()",
-        }
-    }
-}
+const UPGRADE_VIM: &str = include_str!("upgrade.vim");
 
 pub fn vimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     base_dirs
@@ -69,33 +33,29 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
     return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
 }
 
-fn upgrade(
-    vim: &PathBuf,
-    vimrc: &PathBuf,
-    plugin_framework: PluginFramework,
-    run_type: RunType,
-    cleanup: bool,
-) -> Result<()> {
-    let output = run_type
+fn upgrade(vim: &PathBuf, vimrc: &PathBuf, ctx: &ExecutionContext) -> Result<()> {
+    let mut tempfile = tempfile::NamedTempFile::new()?;
+    tempfile.write_all(UPGRADE_VIM.as_bytes())?;
+    debug!("Wrote vim script to {:?}", tempfile.path());
+
+    let output = ctx
+        .run_type()
         .execute(&vim)
-        .args(&["-N", "-u"])
+        .args(&["-u"])
         .arg(vimrc)
-        .args(&[
-            "-c",
-            plugin_framework.upgrade_command(cleanup),
-            "-c",
-            "quitall",
-            "-e",
-            "-s",
-            "-V1",
-        ])
+        .args(&["-U", "NONE", "-V1", "-nNesS"])
+        .arg(tempfile.path())
         .output()?;
 
     if let ExecutorOutput::Wet(output) = output {
         let status = output.status;
-        if !status.success() {
+
+        if !status.success() || ctx.config().verbose() {
             io::stdout().write(&output.stdout).ok();
             io::stderr().write(&output.stderr).ok();
+        }
+
+        if !status.success() {
             return Err(TopgradeError::ProcessFailed(status).into());
         } else {
             println!("Plugins upgraded")
@@ -105,7 +65,7 @@ fn upgrade(
     Ok(())
 }
 
-pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
+pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
     let vim = require("vim")?;
 
     let output = Command::new(&vim).arg("--version").check_output()?;
@@ -114,19 +74,17 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Re
     }
 
     let vimrc = require_option(vimrc(&base_dirs))?;
-    let plugin_framework = require_option(PluginFramework::detect(&vimrc))?;
 
-    print_separator(&format!("Vim ({:?})", plugin_framework));
-    upgrade(&vim, &vimrc, plugin_framework, run_type, cleanup)
+    print_separator("Vim");
+    upgrade(&vim, &vimrc, ctx)
 }
 
-pub fn upgrade_neovim(base_dirs: &BaseDirs, run_type: RunType, cleanup: bool) -> Result<()> {
+pub fn upgrade_neovim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
     let nvim = require("nvim")?;
     let nvimrc = require_option(nvimrc(&base_dirs))?;
-    let plugin_framework = require_option(PluginFramework::detect(&nvimrc))?;
 
-    print_separator(&format!("Neovim ({:?})", plugin_framework));
-    upgrade(&nvim, &nvimrc, plugin_framework, run_type, cleanup)
+    print_separator("Neovim");
+    upgrade(&nvim, &nvimrc, ctx)
 }
 
 pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {

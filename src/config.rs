@@ -588,6 +588,10 @@ impl Config {
             && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
 
+    pub fn verbose(&self) -> bool {
+        self.opt.verbose
+    }
+
     #[cfg(target_os = "linux")]
     str_value!(linux, emerge_sync_flags);
 
