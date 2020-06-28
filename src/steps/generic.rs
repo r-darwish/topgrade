@@ -79,6 +79,14 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&rustup).arg("update").check_run()
 }
 
+pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
+    let krew = utils::require("kubectl-krew")?;
+
+    print_separator("Krew");
+
+    run_type.execute(&krew).args(&["upgrade"]).check_run()
+}
+
 pub fn run_jetpack(run_type: RunType) -> Result<()> {
     let jetpack = utils::require("jetpack")?;
 

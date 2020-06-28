@@ -67,6 +67,7 @@ pub enum Step {
     Gem,
     Node,
     Composer,
+    Krew,
     Sdkman,
     Remotes,
     Rustup,

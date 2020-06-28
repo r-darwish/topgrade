@@ -332,6 +332,10 @@ fn run() -> Result<()> {
         runner.execute("composer", || generic::run_composer_update(&ctx))?;
     }
 
+    if config.should_run(Step::Krew) {
+        runner.execute("krew", || generic::run_krew_upgrade(run_type))?;
+    }
+
     #[cfg(not(any(
         target_os = "freebsd",
         target_os = "openbsd",
