@@ -56,7 +56,7 @@ macro_rules! get_deprecated {
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter)]
+#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
 #[serde(rename_all = "lowercase")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
@@ -158,6 +158,7 @@ pub struct ConfigFile {
     git_repos: Option<Vec<String>>,
     predefined_git_repos: Option<bool>,
     disable: Option<Vec<Step>>,
+    ignore_failure: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
@@ -404,6 +405,14 @@ impl Config {
     /// or the `disable` option in the configuration, the function returns false.
     pub fn should_run(&self, step: Step) -> bool {
         self.allowed_steps.contains(&step)
+    }
+
+    /// Should we ask the user if the step is to be retried
+    pub fn should_ask_for_retry(&self, step: Option<Step>) -> bool {
+        !(self.no_retry()
+            || step
+                .and_then(|step| self.config_file.ignore_failure.as_ref().map(|v| v.contains(&step)))
+                .unwrap_or(false))
     }
 
     fn allowed_steps(opt: &CommandLineArgs, config_file: &ConfigFile) -> Vec<Step> {

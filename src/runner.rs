@@ -2,7 +2,7 @@ use crate::ctrlc;
 use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::report::Report;
-use crate::terminal::should_retry;
+use crate::{config::Step, terminal::should_retry};
 use anyhow::Result;
 use log::debug;
 use std::borrow::Cow;
@@ -21,13 +21,19 @@ impl<'a> Runner<'a> {
         }
     }
 
-    pub fn execute<F, M>(&mut self, key: M, func: F) -> Result<()>
+    pub fn execute2<F, M>(&mut self, key: M, func: F, step: Option<Step>) -> Result<()>
     where
         F: Fn() -> Result<()>,
         M: Into<Cow<'a, str>> + Debug,
     {
         let key = key.into();
         debug!("Step {:?}", key);
+
+        if let Some(step) = step {
+            if !self.ctx.config().should_run(step) {
+                return Ok(());
+            }
+        }
 
         loop {
             match func() {
@@ -44,8 +50,8 @@ impl<'a> Runner<'a> {
                         ctrlc::unset_interrupted();
                     }
 
-                    let should_ask = interrupted || !self.ctx.config().no_retry();
-                    let should_retry = should_ask && should_retry(interrupted, key.as_ref())?;
+                    let should_retry =
+                        self.ctx.config().should_ask_for_retry(step) && should_retry(interrupted, key.as_ref())?;
 
                     if !should_retry {
                         self.report.push_result(Some((key, false)));
@@ -56,6 +62,14 @@ impl<'a> Runner<'a> {
         }
 
         Ok(())
+    }
+
+    pub fn execute<F, M>(&mut self, key: M, func: F) -> Result<()>
+    where
+        F: Fn() -> Result<()>,
+        M: Into<Cow<'a, str>> + Debug,
+    {
+        self.execute2(key, func, None)
     }
 
     pub fn report(&self) -> &Report {
