@@ -59,7 +59,7 @@ macro_rules! get_deprecated {
 type Commands = BTreeMap<String, String>;
 
 #[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
     System,
