@@ -7,11 +7,21 @@ use crate::utils::require;
 use anyhow::Result;
 use std::process::Command;
 
-pub fn run_chocolatey(run_type: RunType) -> Result<()> {
+pub fn run_chocolatey(ctx: &ExecutionContext) -> Result<()> {
     let choco = require("choco")?;
+    let yes = ctx.config().yes();
 
     print_separator("Chocolatey");
-    run_type.execute(&choco).args(&["upgrade", "all"]).check_run()
+
+    let mut command = ctx.run_type().execute(&choco);
+
+    command.args(&["upgrade", "all"]);
+
+    if yes {
+        command.arg("--yes");
+    }
+
+    command.check_run()
 }
 
 pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {

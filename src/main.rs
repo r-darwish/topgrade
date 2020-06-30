@@ -139,7 +139,7 @@ fn run() -> Result<()> {
     #[cfg(windows)]
     {
         if config.should_run(Step::Chocolatey) {
-            runner.execute("Chocolatey", || windows::run_chocolatey(run_type))?;
+            runner.execute("Chocolatey", || windows::run_chocolatey(&ctx))?;
         }
 
         if config.should_run(Step::Scoop) {
