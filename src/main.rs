@@ -38,6 +38,11 @@ fn run() -> Result<()> {
         return Ok(());
     };
 
+    if opt.show_config_reference() {
+        print!("{}", crate::config::EXAMPLE_CONFIG);
+        return Ok(());
+    }
+
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
     terminal::set_desktop_notifications(config.notify_each_step());

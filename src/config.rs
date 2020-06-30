@@ -13,6 +13,8 @@ use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
 use which_crate::which;
 
+pub static EXAMPLE_CONFIG: &str = include_str!("../config.example.toml");
+
 #[allow(unused_macros)]
 macro_rules! str_value {
     ($section:ident, $value:ident) => {
@@ -195,7 +197,7 @@ impl ConfigFile {
 
         if !config_path.exists() {
             debug!("No configuration exists");
-            write(&config_path, include_str!("../config.example.toml")).map_err(|e| {
+            write(&config_path, EXAMPLE_CONFIG).map_err(|e| {
                 debug!(
                     "Unable to write the example configuration file to {}: {}. Using blank config.",
                     config_path.display(),
@@ -275,6 +277,10 @@ pub struct CommandLineArgs {
     #[structopt(long = "edit-config")]
     edit_config: bool,
 
+    /// Show config reference
+    #[structopt(long = "config-reference")]
+    show_config_reference: bool,
+
     /// Run inside tmux
     #[structopt(short = "t", long = "tmux")]
     run_in_tmux: bool,
@@ -323,6 +329,10 @@ pub struct CommandLineArgs {
 impl CommandLineArgs {
     pub fn edit_config(&self) -> bool {
         self.edit_config
+    }
+
+    pub fn show_config_reference(&self) -> bool {
+        self.show_config_reference
     }
 }
 
