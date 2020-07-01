@@ -171,6 +171,7 @@ impl Terminal {
                 match result {
                     StepResult::Success => style("OK").bold().green(),
                     StepResult::Failure => style("FAILED").bold().red(),
+                    StepResult::Ignored => style("IGNORED").bold().yellow(),
                 }
             ))
             .ok();

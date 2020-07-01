@@ -4,6 +4,9 @@
 # Disable specific steps - same options as the command line flag
 #disable = ["system", "emacs"]
 
+# Ignore failures for these steps
+#ignore_failures = ["powershell"]
+
 # Run specific steps - same options as the command line flag
 #only = ["system", "emacs"]
 

@@ -48,11 +48,19 @@ impl<'a> Runner<'a> {
                         ctrlc::unset_interrupted();
                     }
 
-                    let should_ask = interrupted || !self.ctx.config().no_retry();
+                    let ignore_failure = self.ctx.config().ignore_failure(step);
+                    let should_ask = interrupted || !(self.ctx.config().no_retry() || ignore_failure);
                     let should_retry = should_ask && should_retry(interrupted, key.as_ref())?;
 
                     if !should_retry {
-                        self.report.push_result(Some((key, StepResult::Failure)));
+                        self.report.push_result(Some((
+                            key,
+                            if ignore_failure {
+                                StepResult::Ignored
+                            } else {
+                                StepResult::Failure
+                            },
+                        )));
                         break;
                     }
                 }

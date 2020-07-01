@@ -4,12 +4,13 @@ use std::borrow::Cow;
 pub enum StepResult {
     Success,
     Failure,
+    Ignored,
 }
 
 impl StepResult {
     pub fn failed(self) -> bool {
         match self {
-            StepResult::Success => false,
+            StepResult::Success | StepResult::Ignored => false,
             StepResult::Failure => true,
         }
     }
