@@ -14,3 +14,5 @@ if exists(":PlugUpgrade")
     PlugClean
     PlugUpdate
 endif
+
+quitall
