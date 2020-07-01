@@ -1,6 +1,6 @@
 use crate::report::StepResult;
 #[cfg(target_os = "linux")]
-use crate::{report::StepResult, utils::which};
+use crate::utils::which;
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
