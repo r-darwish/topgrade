@@ -103,6 +103,8 @@ pub enum Step {
     Flatpak,
     Snap,
     Pkg,
+    Powershell,
+    CustomCommands,
 }
 
 #[derive(Deserialize, Default, Debug)]

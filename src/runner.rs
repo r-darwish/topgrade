@@ -2,7 +2,7 @@ use crate::ctrlc;
 use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::report::Report;
-use crate::terminal::should_retry;
+use crate::{config::Step, terminal::should_retry};
 use anyhow::Result;
 use log::debug;
 use std::borrow::Cow;
@@ -21,11 +21,15 @@ impl<'a> Runner<'a> {
         }
     }
 
-    pub fn execute<F, M>(&mut self, key: M, func: F) -> Result<()>
+    pub fn execute<F, M>(&mut self, step: Step, key: M, func: F) -> Result<()>
     where
         F: Fn() -> Result<()>,
         M: Into<Cow<'a, str>> + Debug,
     {
+        if !self.ctx.config().should_run(step) {
+            return Ok(());
+        }
+
         let key = key.into();
         debug!("Step {:?}", key);
 
