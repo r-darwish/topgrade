@@ -1,8 +1,24 @@
 use std::borrow::Cow;
 
+#[derive(Clone, Copy)]
+pub enum StepResult {
+    Success,
+    Failure,
+}
+
+impl StepResult {
+    pub fn failed(self) -> bool {
+        match self {
+            StepResult::Success => false,
+            StepResult::Failure => true,
+        }
+    }
+}
+
 type CowString<'a> = Cow<'a, str>;
+type ReportData<'a> = Vec<(CowString<'a>, StepResult)>;
 pub struct Report<'a> {
-    data: Vec<(CowString<'a>, bool)>,
+    data: ReportData<'a>,
 }
 
 impl<'a> Report<'a> {
@@ -10,7 +26,7 @@ impl<'a> Report<'a> {
         Self { data: Vec::new() }
     }
 
-    pub fn push_result<M>(&mut self, result: Option<(M, bool)>)
+    pub fn push_result<M>(&mut self, result: Option<(M, StepResult)>)
     where
         M: Into<CowString<'a>>,
     {
@@ -22,7 +38,7 @@ impl<'a> Report<'a> {
         }
     }
 
-    pub fn data(&self) -> &Vec<(CowString<'a>, bool)> {
+    pub fn data(&self) -> &ReportData<'a> {
         &self.data
     }
 }

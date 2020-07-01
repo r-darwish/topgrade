@@ -331,8 +331,8 @@ fn run() -> Result<()> {
     if !runner.report().data().is_empty() {
         print_separator("Summary");
 
-        for (key, succeeded) in runner.report().data() {
-            print_result(key, *succeeded);
+        for (key, result) in runner.report().data() {
+            print_result(key, *result);
         }
 
         #[cfg(target_os = "linux")]
@@ -368,7 +368,7 @@ fn run() -> Result<()> {
         }
     }
 
-    if runner.report().data().iter().all(|(_, succeeded)| *succeeded) {
+    if runner.report().data().iter().any(|(_, result)| result.failed()) {
         Ok(())
     } else {
         Err(StepFailed.into())

@@ -1,7 +1,7 @@
 use crate::ctrlc;
 use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
-use crate::report::Report;
+use crate::report::{Report, StepResult};
 use crate::{config::Step, terminal::should_retry};
 use anyhow::Result;
 use log::debug;
@@ -36,7 +36,7 @@ impl<'a> Runner<'a> {
         loop {
             match func() {
                 Ok(()) => {
-                    self.report.push_result(Some((key, true)));
+                    self.report.push_result(Some((key, StepResult::Success)));
                     break;
                 }
                 Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
@@ -52,7 +52,7 @@ impl<'a> Runner<'a> {
                     let should_retry = should_ask && should_retry(interrupted, key.as_ref())?;
 
                     if !should_retry {
-                        self.report.push_result(Some((key, false)));
+                        self.report.push_result(Some((key, StepResult::Failure)));
                         break;
                     }
                 }
