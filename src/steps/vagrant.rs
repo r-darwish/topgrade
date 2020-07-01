@@ -190,7 +190,7 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
     }
     let mut command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box.smart_name());
     if ctx.config().yes() {
-        command.push_str("-y");
+        command.push_str(" -y");
     }
 
     ctx.run_type()
