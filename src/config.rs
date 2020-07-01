@@ -126,6 +126,7 @@ pub struct Vagrant {
 #[serde(deny_unknown_fields)]
 pub struct Windows {
     accept_all_updates: Option<bool>,
+    self_rename: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -503,6 +504,16 @@ impl Config {
             accept_all_updates
         )
         .unwrap_or(true)
+    }
+
+    /// Whether to self rename the Topgrade executable during the run
+    #[allow(dead_code)]
+    pub fn self_rename(&self) -> bool {
+        self.config_file
+            .windows
+            .as_ref()
+            .and_then(|w| w.self_rename)
+            .unwrap_or(false)
     }
 
     /// Whether Brew cask should be greedy

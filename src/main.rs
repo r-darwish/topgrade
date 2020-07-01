@@ -6,6 +6,8 @@ mod execution_context;
 mod executor;
 mod report;
 mod runner;
+#[cfg(windows)]
+mod self_renamer;
 #[cfg(feature = "self-update")]
 mod self_update;
 mod steps;
@@ -91,6 +93,15 @@ fn run() -> Result<()> {
             }
         }
     }
+
+    let _self_rename = if config.self_rename() {
+        Some(crate::self_renamer::SelfRenamer::create()?)
+    } else {
+        None
+    };
+
+    let mut s = String::new();
+    std::io::stdin().read_line(&mut s)?;
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
