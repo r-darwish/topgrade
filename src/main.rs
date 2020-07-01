@@ -129,17 +129,17 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        if config.should_run(Step::System) {
-            match &distribution {
-                Ok(distribution) => {
-                    runner.execute("System update", || distribution.upgrade(&ctx))?;
-                }
-                Err(e) => {
-                    println!("Error detecting current distribution: {}", e);
-                }
+        match &distribution {
+            Ok(distribution) => {
+                runner.execute(Step::System, "System update", || distribution.upgrade(&ctx))?;
             }
-            runner.execute("etc-update", || linux::run_etc_update(sudo.as_ref(), run_type))?;
+            Err(e) => {
+                println!("Error detecting current distribution: {}", e);
+            }
         }
+        runner.execute(Step::System, "etc-update", || {
+            linux::run_etc_update(sudo.as_ref(), run_type)
+        })?;
     }
 
     #[cfg(windows)]
