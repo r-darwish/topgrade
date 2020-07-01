@@ -94,6 +94,7 @@ fn run() -> Result<()> {
         }
     }
 
+    #[cfg(windows)]
     let _self_rename = if config.self_rename() {
         Some(crate::self_renamer::SelfRenamer::create()?)
     } else {
