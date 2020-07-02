@@ -368,9 +368,9 @@ fn run() -> Result<()> {
     }
 
     if runner.report().data().iter().any(|(_, result)| result.failed()) {
-        Ok(())
-    } else {
         Err(StepFailed.into())
+    } else {
+        Ok(())
     }
 }
 
