@@ -159,7 +159,8 @@ fn run() -> Result<()> {
     #[cfg(unix)]
     {
         if config.should_run(Step::Brew) {
-            runner.execute("brew", || unix::run_homebrew(&ctx))?;
+            runner.execute("Brew", || unix::run_brew(&ctx))?;
+            runner.execute("Brew Cask", || unix::run_brew_cask(&ctx))?;
         }
         #[cfg(target_os = "macos")]
         {

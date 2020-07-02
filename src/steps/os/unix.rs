@@ -30,17 +30,24 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
-pub fn run_homebrew(ctx: &ExecutionContext) -> Result<()> {
+pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
     let brew = require("brew")?;
     print_separator("Brew");
     let run_type = ctx.run_type();
-    let config = ctx.config();
 
     run_type.execute(&brew).arg("update").check_run()?;
     run_type
         .execute(&brew)
         .args(&["upgrade", "--ignore-pinned"])
-        .check_run()?;
+        .check_run()
+}
+
+pub fn run_brew_cask(ctx: &ExecutionContext) -> Result<()> {
+    let brew = require("brew")?;
+    print_separator("Brew Cask");
+
+    let config = ctx.config();
+    let run_type = ctx.run_type();
 
     let cask_upgrade_exists = Command::new(&brew)
         .args(&["--repository", "buo/cask-upgrade"])
