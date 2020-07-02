@@ -101,9 +101,6 @@ fn run() -> Result<()> {
         None
     };
 
-    let mut s = String::new();
-    std::io::stdin().read_line(&mut s)?;
-
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
             generic::run_custom_command(&name, &command, &ctx)?;
