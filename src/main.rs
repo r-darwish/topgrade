@@ -101,9 +101,6 @@ fn run() -> Result<()> {
         None
     };
 
-    let mut s = String::new();
-    std::io::stdin().read_line(&mut s)?;
-
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
             generic::run_custom_command(&name, &command, &ctx)?;
@@ -150,7 +147,9 @@ fn run() -> Result<()> {
 
     #[cfg(unix)]
     {
-        runner.execute(Step::Brew, "brew", || unix::run_homebrew(&ctx))?;
+        runner.execute(Step::Brew, "brew", || unix::run_brew(&ctx))?;
+        runner.execute(Step::Brew, "brew", || unix::run_brew_cask(&ctx))?;
+
         #[cfg(target_os = "macos")]
         {
             runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
