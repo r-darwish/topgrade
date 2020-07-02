@@ -58,7 +58,7 @@ macro_rules! get_deprecated {
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter)]
+#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
@@ -103,6 +103,8 @@ pub enum Step {
     Flatpak,
     Snap,
     Pkg,
+    Powershell,
+    CustomCommands,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -161,6 +163,7 @@ pub struct ConfigFile {
     git_repos: Option<Vec<String>>,
     predefined_git_repos: Option<bool>,
     disable: Option<Vec<Step>>,
+    ignore_failures: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
@@ -602,6 +605,15 @@ impl Config {
             .linux
             .as_ref()
             .and_then(|linux| linux.enable_tlmgr)
+            .unwrap_or(false)
+    }
+
+    /// Should we ignore failures for this step
+    pub fn ignore_failure(&self, step: Step) -> bool {
+        self.config_file
+            .ignore_failures
+            .as_ref()
+            .map(|v| v.contains(&step))
             .unwrap_or(false)
     }
 

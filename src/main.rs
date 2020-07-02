@@ -108,22 +108,16 @@ fn run() -> Result<()> {
     }
 
     let powershell = powershell::Powershell::new();
-    let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Shell);
+    let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
 
     #[cfg(windows)]
-    {
-        if config.should_run(Step::Wsl) {
-            runner.execute("WSL", || windows::run_wsl_topgrade(run_type))?;
-        }
-    }
+    runner.execute(Step::Wsl, "WSL", || windows::run_wsl_topgrade(run_type))?;
 
     if let Some(topgrades) = config.remote_topgrades() {
-        if config.should_run(Step::Remotes) {
-            for remote_topgrade in topgrades {
-                runner.execute(format!("Remote ({})", remote_topgrade), || {
-                    generic::run_remote_topgrade(&ctx, remote_topgrade)
-                })?;
-            }
+        for remote_topgrade in topgrades {
+            runner.execute(Step::Remotes, format!("Remote ({})", remote_topgrade), || {
+                generic::run_remote_topgrade(&ctx, remote_topgrade)
+            })?;
         }
     }
 
@@ -132,75 +126,52 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        if config.should_run(Step::System) {
-            match &distribution {
-                Ok(distribution) => {
-                    runner.execute("System update", || distribution.upgrade(&ctx))?;
-                }
-                Err(e) => {
-                    println!("Error detecting current distribution: {}", e);
-                }
+        match &distribution {
+            Ok(distribution) => {
+                runner.execute(Step::System, "System update", || distribution.upgrade(&ctx))?;
             }
-            runner.execute("etc-update", || linux::run_etc_update(sudo.as_ref(), run_type))?;
+            Err(e) => {
+                println!("Error detecting current distribution: {}", e);
+            }
         }
+        runner.execute(Step::System, "etc-update", || {
+            linux::run_etc_update(sudo.as_ref(), run_type)
+        })?;
     }
 
     #[cfg(windows)]
     {
-        if config.should_run(Step::Chocolatey) {
-            runner.execute("Chocolatey", || windows::run_chocolatey(&ctx))?;
-        }
-
-        if config.should_run(Step::Scoop) {
-            runner.execute("Scoop", || windows::run_scoop(config.cleanup(), run_type))?;
-        }
+        runner.execute(Step::Chocolatey, "Chocolatey", || windows::run_chocolatey(&ctx))?;
+        runner.execute(Step::Scoop, "Scoop", || windows::run_scoop(config.cleanup(), run_type))?;
     }
 
     #[cfg(unix)]
     {
-        if config.should_run(Step::Brew) {
-            runner.execute("Brew", || unix::run_brew(&ctx))?;
-            runner.execute("Brew Cask", || unix::run_brew_cask(&ctx))?;
-        }
+        runner.execute(Step::Brew, "Brew", || unix::run_brew(&ctx))?;
+        runner.execute(Step::Brew, "Brew Cask", || unix::run_brew_cask(&ctx))?;
+
         #[cfg(target_os = "macos")]
         {
-            if config.should_run(Step::MacPorts) {
-                runner.execute("MacPorts", || macos::run_macports(&ctx))?;
-            }
-            if config.should_run(Step::MicrosoftAutoUpdate) {
-                runner.execute("Microsoft AutoUpdate", || macos::run_msupdate(&ctx))?;
-            }
-        }
-        if config.should_run(Step::Nix) {
-            runner.execute("nix", || unix::run_nix(&ctx))?;
+            runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
+            runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
+                macos::run_msupdate(&ctx)
+            })?;
         }
 
-        if config.should_run(Step::HomeManager) {
-            runner.execute("home-manager", || unix::run_home_manager(run_type))?;
-        }
-
-        if config.should_run(Step::Asdf) {
-            runner.execute("asdf", || unix::run_asdf(run_type))?;
-        }
+        runner.execute(Step::Nix, "nix", || unix::run_nix(&ctx))?;
+        runner.execute(Step::HomeManager, "home-manager", || unix::run_home_manager(run_type))?;
+        runner.execute(Step::Asdf, "asdf", || unix::run_asdf(run_type))?;
     }
 
     #[cfg(target_os = "dragonfly")]
-    {
-        if config.should_run(Step::Pkg) {
-            runner.execute("DragonFly BSD Packages", || {
-                dragonfly::upgrade_packages(sudo.as_ref(), run_type)
-            })?;
-        }
-    }
+    runner.execute(Step::Pkg, "DragonFly BSD Packages", || {
+        dragonfly::upgrade_packages(sudo.as_ref(), run_type)
+    })?;
 
     #[cfg(target_os = "freebsd")]
-    {
-        if config.should_run(Step::Pkg) {
-            runner.execute("FreeBSD Packages", || {
-                freebsd::upgrade_packages(sudo.as_ref(), run_type)
-            })?;
-        }
-    }
+    runner.execute(Step::Pkg, "FreeBSD Packages", || {
+        freebsd::upgrade_packages(sudo.as_ref(), run_type)
+    })?;
 
     let emacs = emacs::Emacs::new(&base_dirs);
     if config.use_predefined_git_repos() {
@@ -249,106 +220,32 @@ fn run() -> Result<()> {
                 git_repos.glob_insert(git_repo);
             }
         }
-        runner.execute("Git repositories", || git.multi_pull_step(&git_repos, &ctx))?;
+        runner.execute(Step::GitRepos, "Git repositories", || {
+            git.multi_pull_step(&git_repos, &ctx)
+        })?;
     }
 
     if should_run_powershell {
-        runner.execute("Powershell Modules Update", || powershell.update_modules(run_type))?;
+        runner.execute(Step::Powershell, "Powershell Modules Update", || {
+            powershell.update_modules(run_type)
+        })?;
     }
 
     #[cfg(unix)]
     {
-        if config.should_run(Step::Shell) {
-            runner.execute("zr", || zsh::run_zr(&base_dirs, run_type))?;
-            runner.execute("antibody", || zsh::run_antibody(run_type))?;
-            runner.execute("antigen", || zsh::run_antigen(&base_dirs, run_type))?;
-            runner.execute("zplug", || zsh::run_zplug(&base_dirs, run_type))?;
-            runner.execute("zinit", || zsh::run_zinit(&base_dirs, run_type))?;
-            runner.execute("oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
-            runner.execute("fisher", || unix::run_fisher(&base_dirs, run_type))?;
-        }
-
-        if config.should_run(Step::Tmux) {
-            runner.execute("tmux", || tmux::run_tpm(&base_dirs, run_type))?;
-        }
-
-        if config.should_run(Step::Tldr) {
-            runner.execute("TLDR", || unix::run_tldr(run_type))?;
-        }
-    }
-
-    if config.should_run(Step::Rustup) {
-        runner.execute("rustup", || generic::run_rustup(&base_dirs, run_type))?;
-    }
-
-    if config.should_run(Step::Cargo) {
-        runner.execute("cargo", || generic::run_cargo_update(run_type))?;
-    }
-
-    if config.should_run(Step::Flutter) {
-        runner.execute("Flutter", || generic::run_flutter_upgrade(run_type))?;
-    }
-
-    if config.should_run(Step::Go) {
-        runner.execute("Go", || generic::run_go(&base_dirs, run_type))?;
-    }
-
-    if config.should_run(Step::Emacs) {
-        runner.execute("Emacs", || emacs.upgrade(run_type))?;
-    }
-
-    if config.should_run(Step::Opam) {
-        runner.execute("opam", || generic::run_opam_update(run_type))?;
-    }
-
-    if config.should_run(Step::Vcpkg) {
-        runner.execute("vcpkg", || generic::run_vcpkg_update(run_type))?;
-    }
-
-    if config.should_run(Step::Pipx) {
-        runner.execute("pipx", || generic::run_pipx_update(run_type))?;
-    }
-
-    if config.should_run(Step::Stack) {
-        runner.execute("stack", || generic::run_stack_update(run_type))?;
-    }
-
-    if config.should_run(Step::Tlmgr) {
-        runner.execute("tlmgr", || generic::run_tlmgr_update(&ctx))?;
-    }
-
-    if config.should_run(Step::Myrepos) {
-        runner.execute("myrepos", || generic::run_myrepos_update(&base_dirs, run_type))?;
-    }
-
-    #[cfg(unix)]
-    {
-        if config.should_run(Step::Pearl) {
-            runner.execute("pearl", || unix::run_pearl(run_type))?;
-        }
-    }
-
-    if config.should_run(Step::Jetpack) {
-        runner.execute("jetpak", || generic::run_jetpack(run_type))?;
-    }
-
-    if config.should_run(Step::Vim) {
-        runner.execute("vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
-        runner.execute("Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
-        runner.execute("voom", || vim::run_voom(&base_dirs, run_type))?;
-    }
-
-    if config.should_run(Step::Node) {
-        runner.execute("npm", || node::run_npm_upgrade(&base_dirs, run_type))?;
-        runner.execute("yarn", || node::yarn_global_update(run_type))?;
-    }
-
-    if config.should_run(Step::Composer) {
-        runner.execute("composer", || generic::run_composer_update(&ctx))?;
-    }
-
-    if config.should_run(Step::Krew) {
-        runner.execute("krew", || generic::run_krew_upgrade(run_type))?;
+        runner.execute(Step::Shell, "zr", || zsh::run_zr(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "antibody", || zsh::run_antibody(run_type))?;
+        runner.execute(Step::Shell, "antigen", || zsh::run_antigen(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "zplug", || zsh::run_zplug(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "zinit", || zsh::run_zinit(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
+        runner.execute(Step::Shell, "fisher", || unix::run_fisher(&base_dirs, run_type))?;
+        runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
+        runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
+        runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
+        runner.execute(Step::Sdkman, "SDKMAN!", || {
+            unix::run_sdkman(&base_dirs, config.cleanup(), run_type)
+        })?;
     }
 
     #[cfg(not(any(
@@ -357,80 +254,73 @@ fn run() -> Result<()> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    {
-        if config.should_run(Step::Atom) {
-            runner.execute("apm", || generic::run_apm(run_type))?;
-        }
-    }
-
-    if config.should_run(Step::Gem) {
-        runner.execute("gem", || generic::run_gem(&base_dirs, run_type))?;
-    }
+    runner.execute(Step::Atom, "apm", || generic::run_apm(run_type))?;
+    runner.execute(Step::Rustup, "rustup", || generic::run_rustup(&base_dirs, run_type))?;
+    runner.execute(Step::Cargo, "cargo", || generic::run_cargo_update(run_type))?;
+    runner.execute(Step::Flutter, "Flutter", || generic::run_flutter_upgrade(run_type))?;
+    runner.execute(Step::Go, "Go", || generic::run_go(&base_dirs, run_type))?;
+    runner.execute(Step::Emacs, "Emacs", || emacs.upgrade(run_type))?;
+    runner.execute(Step::Opam, "opam", || generic::run_opam_update(run_type))?;
+    runner.execute(Step::Vcpkg, "vcpkg", || generic::run_vcpkg_update(run_type))?;
+    runner.execute(Step::Pipx, "pipx", || generic::run_pipx_update(run_type))?;
+    runner.execute(Step::Stack, "stack", || generic::run_stack_update(run_type))?;
+    runner.execute(Step::Tlmgr, "tlmgr", || generic::run_tlmgr_update(&ctx))?;
+    runner.execute(Step::Myrepos, "myrepos", || {
+        generic::run_myrepos_update(&base_dirs, run_type)
+    })?;
+    runner.execute(Step::Jetpack, "jetpak", || generic::run_jetpack(run_type))?;
+    runner.execute(Step::Vim, "vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
+    runner.execute(Step::Vim, "Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
+    runner.execute(Step::Vim, "voom", || vim::run_voom(&base_dirs, run_type))?;
+    runner.execute(Step::Node, "npm", || node::run_npm_upgrade(&base_dirs, run_type))?;
+    runner.execute(Step::Node, "yarn", || node::yarn_global_update(run_type))?;
+    runner.execute(Step::Composer, "composer", || generic::run_composer_update(&ctx))?;
+    runner.execute(Step::Krew, "krew", || generic::run_krew_upgrade(run_type))?;
+    runner.execute(Step::Gem, "gem", || generic::run_gem(&base_dirs, run_type))?;
 
     #[cfg(target_os = "linux")]
     {
-        if config.should_run(Step::Flatpak) {
-            runner.execute("Flatpak", || linux::flatpak_update(run_type))?;
-        }
-        if config.should_run(Step::Snap) {
-            runner.execute("snap", || linux::run_snap(sudo.as_ref(), run_type))?;
-        }
+        runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(run_type))?;
+        runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
     }
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            runner.execute(name, || generic::run_custom_command(&name, &command, &ctx))?;
+            runner.execute(Step::CustomCommands, name, || {
+                generic::run_custom_command(&name, &command, &ctx)
+            })?;
         }
     }
 
     #[cfg(target_os = "linux")]
     {
-        if config.should_run(Step::System) {
-            runner.execute("pihole", || linux::run_pihole_update(sudo.as_ref(), run_type))?;
-        }
-
-        if config.should_run(Step::Firmware) {
-            runner.execute("Firmware upgrades", || linux::run_fwupdmgr(run_type))?;
-        }
-
-        if config.should_run(Step::Restarts) {
-            runner.execute("Restarts", || linux::run_needrestart(sudo.as_ref(), run_type))?;
-        }
+        runner.execute(Step::System, "pihole", || {
+            linux::run_pihole_update(sudo.as_ref(), run_type)
+        })?;
+        runner.execute(Step::Firmware, "Firmware upgrades", || linux::run_fwupdmgr(run_type))?;
+        runner.execute(Step::Restarts, "Restarts", || {
+            linux::run_needrestart(sudo.as_ref(), run_type)
+        })?;
     }
 
     #[cfg(target_os = "macos")]
     {
-        if config.should_run(Step::System) {
-            runner.execute("App Store", || macos::run_mas(run_type))?;
-            runner.execute("System upgrade", || macos::upgrade_macos(&ctx))?;
-        }
+        runner.execute(Step::System, "App Store", || macos::run_mas(run_type))?;
+        runner.execute(Step::System, "System upgrade", || macos::upgrade_macos(&ctx))?;
     }
 
     #[cfg(target_os = "freebsd")]
-    {
-        if config.should_run(Step::System) {
-            runner.execute("FreeBSD Upgrade", || freebsd::upgrade_freebsd(sudo.as_ref(), run_type))?;
-        }
-    }
+    runner.execute(Step::System, "FreeBSD Upgrade", || {
+        freebsd::upgrade_freebsd(sudo.as_ref(), run_type)
+    })?;
 
     #[cfg(windows)]
-    {
-        if config.should_run(Step::System) {
-            runner.execute("Windows update", || windows::windows_update(&ctx))?;
-        }
-    }
-
-    #[cfg(unix)]
-    {
-        if config.should_run(Step::Sdkman) {
-            runner.execute("SDKMAN!", || unix::run_sdkman(&base_dirs, config.cleanup(), run_type))?;
-        }
-    }
+    runner.execute(Step::System, "Windows update", || windows::windows_update(&ctx))?;
 
     if config.should_run(Step::Vagrant) {
         if let Ok(boxes) = vagrant::collect_boxes(&ctx) {
             for vagrant_box in boxes {
-                runner.execute(format!("Vagrant ({})", vagrant_box.smart_name()), || {
+                runner.execute(Step::Vagrant, format!("Vagrant ({})", vagrant_box.smart_name()), || {
                     vagrant::topgrade_vagrant_box(&ctx, &vagrant_box)
                 })?;
             }
@@ -440,8 +330,8 @@ fn run() -> Result<()> {
     if !runner.report().data().is_empty() {
         print_separator("Summary");
 
-        for (key, succeeded) in runner.report().data() {
-            print_result(key, *succeeded);
+        for (key, result) in runner.report().data() {
+            print_result(key, *result);
         }
 
         #[cfg(target_os = "linux")]
@@ -477,10 +367,10 @@ fn run() -> Result<()> {
         }
     }
 
-    if runner.report().data().iter().all(|(_, succeeded)| *succeeded) {
-        Ok(())
-    } else {
+    if runner.report().data().iter().any(|(_, result)| result.failed()) {
         Err(StepFailed.into())
+    } else {
+        Ok(())
     }
 }
 

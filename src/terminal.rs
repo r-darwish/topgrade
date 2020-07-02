@@ -1,3 +1,4 @@
+use crate::report::StepResult;
 #[cfg(target_os = "linux")]
 use crate::utils::which;
 use chrono::{Local, Timelike};
@@ -160,17 +161,17 @@ impl Terminal {
             .ok();
     }
 
-    fn print_result<P: AsRef<str>>(&mut self, key: P, succeeded: bool) {
+    fn print_result<P: AsRef<str>>(&mut self, key: P, result: StepResult) {
         let key = key.as_ref();
 
         self.term
             .write_fmt(format_args!(
                 "{}: {}\n",
                 key,
-                if succeeded {
-                    style("OK").bold().green()
-                } else {
-                    style("FAILED").bold().red()
+                match result {
+                    StepResult::Success => style("OK").bold().green(),
+                    StepResult::Failure => style("FAILED").bold().red(),
+                    StepResult::Ignored => style("IGNORED").bold().yellow(),
                 }
             ))
             .ok();
@@ -269,8 +270,8 @@ pub fn print_info<P: AsRef<str>>(message: P) {
     TERMINAL.lock().unwrap().print_info(message)
 }
 
-pub fn print_result<P: AsRef<str>>(key: P, succeeded: bool) {
-    TERMINAL.lock().unwrap().print_result(key, succeeded)
+pub fn print_result<P: AsRef<str>>(key: P, result: StepResult) {
+    TERMINAL.lock().unwrap().print_result(key, result)
 }
 
 /// Tells whether the terminal is dumb.
