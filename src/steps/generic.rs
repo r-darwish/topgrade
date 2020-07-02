@@ -276,6 +276,9 @@ pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()>
             args.push("-y");
         }
 
+        print_separator(format!("Remote ({})", hostname));
+        println!("Connecting to {}...", hostname);
+
         ctx.run_type().execute(&ssh).args(&args).check_run()
     }
 }
