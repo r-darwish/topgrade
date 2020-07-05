@@ -129,6 +129,7 @@ pub struct Vagrant {
 pub struct Windows {
     accept_all_updates: Option<bool>,
     self_rename: Option<bool>,
+    use_gsudo_with_choco: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -516,6 +517,16 @@ impl Config {
             .windows
             .as_ref()
             .and_then(|w| w.self_rename)
+            .unwrap_or(false)
+    }
+
+    /// Whether to use gsudo command with choco if available
+    #[allow(dead_code)]
+    pub fn use_gsudo_with_choco(&self) -> bool {
+        self.config_file
+            .windows
+            .as_ref()
+            .and_then(|w| w.use_gsudo_with_choco)
             .unwrap_or(false)
     }
 

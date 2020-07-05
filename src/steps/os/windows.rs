@@ -3,19 +3,31 @@ use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::powershell;
 use crate::terminal::print_separator;
-use crate::utils::require;
+use crate::utils::{require, which};
 use anyhow::Result;
 use std::process::Command;
 
 pub fn run_chocolatey(ctx: &ExecutionContext) -> Result<()> {
     let choco = require("choco")?;
     let yes = ctx.config().yes();
+    let use_gsudo = ctx.config().use_gsudo_with_choco();
 
     print_separator("Chocolatey");
 
-    let mut command = ctx.run_type().execute(&choco);
+    let mut cmd = choco;
+    let mut args = vec!["upgrade", "all"];
 
-    command.args(&["upgrade", "all"]);
+    if use_gsudo {
+        let gsudo = which("gsudo");
+        if let Some(gsudo) = gsudo {
+            cmd = gsudo;
+            args = vec!["choco", "upgrade", "all"];
+        }
+    }
+
+    let mut command = ctx.run_type().execute(&cmd);
+
+    command.args(&args);
 
     if yes {
         command.arg("--yes");
