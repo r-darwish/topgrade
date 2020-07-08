@@ -40,7 +40,7 @@
 #]
 
 # Don't pull the predefined git repos
-# predefined_repos = false
+#predefined_repos = false
 
 # Arguments to pass Git when pulling Repositories
 #arguments = "--rebase --autostash"
