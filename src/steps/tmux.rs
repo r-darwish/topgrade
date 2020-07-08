@@ -104,11 +104,12 @@ pub fn run_in_tmux(args: &Option<String>) -> ! {
     }
 }
 
-pub fn run_remote_topgrade(hostname: &str, ssh: &Path, tmux_args: &Option<String>) -> Result<()> {
+pub fn run_remote_topgrade(hostname: &str, ssh: &Path, topgrade: &str, tmux_args: &Option<String>) -> Result<()> {
     let command = format!(
-        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 topgrade",
+        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 {topgrade}",
         ssh = ssh.display(),
-        hostname = hostname
+        hostname = hostname,
+        topgrade = topgrade
     );
     Tmux::new(tmux_args)
         .build()

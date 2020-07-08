@@ -22,6 +22,9 @@
 # Arguments to pass SSH when upgrading remote systems
 #ssh_arguments = "-o ConnectTimeout=2"
 
+# Path to Topgrade executable on remote machines
+#remote_topgrade_path = [".cargo/bin/topgrade"]
+
 # Arguments to pass tmux when pulling Repositories
 #tmux_arguments = "-S /var/tmux.sock"
 
