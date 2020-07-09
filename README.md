@@ -1,4 +1,5 @@
-# Topgrade
+![Topgrade](doc/topgrade.png)
+
 [![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/r-darwish/topgrade?svg=true)](https://ci.appveyor.com/project/r-darwish/topgrade)
 ![GitHub release](https://img.shields.io/github/release/r-darwish/topgrade.svg)
@@ -6,7 +7,7 @@
 [![AUR](https://img.shields.io/aur/version/topgrade.svg)](https://aur.archlinux.org/packages/topgrade/)
 ![homebrew](https://img.shields.io/homebrew/v/topgrade.svg)
 
-![Alt Text](doc/screenshot.gif)
+![Demo](doc/screenshot.gif)
 
 Keeping your system up to date mostly involves invoking more than a single package manager. This
 usually results in big shell one-liners saved in your shell history. Topgrade tries to solve this
