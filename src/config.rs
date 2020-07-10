@@ -166,6 +166,7 @@ pub struct ConfigFile {
     disable: Option<Vec<Step>>,
     ignore_failures: Option<Vec<Step>>,
     remote_topgrades: Option<Vec<String>>,
+    remote_topgrade_path: Option<String>,
     ssh_arguments: Option<String>,
     git_arguments: Option<String>,
     tmux_arguments: Option<String>,
@@ -464,6 +465,11 @@ impl Config {
     /// List of remote hosts to run Topgrade in
     pub fn remote_topgrades(&self) -> &Option<Vec<String>> {
         &self.config_file.remote_topgrades
+    }
+
+    /// Path to Topgrade executable used for all remote hosts
+    pub fn remote_topgrade_path(&self) -> &str {
+        self.config_file.remote_topgrade_path.as_deref().unwrap_or("topgrade")
     }
 
     /// Extra SSH arguments

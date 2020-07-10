@@ -253,10 +253,12 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
     let ssh = utils::require("ssh")?;
 
+    let topgrade = ctx.config().remote_topgrade_path();
+
     if ctx.config().run_in_tmux() && !ctx.run_type().dry() {
         #[cfg(unix)]
         {
-            crate::tmux::run_remote_topgrade(hostname, &ssh, ctx.config().tmux_arguments())?;
+            crate::tmux::run_remote_topgrade(hostname, &ssh, topgrade, ctx.config().tmux_arguments())?;
             Err(SkipStep.into())
         }
 
@@ -270,7 +272,7 @@ pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()>
         }
 
         let env = format!("TOPGRADE_PREFIX={}", hostname);
-        args.extend(&["env", &env, "topgrade"]);
+        args.extend(&["env", &env, topgrade]);
 
         if ctx.config().yes() {
             args.push("-y");
