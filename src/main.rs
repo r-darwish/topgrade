@@ -148,11 +148,10 @@ fn run() -> Result<()> {
     #[cfg(unix)]
     {
         runner.execute(Step::Brew, "Brew", || unix::run_brew(&ctx))?;
-        #[cfg(target_os = "macos")]
-        runner.execute(Step::Brew, "Brew Cask", || unix::run_brew_cask(&ctx))?;
 
         #[cfg(target_os = "macos")]
         {
+            runner.execute(Step::Brew, "Brew Cask", || unix::run_brew_cask(&ctx))?;
             runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
             runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
                 macos::run_msupdate(&ctx)
