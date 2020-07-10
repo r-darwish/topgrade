@@ -42,6 +42,7 @@ pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
         .check_run()
 }
 
+#[cfg(target_os = "macos")]
 pub fn run_brew_cask(ctx: &ExecutionContext) -> Result<()> {
     let brew = require("brew")?;
     print_separator("Brew Cask");
