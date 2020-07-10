@@ -385,6 +385,15 @@ impl Config {
         check_deprecated!(config_file, yay_arguments, linux, yay_arguments);
         check_deprecated!(config_file, accept_all_windows_updates, windows, accept_all_updates);
 
+        if config_file
+            .windows
+            .as_ref()
+            .map(|w| w.use_gsudo_with_choco.is_some())
+            .unwrap_or(false)
+        {
+            println!("use_gsudo_with_choco is deprecated and will be removed in the future. Topgrade will not automatically detect and use gsudo");
+        }
+
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
         Ok(Self {
@@ -523,16 +532,6 @@ impl Config {
             .windows
             .as_ref()
             .and_then(|w| w.self_rename)
-            .unwrap_or(false)
-    }
-
-    /// Whether to use gsudo command with choco if available
-    #[allow(dead_code)]
-    pub fn use_gsudo_with_choco(&self) -> bool {
-        self.config_file
-            .windows
-            .as_ref()
-            .and_then(|w| w.use_gsudo_with_choco)
             .unwrap_or(false)
     }
 

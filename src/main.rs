@@ -65,15 +65,10 @@ fn run() -> Result<()> {
     let git = git::Git::new();
     let mut git_repos = git::Repositories::new(&git);
 
-    #[cfg(unix)]
     let sudo = utils::sudo();
     let run_type = executor::RunType::new(config.dry_run());
 
-    #[cfg(unix)]
     let ctx = execution_context::ExecutionContext::new(run_type, &sudo, &git, &config, &base_dirs);
-
-    #[cfg(not(unix))]
-    let ctx = execution_context::ExecutionContext::new(run_type, &git, &config, &base_dirs);
 
     let mut runner = runner::Runner::new(&ctx);
 

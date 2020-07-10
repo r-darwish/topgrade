@@ -14,7 +14,6 @@ pub struct ExecutionContext<'a> {
 }
 
 impl<'a> ExecutionContext<'a> {
-    #[cfg(unix)]
     pub fn new(
         run_type: RunType,
         sudo: &'a Option<PathBuf>,
@@ -27,17 +26,6 @@ impl<'a> ExecutionContext<'a> {
             sudo,
             git,
             config,
-            base_dirs,
-        }
-    }
-
-    #[cfg(not(unix))]
-    pub fn new(run_type: RunType, git: &'a Git, config: &'a Config, base_dirs: &'a BaseDirs) -> ExecutionContext<'a> {
-        ExecutionContext {
-            run_type,
-            sudo: &None,
-            config,
-            git,
             base_dirs,
         }
     }
