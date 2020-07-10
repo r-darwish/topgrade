@@ -110,6 +110,14 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
 
+pub fn run_yadm(run_type: RunType) -> Result<()> {
+    let yadm = require("yadm")?;
+
+    print_separator("yadm");
+
+    run_type.execute(&yadm).arg("pull").check_run()
+}
+
 pub fn run_asdf(run_type: RunType) -> Result<()> {
     let asdf = require("asdf")?;
 
