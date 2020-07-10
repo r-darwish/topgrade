@@ -87,9 +87,8 @@ pub fn which<T: AsRef<OsStr> + Debug>(binary_name: T) -> Option<PathBuf> {
     }
 }
 
-#[cfg(unix)]
 pub fn sudo() -> Option<PathBuf> {
-    which("sudo").or_else(|| which("pkexec"))
+    which("sudo").or_else(|| which("gsudo")).or_else(|| which("pkexec"))
 }
 
 pub fn editor() -> Vec<String> {
