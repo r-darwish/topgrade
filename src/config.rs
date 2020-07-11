@@ -105,6 +105,7 @@ pub enum Step {
     Pkg,
     Powershell,
     CustomCommands,
+    Yadm,
 }
 
 #[derive(Deserialize, Default, Debug)]
