@@ -18,7 +18,7 @@ Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/)
 
 On NixOS, use the `topgrade` package in `nixpkgs`.
 
-macOS users can install topgrade via Homebrew.
+macOS users can install topgrade via [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/install.php).
 
 Other systems users can either use `cargo install` or use the compiled binaries from the release
 page. The compiled binaries contain a self-upgrading feature.
