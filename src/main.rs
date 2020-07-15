@@ -223,7 +223,7 @@ fn run() -> Result<()> {
 
     if should_run_powershell {
         runner.execute(Step::Powershell, "Powershell Modules Update", || {
-            powershell.update_modules(run_type)
+            powershell.update_modules(&ctx)
         })?;
     }
 

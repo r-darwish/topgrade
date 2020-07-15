@@ -1,6 +1,6 @@
 #[cfg(windows)]
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
+use crate::executor::CommandExt;
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
 use anyhow::Result;
@@ -53,15 +53,19 @@ impl Powershell {
         self.profile.as_ref()
     }
 
-    pub fn update_modules(&self, run_type: RunType) -> Result<()> {
+    pub fn update_modules(&self, ctx: &ExecutionContext) -> Result<()> {
         let powershell = require_option(self.path.as_ref())?;
 
         print_separator("Powershell Modules Update");
+
+        let cmd = if ctx.config().yes() {
+            "Update-Module -AcceptLicense -Force"
+        } else {
+            "Update-Module"
+        };
+
         println!("Updating modules...");
-        run_type
-            .execute(&powershell)
-            .args(&["-Command", "Update-Module"])
-            .check_run()
+        ctx.run_type().execute(&powershell).args(&["-Command", cmd]).check_run()
     }
 
     #[cfg(windows)]
