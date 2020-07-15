@@ -1,4 +1,3 @@
-#[cfg(windows)]
 use crate::execution_context::ExecutionContext;
 use crate::executor::CommandExt;
 use crate::terminal::{is_dumb, print_separator};
