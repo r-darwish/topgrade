@@ -81,8 +81,15 @@ impl Powershell {
 
         debug_assert!(self.supports_windows_update());
 
-        ctx.run_type()
-            .execute(&powershell)
+        let mut command = if let Some(sudo) = ctx.sudo() {
+            let mut command = ctx.run_type().execute(sudo);
+            command.arg(&powershell);
+            command
+        } else {
+            ctx.run_type().execute(&powershell)
+        };
+
+        command
             .args(&[
                 "-Command",
                 &format!(
