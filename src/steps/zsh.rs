@@ -89,10 +89,18 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("oh-my-zsh");
 
-    let custom_dir = PathBuf::from(
-        env::var::<_>("ZSH_CUSTOM")
-            .or_else(|_| Command::new("zsh").args(&["-c", "echo -n $ZSH_CUSTOM"]).check_output())?,
-    );
+    let custom_dir = env::var::<_>("ZSH_CUSTOM")
+        .or_else(|_| Command::new("zsh").args(&["-c", "echo -n $ZSH_CUSTOM"]).check_output())
+        .map(PathBuf::from)
+        .unwrap_or_else(|e| {
+            let default_path = oh_my_zsh.join("custom");
+            debug!(
+                "Running zsh returned {}. Using default path: {}",
+                e,
+                default_path.display()
+            );
+            default_path
+        });
 
     debug!("oh-my-zsh custom dir: {}", custom_dir.display());
 
