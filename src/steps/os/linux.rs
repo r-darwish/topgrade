@@ -229,6 +229,7 @@ fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
 fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
     if let Some(ostree) = Path::new("/usr/bin/rpm-ostree").if_exists() {
         let mut command = ctx.run_type().execute(ostree);
+        command.arg("upgrade");
         if ctx.config().yes() {
             command.arg("-y");
         }
