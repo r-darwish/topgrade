@@ -90,7 +90,11 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
     print_separator("oh-my-zsh");
 
     let custom_dir = env::var::<_>("ZSH_CUSTOM")
-        .or_else(|_| Command::new("zsh").args(&["-c", "echo -n $ZSH_CUSTOM"]).check_output())
+        .or_else(|_| {
+            Command::new("zsh")
+                .args(&["-c", "test $ZSH_CUSTOM && echo -n $ZSH_CUSTOM"])
+                .check_output()
+        })
         .map(PathBuf::from)
         .unwrap_or_else(|e| {
             let default_path = oh_my_zsh.join("custom");
