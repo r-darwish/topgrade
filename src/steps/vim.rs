@@ -35,7 +35,7 @@ fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
 
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, ctx: &ExecutionContext) -> Result<()> {
     let mut tempfile = tempfile::NamedTempFile::new()?;
-    tempfile.write_all(UPGRADE_VIM.as_bytes())?;
+    tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
     debug!("Wrote vim script to {:?}", tempfile.path());
 
     let output = ctx

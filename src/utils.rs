@@ -45,8 +45,10 @@ where
 {
     fn if_exists(self) -> Option<Self> {
         if self.as_ref().exists() {
+            debug!("Path {:?} exists", self.as_ref());
             Some(self)
         } else {
+            debug!("Path {:?} doesn't exist", self.as_ref());
             None
         }
     }
