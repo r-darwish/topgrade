@@ -110,7 +110,7 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
 
     let mut custom_repos = Repositories::new(ctx.git());
 
-    for entry in WalkDir::new(custom_dir).max_depth(1) {
+    for entry in WalkDir::new(custom_dir).max_depth(2) {
         let entry = entry?;
         custom_repos.insert_if_repo(entry.path());
     }
