@@ -109,6 +109,13 @@ impl Distribution {
             show_pacnew();
         }
     }
+
+    pub fn redhat_based(self) -> bool {
+        match self {
+            Distribution::CentOS | Distribution::Fedora => true,
+            _ => false,
+        }
+    }
 }
 
 fn is_wsl() -> Result<bool> {
@@ -450,6 +457,12 @@ fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Re
 pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo)?;
     let needrestart = require("needrestart")?;
+    let distribution = Distribution::detect()?;
+
+    if distribution.redhat_based() {
+        debug!("Skipping needrestart on Redhat based distributions");
+        return Err(SkipStep.into());
+    }
 
     print_separator("Check for needed restarts");
 
