@@ -273,6 +273,7 @@ fn run() -> Result<()> {
     runner.execute(Step::Composer, "composer", || generic::run_composer_update(&ctx))?;
     runner.execute(Step::Krew, "krew", || generic::run_krew_upgrade(run_type))?;
     runner.execute(Step::Gem, "gem", || generic::run_gem(&base_dirs, run_type))?;
+    runner.execute(Step::Sheldon, "sheldon", || generic::run_sheldon(&ctx))?;
 
     #[cfg(target_os = "linux")]
     {
