@@ -75,9 +75,11 @@ fn run() -> Result<()> {
 
     let mut runner = runner::Runner::new(&ctx);
 
-    #[cfg(all(feature = "self-update", target_os = "linux"))]
+    #[cfg(feature = "self-update")]
     {
+        #[cfg(target_os = "linux")]
         openssl_probe::init_ssl_cert_env_vars();
+
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
