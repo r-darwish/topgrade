@@ -23,6 +23,9 @@ use self::steps::*;
 use self::terminal::*;
 use anyhow::{anyhow, Result};
 use log::debug;
+#[cfg(all(feature = "self-update", target_os = "linux"))]
+use openssl_probe;
+
 use std::env;
 use std::io;
 use std::process::exit;
@@ -72,8 +75,9 @@ fn run() -> Result<()> {
 
     let mut runner = runner::Runner::new(&ctx);
 
-    #[cfg(feature = "self-update")]
+    #[cfg(all(feature = "self-update", target_os = "linux"))]
     {
+        openssl_probe::init_ssl_cert_env_vars();
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
