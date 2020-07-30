@@ -53,6 +53,14 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&gem).args(&["update", "--user-install"]).check_run()
 }
 
+pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
+    let sheldon = utils::require("sheldon")?;
+
+    print_separator("Sheldon");
+
+    ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
+}
+
 #[cfg(not(any(
     target_os = "freebsd",
     target_os = "openbsd",

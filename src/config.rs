@@ -106,6 +106,7 @@ pub enum Step {
     Powershell,
     CustomCommands,
     Yadm,
+    Sheldon,
 }
 
 #[derive(Deserialize, Default, Debug)]
