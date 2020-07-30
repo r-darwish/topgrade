@@ -23,8 +23,6 @@ use self::steps::*;
 use self::terminal::*;
 use anyhow::{anyhow, Result};
 use log::debug;
-#[cfg(all(feature = "self-update", target_os = "linux"))]
-use openssl_probe;
 
 use std::env;
 use std::io;
