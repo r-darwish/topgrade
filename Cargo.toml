@@ -45,6 +45,7 @@ self_update_crate = { version = "0.16.0", optional = true, package =  "self_upda
 
 [target.'cfg(target_os = "linux")'.dependencies]
 rust-ini = "0.15.0"
+openssl-probe = { version = "0.1.2", optional = true }
 
 [profile.release]
 lto = true
@@ -52,4 +53,4 @@ lto = true
 [features]
 default = []
 
-self-update = ["self_update_crate"]
+self-update = ["self_update_crate", "openssl-probe"]

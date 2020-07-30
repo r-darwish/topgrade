@@ -1836,6 +1836,7 @@ dependencies = [
  "log",
  "nix",
  "notify-rust",
+ "openssl-probe",
  "pretty_env_logger",
  "rust-ini",
  "self_update",
