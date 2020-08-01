@@ -109,7 +109,7 @@ fn run() -> Result<()> {
     runner.execute(Step::Wsl, "WSL", || windows::run_wsl_topgrade(run_type))?;
 
     if let Some(topgrades) = config.remote_topgrades() {
-        for remote_topgrade in topgrades {
+        for remote_topgrade in topgrades.iter().filter(|t| config.should_execute_remote(t)) {
             runner.execute(Step::Remotes, format!("Remote ({})", remote_topgrade), || {
                 generic::run_remote_topgrade(&ctx, remote_topgrade)
             })?;
