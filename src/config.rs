@@ -3,6 +3,7 @@ use anyhow::Result;
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
+use regex::Regex;
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs::write;
@@ -332,6 +333,10 @@ pub struct CommandLineArgs {
     /// Alternative configuration file
     #[structopt(long = "config")]
     config: Option<PathBuf>,
+
+    /// A regular expression for restricting remote host execution
+    #[structopt(long = "remote-host-limit", parse(try_from_str))]
+    remote_host_limit: Option<Regex>,
 }
 
 impl CommandLineArgs {
@@ -649,4 +654,12 @@ impl Config {
 
     #[cfg(target_os = "linux")]
     str_value!(linux, emerge_update_flags);
+
+    pub fn should_execute_remote(&self, remote: &str) -> bool {
+        self.opt
+            .remote_host_limit
+            .as_ref()
+            .map(|h| h.is_match(remote))
+            .unwrap_or(true)
+    }
 }
