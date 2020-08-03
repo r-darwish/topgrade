@@ -44,4 +44,4 @@ The configuration should be placed in the following paths depending by the opera
 ## Remote execution
 You can specify a key called `remote_topgrades` in the configuration file. This key should contain a
 list of hostnames that have topgrade installed on them. Topgrade will execute Topgrades on these
-remote hosts.
+remote hosts. To limit the execution only to specific hosts use the `--remote-host-limit` parameter.
