@@ -93,7 +93,7 @@ pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
             println!();
         } else {
             println!("No new software available.");
-            return Err(SkipStep.into());
+            return Ok(());
         }
     }
 
