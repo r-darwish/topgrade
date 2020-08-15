@@ -15,4 +15,9 @@ if exists(":PlugUpgrade")
     PlugUpdate
 endif
 
+if exists(":PackerUpdate")
+    echo "Packer"
+    PackerSync
+endif
+
 quitall
