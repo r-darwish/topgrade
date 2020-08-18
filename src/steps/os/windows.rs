@@ -50,7 +50,7 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
 pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {
     let wsl = require("wsl")?;
     let topgrade = Command::new(&wsl)
-        .args(&["bash", "-l", "which", "topgrade"])
+        .args(&["which", "topgrade"])
         .check_output()
         .map_err(|_| SkipStep)?;
 
