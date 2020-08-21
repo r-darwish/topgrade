@@ -2,7 +2,7 @@ use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, prompt_yesno};
 use crate::{
-    error::{SkipStep, TopgradeError},
+    error::TopgradeError,
     utils::{require, PathExt},
 };
 use anyhow::Result;
@@ -88,7 +88,7 @@ pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
         if system_update_available()? {
             let answer = prompt_yesno("A system update is available. Do you wish to install it?")?;
             if !answer {
-                return Err(SkipStep.into());
+                return Ok(());
             }
             println!();
         } else {
