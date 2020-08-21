@@ -40,6 +40,9 @@ impl<'a> Runner<'a> {
                     break;
                 }
                 Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
+                    if self.ctx.config().verbose() || self.ctx.config().show_skipped() {
+                        self.report.push_result(Some((key, StepResult::Skipped(e.to_string()))));
+                    }
                     break;
                 }
                 Err(_) => {

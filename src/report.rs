@@ -1,16 +1,16 @@
 use std::borrow::Cow;
 
-#[derive(Clone, Copy)]
 pub enum StepResult {
     Success,
     Failure,
     Ignored,
+    Skipped(String),
 }
 
 impl StepResult {
-    pub fn failed(self) -> bool {
+    pub fn failed(&self) -> bool {
         match self {
-            StepResult::Success | StepResult::Ignored => false,
+            StepResult::Success | StepResult::Ignored | StepResult::Skipped(_) => false,
             StepResult::Failure => true,
         }
     }

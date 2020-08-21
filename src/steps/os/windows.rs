@@ -52,7 +52,7 @@ pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
     let topgrade = Command::new(&wsl)
         .args(&["which", "topgrade"])
         .check_output()
-        .map_err(|_| SkipStep)?;
+        .map_err(|_| SkipStep(String::from("Could not find Topgrade installed in WSL")))?;
 
     let mut command = ctx.run_type().execute(&wsl);
     command

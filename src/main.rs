@@ -332,7 +332,7 @@ fn run() -> Result<()> {
         print_separator("Summary");
 
         for (key, result) in runner.report().data() {
-            print_result(key, *result);
+            print_result(key, result);
         }
 
         #[cfg(target_os = "linux")]

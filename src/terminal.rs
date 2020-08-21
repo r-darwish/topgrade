@@ -161,7 +161,7 @@ impl Terminal {
             .ok();
     }
 
-    fn print_result<P: AsRef<str>>(&mut self, key: P, result: StepResult) {
+    fn print_result<P: AsRef<str>>(&mut self, key: P, result: &StepResult) {
         let key = key.as_ref();
 
         self.term
@@ -169,9 +169,10 @@ impl Terminal {
                 "{}: {}\n",
                 key,
                 match result {
-                    StepResult::Success => style("OK").bold().green(),
-                    StepResult::Failure => style("FAILED").bold().red(),
-                    StepResult::Ignored => style("IGNORED").bold().yellow(),
+                    StepResult::Success => format!("{}", style("OK").bold().green()),
+                    StepResult::Failure => format!("{}", style("FAILED").bold().red()),
+                    StepResult::Ignored => format!("{}", style("IGNORED").bold().yellow()),
+                    StepResult::Skipped(reason) => format!("{}: {}", style("SKIPPED").bold().blue(), reason),
                 }
             ))
             .ok();
@@ -270,7 +271,7 @@ pub fn print_info<P: AsRef<str>>(message: P) {
     TERMINAL.lock().unwrap().print_info(message)
 }
 
-pub fn print_result<P: AsRef<str>>(key: P, result: StepResult) {
+pub fn print_result<P: AsRef<str>>(key: P, result: &StepResult) {
     TERMINAL.lock().unwrap().print_result(key, result)
 }
 

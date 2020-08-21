@@ -62,8 +62,7 @@ where
             debug!("Path {:?} exists", self.as_ref());
             Ok(self)
         } else {
-            debug!("Path {:?} doesn't exist", self.as_ref());
-            Err(SkipStep.into())
+            Err(SkipStep(format!("Path {:?} doesn't exist", self.as_ref())).into())
         }
     }
 }
@@ -109,8 +108,7 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
         }
         Err(e) => match e {
             which_crate::Error::CannotFindBinaryPath => {
-                debug!("Cannot find {:?}", &binary_name);
-                Err(SkipStep.into())
+                Err(SkipStep(format!("Cannot find {:?} in PATH", &binary_name)).into())
             }
             _ => {
                 panic!("Detecting {:?} failed: {}", &binary_name, e);
@@ -120,10 +118,10 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
 }
 
 #[allow(dead_code)]
-pub fn require_option<T>(option: Option<T>) -> Result<T> {
+pub fn require_option<T>(option: Option<T>, cause: String) -> Result<T> {
     if let Some(value) = option {
         Ok(value)
     } else {
-        Err(SkipStep.into())
+        Err(SkipStep(cause).into())
     }
 }

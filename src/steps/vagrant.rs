@@ -148,7 +148,10 @@ impl<'a> Drop for TemporaryPowerOn<'a> {
 }
 
 pub fn collect_boxes(ctx: &ExecutionContext) -> Result<Vec<VagrantBox>> {
-    let directories = utils::require_option(ctx.config().vagrant_directories())?;
+    let directories = utils::require_option(
+        ctx.config().vagrant_directories(),
+        String::from("No Vagrant directories were specified in the configuration file"),
+    )?;
     let vagrant = Vagrant {
         path: utils::require("vagrant")?,
     };
@@ -179,8 +182,7 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
     let mut _poweron = None;
     if !vagrant_box.initial_status.powered_on() {
         if !(ctx.config().vagrant_power_on().unwrap_or(true)) {
-            debug!("Skipping powered off box {}", vagrant_box);
-            return Err(SkipStep.into());
+            return Err(SkipStep(format!("Skipping powered off box {}", vagrant_box)).into());
         } else {
             print_separator(seperator);
             _poweron = Some(vagrant.temporary_power_on(&vagrant_box, ctx)?);

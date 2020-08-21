@@ -53,7 +53,7 @@ impl Powershell {
     }
 
     pub fn update_modules(&self, ctx: &ExecutionContext) -> Result<()> {
-        let powershell = require_option(self.path.as_ref())?;
+        let powershell = require_option(self.path.as_ref(), String::from("Powershell is not installed"))?;
 
         print_separator("Powershell Modules Update");
 
@@ -77,7 +77,7 @@ impl Powershell {
 
     #[cfg(windows)]
     pub fn windows_update(&self, ctx: &ExecutionContext) -> Result<()> {
-        let powershell = require_option(self.path.as_ref())?;
+        let powershell = require_option(self.path.as_ref(), String::from("Powershell is not installed"))?;
 
         debug_assert!(self.supports_windows_update());
 

@@ -173,7 +173,7 @@ impl Git {
     }
     pub fn multi_pull_step(&self, repositories: &Repositories, ctx: &ExecutionContext) -> Result<()> {
         if repositories.repositories.is_empty() {
-            return Err(SkipStep.into());
+            return Err(SkipStep(String::from("No repositories to pull")).into());
         }
 
         print_separator("Git repositories");

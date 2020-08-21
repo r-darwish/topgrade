@@ -67,7 +67,9 @@ impl Emacs {
 
     pub fn upgrade(&self, run_type: RunType) -> Result<()> {
         let emacs = require("emacs")?;
-        let init_file = require_option(self.directory.as_ref())?.join("init.el").require()?;
+        let init_file = require_option(self.directory.as_ref(), String::from("Emacs directory does not exist"))?
+            .join("init.el")
+            .require()?;
 
         if let Some(doom) = &self.doom {
             return Emacs::update_doom(doom, run_type);

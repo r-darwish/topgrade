@@ -337,6 +337,10 @@ pub struct CommandLineArgs {
     /// A regular expression for restricting remote host execution
     #[structopt(long = "remote-host-limit", parse(try_from_str))]
     remote_host_limit: Option<Regex>,
+
+    /// Show the reason for skipped steps
+    #[structopt(long = "show-skipped")]
+    show_skipped: bool,
 }
 
 impl CommandLineArgs {
@@ -647,6 +651,10 @@ impl Config {
 
     pub fn verbose(&self) -> bool {
         self.opt.verbose
+    }
+
+    pub fn show_skipped(&self) -> bool {
+        self.opt.show_skipped
     }
 
     #[cfg(target_os = "linux")]
