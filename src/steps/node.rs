@@ -42,7 +42,11 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     {
         let npm_root = npm.root()?;
         if !npm_root.is_descendant_of(_base_dirs.home_dir()) {
-            return Err(SkipStep.into());
+            return Err(SkipStep(format!(
+                "NPM root at {} isn't a decandent of the user's home directory",
+                npm_root.display()
+            ))
+            .into());
         }
     }
 
@@ -55,8 +59,7 @@ pub fn yarn_global_update(run_type: RunType) -> Result<()> {
 
     let output = Command::new(&yarn).arg("--version").string_output()?;
     if output.contains("Hadoop") {
-        debug!("Yarn is Hadoop yarn");
-        return Err(SkipStep.into());
+        return Err(SkipStep(String::from("Installed yarn is Hadoop's yarn")).into());
     }
 
     print_separator("Yarn");

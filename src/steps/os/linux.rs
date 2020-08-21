@@ -455,7 +455,7 @@ fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Re
 }
 
 pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, "sudo is not installed")?;
     let needrestart = require("needrestart")?;
     let distribution = Distribution::detect()?;
 
@@ -508,7 +508,7 @@ pub fn flatpak_update(run_type: RunType) -> Result<()> {
 }
 
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, "sudo is not installed")?;
     let snap = require("snap")?;
 
     if !PathBuf::from("/var/snapd.socket").exists() && !PathBuf::from("/run/snapd.socket").exists() {
@@ -520,7 +520,7 @@ pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
 }
 
 pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, "sudo is not installed")?;
     let pihole = require("pihole")?;
     Path::new("/opt/pihole/update.sh").require()?;
 
@@ -530,7 +530,7 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
 }
 
 pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, "sudo is not installed")?;
     let etc_update = require("etc-update")?;
     print_separator("etc-update");
 

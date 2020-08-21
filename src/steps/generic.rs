@@ -145,7 +145,7 @@ pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(target_os = "linux")] {
             if !ctx.config().enable_tlmgr_linux() {
-                return Err(SkipStep.into());
+                return Err(SkipStep(String::from("tlmgr must be explicity enabled in the configuration to run in Linux")).into());
             }
         }
     }
@@ -216,12 +216,16 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let composer_home = Command::new(&composer)
         .args(&["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
-        .map_err(|_| (SkipStep))
+        .map_err(|e| (SkipStep(format!("Error getting the composer directory: {}", e))))
         .map(|s| PathBuf::from(s.trim()))?
         .require()?;
 
     if !composer_home.is_descendant_of(ctx.base_dirs().home_dir()) {
-        return Err(SkipStep.into());
+        return Err(SkipStep(format!(
+            "Composer directory {} isn't a decandent of the user's home directory",
+            composer_home.display()
+        ))
+        .into());
     }
 
     print_separator("Composer");
@@ -275,7 +279,7 @@ pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()>
         #[cfg(unix)]
         {
             crate::tmux::run_remote_topgrade(hostname, &ssh, topgrade, ctx.config().tmux_arguments())?;
-            Err(SkipStep.into())
+            Err(SkipStep(String::from("Remote Topgrade launched in Tmux")).into())
         }
 
         #[cfg(not(unix))]

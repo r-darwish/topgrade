@@ -5,7 +5,7 @@ use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::print_separator;
 use crate::{
     execution_context::ExecutionContext,
-    utils::{require, require_option, PathExt},
+    utils::{require, PathExt},
 };
 use directories::BaseDirs;
 use log::debug;
@@ -17,20 +17,20 @@ use std::{
 
 const UPGRADE_VIM: &str = include_str!("upgrade.vim");
 
-pub fn vimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
+pub fn vimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     base_dirs
         .home_dir()
         .join(".vimrc")
-        .if_exists()
-        .or_else(|| base_dirs.home_dir().join(".vim/vimrc").if_exists())
+        .require()
+        .or_else(|_| base_dirs.home_dir().join(".vim/vimrc").require())
 }
 
-fn nvimrc(base_dirs: &BaseDirs) -> Option<PathBuf> {
+fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(unix)]
-    return base_dirs.home_dir().join(".config/nvim/init.vim").if_exists();
+    return base_dirs.home_dir().join(".config/nvim/init.vim").require();
 
     #[cfg(windows)]
-    return base_dirs.cache_dir().join("nvim/init.vim").if_exists();
+    return base_dirs.cache_dir().join("nvim/init.vim").require();
 }
 
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, ctx: &ExecutionContext) -> Result<()> {
@@ -70,10 +70,10 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        return Err(SkipStep.into());
+        return Err(SkipStep(String::from("vim binary might by actually nvim")).into());
     }
 
-    let vimrc = require_option(vimrc(&base_dirs))?;
+    let vimrc = vimrc(&base_dirs)?;
 
     print_separator("Vim");
     upgrade(&vim, &vimrc, ctx)
@@ -81,7 +81,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
 
 pub fn upgrade_neovim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
     let nvim = require("nvim")?;
-    let nvimrc = require_option(nvimrc(&base_dirs))?;
+    let nvimrc = nvimrc(&base_dirs)?;
 
     print_separator("Neovim");
     upgrade(&nvim, &nvimrc, ctx)
