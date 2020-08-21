@@ -23,7 +23,7 @@ pub enum TopgradeError {
 pub struct StepFailed;
 
 #[derive(Error, Debug)]
-#[error("Skipped: {0}")]
+#[error("{0}")]
 pub struct SkipStep(pub String);
 
 #[cfg(all(windows, feature = "self-update"))]

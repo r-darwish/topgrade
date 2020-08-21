@@ -2,10 +2,7 @@ use crate::ctrlc;
 use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::report::{Report, StepResult};
-use crate::{
-    config::Step,
-    terminal::{print_info, print_separator, should_retry},
-};
+use crate::{config::Step, terminal::should_retry};
 use anyhow::Result;
 use log::debug;
 use std::borrow::Cow;
@@ -44,8 +41,7 @@ impl<'a> Runner<'a> {
                 }
                 Err(e) if e.downcast_ref::<SkipStep>().is_some() => {
                     if self.ctx.config().verbose() || self.ctx.config().show_skipped() {
-                        print_separator(key);
-                        print_info(e.to_string())
+                        self.report.push_result(Some((key, StepResult::Skipped(e.to_string()))));
                     }
                     break;
                 }
