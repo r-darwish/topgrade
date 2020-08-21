@@ -110,7 +110,7 @@ fn run() -> Result<()> {
     let should_run_powershell = powershell.profile().is_some() && config.should_run(Step::Powershell);
 
     #[cfg(windows)]
-    runner.execute(Step::Wsl, "WSL", || windows::run_wsl_topgrade(run_type))?;
+    runner.execute(Step::Wsl, "WSL", || windows::run_wsl_topgrade(&ctx))?;
 
     if let Some(topgrades) = config.remote_topgrades() {
         for remote_topgrade in topgrades.iter().filter(|t| config.should_execute_remote(t)) {

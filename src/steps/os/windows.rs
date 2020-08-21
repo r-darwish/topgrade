@@ -47,18 +47,23 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-pub fn run_wsl_topgrade(run_type: RunType) -> Result<()> {
+pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
     let wsl = require("wsl")?;
     let topgrade = Command::new(&wsl)
         .args(&["which", "topgrade"])
         .check_output()
         .map_err(|_| SkipStep)?;
 
-    run_type
-        .execute(&wsl)
+    let mut command = ctx.run_type().execute(&wsl);
+    command
         .args(&["bash", "-c"])
-        .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade))
-        .check_run()
+        .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade));
+
+    if ctx.config().yes() {
+        command.arg("-y");
+    }
+
+    command.check_run()
 }
 
 pub fn windows_update(ctx: &ExecutionContext) -> Result<()> {
