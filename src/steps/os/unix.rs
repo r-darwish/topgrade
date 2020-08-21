@@ -56,8 +56,7 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
         use super::linux::Distribution;
 
         if let Ok(Distribution::NixOS) = Distribution::detect() {
-            debug!("Nix on NixOS must be upgraded via 'nixos-rebuild switch', skipping.");
-            return Err(SkipStep.into());
+            return Err(SkipStep(String::from("Nix on NixOS must be upgraded via nixos-rebuild switch")).into());
         }
     }
 
