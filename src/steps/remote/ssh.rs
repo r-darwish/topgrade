@@ -1,4 +1,6 @@
-use crate::{execution_context::ExecutionContext, terminal::print_separator, utils, error::SkipStep};
+#[cfg(unix)]
+use crate::error::SkipStep;
+use crate::{execution_context::ExecutionContext, terminal::print_separator, utils};
 use anyhow::Result;
 
 pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
