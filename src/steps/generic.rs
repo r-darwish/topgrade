@@ -269,38 +269,3 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 
     Ok(())
 }
-
-pub fn run_remote_topgrade(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
-    let ssh = utils::require("ssh")?;
-
-    let topgrade = ctx.config().remote_topgrade_path();
-
-    if ctx.config().run_in_tmux() && !ctx.run_type().dry() {
-        #[cfg(unix)]
-        {
-            crate::tmux::run_remote_topgrade(hostname, &ssh, topgrade, ctx.config().tmux_arguments())?;
-            Err(SkipStep(String::from("Remote Topgrade launched in Tmux")).into())
-        }
-
-        #[cfg(not(unix))]
-        unreachable!("Tmux execution is only implemented in Unix");
-    } else {
-        let mut args = vec!["-t", hostname];
-
-        if let Some(ssh_arguments) = ctx.config().ssh_arguments() {
-            args.extend(ssh_arguments.split_whitespace());
-        }
-
-        let env = format!("TOPGRADE_PREFIX={}", hostname);
-        args.extend(&["env", &env, topgrade]);
-
-        if ctx.config().yes() {
-            args.push("-y");
-        }
-
-        print_separator(format!("Remote ({})", hostname));
-        println!("Connecting to {}...", hostname);
-
-        ctx.run_type().execute(&ssh).args(&args).check_run()
-    }
-}

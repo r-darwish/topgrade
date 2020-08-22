@@ -1,12 +1,15 @@
 use crate::executor::RunType;
 use crate::terminal::print_separator;
-use crate::utils::{which, Check, PathExt};
+use crate::{
+    execution_context::ExecutionContext,
+    utils::{which, Check, PathExt},
+};
 use anyhow::Result;
 use directories::BaseDirs;
 use std::env;
 use std::io;
 use std::os::unix::process::CommandExt;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::{exit, Command};
 
 pub fn run_tpm(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -104,14 +107,8 @@ pub fn run_in_tmux(args: &Option<String>) -> ! {
     }
 }
 
-pub fn run_remote_topgrade(hostname: &str, ssh: &Path, topgrade: &str, tmux_args: &Option<String>) -> Result<()> {
-    let command = format!(
-        "{ssh} -t {hostname} env TOPGRADE_PREFIX={hostname} TOPGRADE_KEEP_END=1 {topgrade}",
-        ssh = ssh.display(),
-        hostname = hostname,
-        topgrade = topgrade
-    );
-    Tmux::new(tmux_args)
+pub fn run_command(ctx: &ExecutionContext, command: &str) -> Result<()> {
+    Tmux::new(ctx.config().tmux_arguments())
         .build()
         .args(&["new-window", "-a", "-t", "topgrade:1", &command])
         .env_remove("TMUX")

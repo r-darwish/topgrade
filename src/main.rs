@@ -19,7 +19,7 @@ use self::error::StepFailed;
 #[cfg(all(windows, feature = "self-update"))]
 use self::error::Upgraded;
 
-use self::steps::*;
+use self::steps::{remote::*, *};
 use self::terminal::*;
 use anyhow::{anyhow, Result};
 use log::debug;
@@ -115,7 +115,7 @@ fn run() -> Result<()> {
     if let Some(topgrades) = config.remote_topgrades() {
         for remote_topgrade in topgrades.iter().filter(|t| config.should_execute_remote(t)) {
             runner.execute(Step::Remotes, format!("Remote ({})", remote_topgrade), || {
-                generic::run_remote_topgrade(&ctx, remote_topgrade)
+                remote::ssh::ssh_step(&ctx, remote_topgrade)
             })?;
         }
     }
