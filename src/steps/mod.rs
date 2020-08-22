@@ -4,9 +4,9 @@ pub mod git;
 pub mod node;
 pub mod os;
 pub mod powershell;
+pub mod remote;
 #[cfg(unix)]
 pub mod tmux;
-pub mod vagrant;
 pub mod vim;
 #[cfg(unix)]
 pub mod zsh;
