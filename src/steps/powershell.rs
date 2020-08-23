@@ -57,14 +57,21 @@ impl Powershell {
 
         print_separator("Powershell Modules Update");
 
-        let cmd = if ctx.config().yes() {
-            "Update-Module -AcceptLicense -Force"
-        } else {
-            "Update-Module"
-        };
+        let mut cmd = vec!["Update-Module"];
+
+        if ctx.config().yes() {
+            cmd.push("-AcceptLicense");
+        }
+
+        if ctx.config().verbose() {
+            cmd.push("-Verbose")
+        }
 
         println!("Updating modules...");
-        ctx.run_type().execute(&powershell).args(&["-Command", cmd]).check_run()
+        ctx.run_type()
+            .execute(&powershell)
+            .args(&["-NoProfile", "-Command", &cmd.join(" ")])
+            .check_run()
     }
 
     #[cfg(windows)]
