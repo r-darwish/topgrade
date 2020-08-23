@@ -73,6 +73,7 @@
 #[windows]
 # Manually select Windows updates
 #accept_all_updates = false
+#open_remotes_in_new_terminal = true
 
 # Causes Topgrade to rename itself during the run to allow package managers 
 # to upgrade it. Use this only if you installed Topgrade by using a package
