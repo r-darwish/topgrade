@@ -132,7 +132,7 @@ pub struct Vagrant {
 pub struct Windows {
     accept_all_updates: Option<bool>,
     self_rename: Option<bool>,
-    use_gsudo_with_choco: Option<bool>,
+    open_remotes_in_new_terminal: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -396,15 +396,6 @@ impl Config {
         check_deprecated!(config_file, yay_arguments, linux, yay_arguments);
         check_deprecated!(config_file, accept_all_windows_updates, windows, accept_all_updates);
 
-        if config_file
-            .windows
-            .as_ref()
-            .map(|w| w.use_gsudo_with_choco.is_some())
-            .unwrap_or(false)
-        {
-            println!("use_gsudo_with_choco is deprecated and will be removed in the future. Topgrade will not automatically detect and use gsudo");
-        }
-
         let allowed_steps = Self::allowed_steps(&opt, &config_file);
 
         Ok(Self {
@@ -655,6 +646,14 @@ impl Config {
 
     pub fn show_skipped(&self) -> bool {
         self.opt.show_skipped
+    }
+
+    pub fn open_remotes_in_new_terminal(&self) -> bool {
+        self.config_file
+            .windows
+            .as_ref()
+            .and_then(|windows| windows.open_remotes_in_new_terminal)
+            .unwrap_or(false)
     }
 
     #[cfg(target_os = "linux")]
