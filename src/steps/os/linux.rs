@@ -49,7 +49,7 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("anarchy") | Some("manjaro-arm") => Distribution::Arch,
+            Some("arch") | Some("anarchy") | Some("manjaro-arm") | Some("garuda") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
