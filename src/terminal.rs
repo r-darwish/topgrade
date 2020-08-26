@@ -211,13 +211,9 @@ impl Terminal {
             .write_fmt(format_args!(
                 "\n{}",
                 style(format!(
-                    "{}Retry? (y)es/(N)o/(s)hell {}",
+                    "{}Retry? (y)es/(N)o/(s)hell{}",
                     self.prefix,
-                    if interrupted {
-                        "(Press Ctrl+C again to stop Topgrade) "
-                    } else {
-                        ""
-                    }
+                    if interrupted { "/(q)uit" } else { "" }
                 ))
                 .yellow()
                 .bold()
@@ -233,7 +229,8 @@ impl Terminal {
                     break Ok(true);
                 }
                 'n' | 'N' | '\r' | '\n' => break Ok(false),
-                _ => (),
+                'q' | 'Q' => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                _ => println!("hi"),
             }
         };
 

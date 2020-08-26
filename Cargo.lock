@@ -1843,6 +1843,7 @@ dependencies = [
  "toml",
  "walkdir",
  "which",
+ "winapi 0.3.9",
 ]
 
 [[package]]

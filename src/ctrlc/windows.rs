@@ -1,9 +1,21 @@
 //! A stub for Ctrl + C handling.
+use crate::ctrlc::interrupted::set_interrupted;
+use winapi::shared::minwindef::{BOOL, DWORD, FALSE, TRUE};
+use winapi::um::consoleapi::SetConsoleCtrlHandler;
+use winapi::um::wincon::CTRL_C_EVENT;
 
-pub fn interrupted() -> bool {
-    false
+extern "system" fn handler(ctrl_type: DWORD) -> BOOL {
+    match ctrl_type {
+        CTRL_C_EVENT => {
+            set_interrupted();
+            TRUE
+        }
+        _ => FALSE,
+    }
 }
 
-pub fn unset_interrupted() {}
-
-pub fn set_handler() {}
+pub fn set_handler() {
+    if 0 == unsafe { SetConsoleCtrlHandler(Some(handler), TRUE) } {
+        log::error!("Cannot set a control C handler")
+    }
+}
