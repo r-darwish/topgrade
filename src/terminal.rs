@@ -230,7 +230,7 @@ impl Terminal {
                 }
                 'n' | 'N' | '\r' | '\n' => break Ok(false),
                 'q' | 'Q' => return Err(io::Error::from(io::ErrorKind::Interrupted)),
-                _ => println!("hi"),
+                _ => (),
             }
         };
 
