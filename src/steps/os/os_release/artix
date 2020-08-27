@@ -1,0 +1,10 @@
+NAME="Artix Linux"
+PRETTY_NAME="Artix Linux"
+ID=artix
+BUILD_ID=rolling
+ANSI_COLOR="0;36"
+HOME_URL="https://www.artixlinux.org/"
+DOCUMENTATION_URL="https://wiki.artixlinux.org/"
+SUPPORT_URL="https://forum.artixlinux.org/"
+BUG_REPORT_URL="https://gitea.artixlinux.org/"
+LOGO=artixlinux

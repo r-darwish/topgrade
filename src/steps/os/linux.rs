@@ -49,7 +49,7 @@ impl Distribution {
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian") => Distribution::Debian,
-            Some("arch") | Some("anarchy") | Some("manjaro-arm") => Distribution::Arch,
+            Some("arch") | Some("anarchy") | Some("manjaro-arm") | Some("garuda") | Some("artix") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
@@ -646,5 +646,10 @@ mod tests {
     #[test]
     fn test_pengwinonwsl() {
         test_template(&include_str!("os_release/pengwinonwsl"), Distribution::Debian);
+    }
+
+    #[test]
+    fn test_artix() {
+        test_template(&include_str!("os_release/artix"), Distribution::Arch);
     }
 }
