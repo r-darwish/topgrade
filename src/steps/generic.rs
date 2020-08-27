@@ -95,6 +95,16 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&rustup).arg("update").check_run()
 }
 
+pub fn run_choosenim(ctx: &ExecutionContext) -> Result<()> {
+    let choosenim = utils::require("choosenim")?;
+
+    print_separator("choosenim");
+    let run_type = ctx.run_type();
+
+    run_type.execute(&choosenim).args(&["update", "self"]).check_run()?;
+    run_type.execute(&choosenim).args(&["update", "stable"]).check_run()
+}
+
 pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
     let krew = utils::require("kubectl-krew")?;
 
