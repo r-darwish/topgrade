@@ -108,6 +108,7 @@ pub enum Step {
     CustomCommands,
     Yadm,
     Sheldon,
+    Choosenim,
 }
 
 #[derive(Deserialize, Default, Debug)]
