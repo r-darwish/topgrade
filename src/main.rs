@@ -240,6 +240,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Shell, "zinit", || zsh::run_zinit(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
         runner.execute(Step::Shell, "fisher", || unix::run_fisher(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "oh-my-fish", || unix::run_oh_my_fix(&ctx))?;
         runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
         runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
@@ -257,7 +258,6 @@ fn run() -> Result<()> {
     runner.execute(Step::Atom, "apm", || generic::run_apm(run_type))?;
     runner.execute(Step::Rustup, "rustup", || generic::run_rustup(&base_dirs, run_type))?;
     runner.execute(Step::Choosenim, "choosenim", || generic::run_choosenim(&ctx))?;
-    runner.execute(Step::Cargo, "cargo", || generic::run_cargo_update(run_type))?;
     runner.execute(Step::Flutter, "Flutter", || generic::run_flutter_upgrade(run_type))?;
     runner.execute(Step::Go, "Go", || generic::run_go(&base_dirs, run_type))?;
     runner.execute(Step::Emacs, "Emacs", || emacs.upgrade(run_type))?;
@@ -401,4 +401,5 @@ fn main() {
             exit(1);
         }
     }
+}
 }
