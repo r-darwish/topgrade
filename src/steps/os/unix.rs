@@ -34,7 +34,7 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     let omf = require("omf")?;
 
     print_separator("oh-my-fish");
-    run_type.execute(&omf).arg("update").check_run()
+    ctx.run_type().execute(&omf).arg("update").check_run()
 }
 
 pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
