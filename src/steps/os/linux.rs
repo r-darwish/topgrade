@@ -652,4 +652,9 @@ mod tests {
     fn test_artix() {
         test_template(&include_str!("os_release/artix"), Distribution::Arch);
     }
+
+    #[test]
+    fn test_garuda() {
+        test_template(&include_str!("os_release/garuda"), Distribution::Arch);
+    }
 }
