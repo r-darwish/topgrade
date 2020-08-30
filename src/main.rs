@@ -350,6 +350,15 @@ fn run() -> Result<()> {
         dragonfly::audit_packages(&sudo).ok();
     }
 
+    let mut post_command_failed = false;
+    if let Some(commands) = config.post_commands() {
+        for (name, command) in commands {
+            if generic::run_custom_command(&name, &command, &ctx).is_err() {
+                post_command_failed = true;
+            }
+        }
+    }
+
     if config.keep_at_end() {
         print_info("\n(R)eboot\n(S)hell\n(Q)uit");
         loop {
@@ -369,7 +378,7 @@ fn run() -> Result<()> {
         }
     }
 
-    if runner.report().data().iter().any(|(_, result)| result.failed()) {
+    if post_command_failed || runner.report().data().iter().any(|(_, result)| result.failed()) {
         Err(StepFailed.into())
     } else {
         Ok(())

@@ -164,6 +164,7 @@ pub struct Composer {
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
+    post_commands: Option<Commands>,
     commands: Option<Commands>,
     git_repos: Option<Vec<String>>,
     predefined_git_repos: Option<bool>,
@@ -414,6 +415,11 @@ impl Config {
     /// The list of commands to run before performing any step.
     pub fn pre_commands(&self) -> &Option<Commands> {
         &self.config_file.pre_commands
+    }
+
+    /// The list of commands to run at the end of all steps
+    pub fn post_commands(&self) -> &Option<Commands> {
+        &self.config_file.post_commands
     }
 
     /// The list of custom steps.
