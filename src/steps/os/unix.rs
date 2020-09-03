@@ -30,6 +30,13 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
+pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
+    let omf = require("omf")?;
+
+    print_separator("oh-my-fish");
+    ctx.run_type().execute(&omf).arg("update").check_run()
+}
+
 pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
     let brew = require("brew")?;
     print_separator("Brew");
