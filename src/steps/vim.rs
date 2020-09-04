@@ -27,10 +27,12 @@ pub fn vimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
 
 fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(unix)]
-    return base_dirs.home_dir().join(".config/nvim/init.vim").require();
+    let base_dir = base_dirs.config_dir();
 
     #[cfg(windows)]
-    return base_dirs.cache_dir().join("nvim/init.vim").require();
+    let base_dir = base_dirs.cache_dir();
+
+    base_dir.join("nvim/init.vim").require()
 }
 
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, ctx: &ExecutionContext) -> Result<()> {
