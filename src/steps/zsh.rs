@@ -14,14 +14,11 @@ use walkdir::WalkDir;
 pub fn run_zr(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
 
-    env::var("ZR_HOME")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zr"))
-        .require()?;
+    require("zr")?;
 
     print_separator("zr");
 
-    let cmd = format!("source {} && zr update", zshrc(base_dirs).display());
+    let cmd = format!("source {} && zr --update", zshrc(base_dirs).display());
     run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
