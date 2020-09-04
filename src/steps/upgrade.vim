@@ -1,5 +1,5 @@
 if exists(":NeoBundleUpdate")
-    echo NeoBundle
+    echo "NeoBundle"
     NeoBundleUpdate
 endif
 
