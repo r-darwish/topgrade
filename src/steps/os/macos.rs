@@ -38,7 +38,7 @@ pub fn run_brew_cask(ctx: &ExecutionContext) -> Result<()> {
         }
         args
     } else {
-        let mut args = vec!["cask", "upgrade"];
+        let mut args = vec!["upgrade", "--cask"];
         if config.brew_cask_greedy() {
             args.push("--greedy");
         }
