@@ -27,7 +27,9 @@ pub fn vimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
 
 fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(unix)]
-    let base_dir = base_dirs.config_dir();
+    let base_dir =
+        // Bypass directories crate as nvim doesn't use the macOS-specific directories.
+        std::env::var_os("XDG_CONFIG_HOME").map_or_else(|| base_dirs.home_dir().join(".config"), PathBuf::from);
 
     #[cfg(windows)]
     let base_dir = base_dirs.cache_dir();
