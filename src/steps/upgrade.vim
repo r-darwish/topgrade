@@ -1,5 +1,5 @@
 if exists(":NeoBundleUpdate")
-    echo NeoBundle
+    echo "NeoBundle"
     NeoBundleUpdate
 endif
 
@@ -11,7 +11,6 @@ endif
 if exists(":PlugUpgrade")
     echo "Plug"
     PlugUpgrade
-    PlugClean
     PlugUpdate
 endif
 
