@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub fn upgrade_freebsd(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, String::from("No sudo detected"))?;
     print_separator("FreeBSD Update");
     run_type
         .execute(sudo)
@@ -15,7 +15,7 @@ pub fn upgrade_freebsd(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> 
 }
 
 pub fn upgrade_packages(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, String::from("No sudo detected"))?;
     print_separator("FreeBSD Packages");
     run_type.execute(sudo).args(&["/usr/sbin/pkg", "upgrade"]).check_run()
 }

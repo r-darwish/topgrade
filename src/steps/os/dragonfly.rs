@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::process::Command;
 
 pub fn upgrade_packages(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo)?;
+    let sudo = require_option(sudo, String::from("No sudo detected"))?;
     print_separator("DrgaonFly BSD Packages");
     run_type
         .execute(sudo)
