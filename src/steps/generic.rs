@@ -124,7 +124,7 @@ pub fn run_jetpack(run_type: RunType) -> Result<()> {
 pub fn run_rtcl(ctx: &ExecutionContext) -> Result<()> {
     let rupdate = utils::require("rupdate")?;
 
-    print_separator("rtcl::rupdate");
+    print_separator("rtcl");
 
     ctx.run_type().execute(&rupdate).check_run()
 }
