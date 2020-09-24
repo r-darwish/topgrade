@@ -121,6 +121,14 @@ pub fn run_jetpack(run_type: RunType) -> Result<()> {
     run_type.execute(&jetpack).args(&["global", "update"]).check_run()
 }
 
+pub fn run_rtcl(ctx: &ExecutionContext) -> Result<()> {
+    let rupdate = utils::require("rupdate")?;
+
+    print_separator("rtcl");
+
+    ctx.run_type().execute(&rupdate).check_run()
+}
+
 pub fn run_opam_update(run_type: RunType) -> Result<()> {
     let opam = utils::require("opam")?;
 
