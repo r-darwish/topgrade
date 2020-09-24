@@ -30,16 +30,16 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
 
-pub fn run_oh_my_fish(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     let fish = require("fish")?;
-    base_dirs
+    ctx.base_dirs()
         .home_dir()
         .join(".local/share/omf/pkg/omf/functions/omf.fish")
         .require()?;
 
     print_separator("oh-my-fish");
 
-    run_type.execute(&fish).args(&["-c", "omf update"]).check_run()
+    ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
 pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
