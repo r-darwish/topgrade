@@ -1,18 +1,18 @@
-#[cfg(target_os = "linux")]
-use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-use crate::executor::{ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
+#[cfg(target_os = "linux")]
+use crate::{error::SkipStep, executor::CommandExt};
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
-use std::env;
 use std::fs;
 use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{env, path::Path};
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let fish = require("fish")?;
@@ -47,11 +47,37 @@ pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
     print_separator("Brew");
     let run_type = ctx.run_type();
 
+    let cask_upgrade_exists = Command::new(&brew)
+        .args(&["--repository", "buo/cask-upgrade"])
+        .check_output()
+        .map(|p| Path::new(p.trim()).exists())?;
+
+    let mut brew_args = vec!["upgrade", "--ignore-pinned"];
+
+    if cask_upgrade_exists {
+        brew_args.push("--formula")
+    }
+    if ctx.config().brew_cask_greedy() {
+        brew_args.push("--greedy");
+    }
+
     run_type.execute(&brew).arg("update").check_run()?;
-    run_type
-        .execute(&brew)
-        .args(&["upgrade", "--ignore-pinned"])
-        .check_run()
+    run_type.execute(&brew).args(&brew_args).check_run()?;
+
+    if cask_upgrade_exists {
+        let mut args = vec!["cu", "-y"];
+        if ctx.config().brew_cask_greedy() {
+            args.push("-a");
+        }
+
+        run_type.execute(&brew).args(&args).check_run()?;
+    }
+
+    if ctx.config().cleanup() {
+        run_type.execute(&brew).arg("cleanup").check_run()?;
+    }
+
+    Ok(())
 }
 
 pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
