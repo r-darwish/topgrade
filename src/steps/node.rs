@@ -66,9 +66,9 @@ pub fn yarn_global_update(run_type: RunType) -> Result<()> {
     run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()
 }
 
-pub fn deno_update(ctx: &ExecutionContext) -> Result<()> {
+pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let deno = require("deno")?;
 
     print_separator("Deno");
-    ctx.run_type().execute(&deno).arg("update").check_run()
+    ctx.run_type().execute(&deno).arg("upgrade").check_run()
 }
