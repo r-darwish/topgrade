@@ -110,6 +110,7 @@ pub enum Step {
     Sheldon,
     Choosenim,
     Rtcl,
+    Deno,
 }
 
 #[derive(Deserialize, Default, Debug)]

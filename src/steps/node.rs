@@ -1,9 +1,9 @@
 #![allow(unused_imports)]
 
-use crate::error::SkipStep;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
+use crate::{error::SkipStep, execution_context::ExecutionContext};
 use anyhow::Result;
 use log::debug;
 
@@ -64,4 +64,11 @@ pub fn yarn_global_update(run_type: RunType) -> Result<()> {
 
     print_separator("Yarn");
     run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()
+}
+
+pub fn deno_update(ctx: &ExecutionContext) -> Result<()> {
+    let deno = require("deno")?;
+
+    print_separator("Deno");
+    ctx.run_type().execute(&deno).arg("update").check_run()
 }
