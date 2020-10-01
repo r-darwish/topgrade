@@ -150,7 +150,6 @@ fn run() -> Result<()> {
 
         #[cfg(target_os = "macos")]
         {
-            runner.execute(Step::Brew, "Brew Cask", || macos::run_brew_cask(&ctx))?;
             runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
             runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
                 macos::run_msupdate(&ctx)
