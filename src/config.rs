@@ -458,7 +458,7 @@ impl Config {
             config_file.disable.as_ref().map_or_else(Vec::new, |v| v.clone())
         };
 
-        enabled_steps.retain(|e| !disabled_steps.contains(e));
+        enabled_steps.retain(|e| !disabled_steps.contains(e) || opt.only.contains(e));
         enabled_steps
     }
 
