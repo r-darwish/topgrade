@@ -56,8 +56,7 @@ pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
 
     if cask_upgrade_exists {
         brew_args.push("--formula")
-    }
-    if ctx.config().brew_cask_greedy() {
+    } else if ctx.config().brew_cask_greedy() {
         brew_args.push("--greedy");
     }
 
