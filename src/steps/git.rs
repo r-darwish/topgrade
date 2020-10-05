@@ -49,7 +49,9 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
 
     let mut command = AsyncCommand::new(git);
 
-    command.args(&["pull", "--ff-only"]).current_dir(&repo);
+    command
+        .args(&["pull", "--ff-only", "-c", "color.ui=false"])
+        .current_dir(&repo);
 
     if let Some(extra_arguments) = ctx.config().git_arguments() {
         command.args(extra_arguments.split_whitespace());
@@ -57,7 +59,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
 
     let pull_output = command.output().await?;
     let submodule_output = AsyncCommand::new(git)
-        .args(&["submodule", "update", "--recursive"])
+        .args(&["submodule", "update", "--recursive", "-c", "color.ui=false"])
         .current_dir(&repo)
         .output()
         .await?;
