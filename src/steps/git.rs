@@ -101,7 +101,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
 
 fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
     Command::new(git)
-        .args(&["rev-parse", "HEAD"])
+        .args(&["-c", "color.ui=false", "rev-parse", "HEAD"])
         .current_dir(repo)
         .check_output()
         .map(|output| output.trim().to_string())
@@ -115,7 +115,7 @@ fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
 
 fn has_remotes(git: &Path, repo: &str) -> Option<bool> {
     Command::new(git)
-        .args(&["remote", "show"])
+        .args(&["-c", "color.ui=false", "remote", "show"])
         .current_dir(repo)
         .check_output()
         .map(|output| output.lines().count() > 0)
@@ -157,7 +157,7 @@ impl Git {
 
                 if let Some(git) = &self.git {
                     let output = Command::new(&git)
-                        .args(&["rev-parse", "--show-toplevel"])
+                        .args(&["-c", "color.ui=false", "rev-parse", "--show-toplevel"])
                         .current_dir(path)
                         .check_output()
                         .ok()
