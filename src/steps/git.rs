@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::io;
 use std::path::{Path, PathBuf};
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 
 use anyhow::Result;
 use console::style;
@@ -49,7 +49,10 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
 
     let mut command = AsyncCommand::new(git);
 
-    command.args(&["pull", "--ff-only"]).current_dir(&repo);
+    command
+        .stdin(Stdio::null())
+        .current_dir(&repo)
+        .args(&["pull", "--ff-only"]);
 
     if let Some(extra_arguments) = ctx.config().git_arguments() {
         command.args(extra_arguments.split_whitespace());
@@ -59,6 +62,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
     let submodule_output = AsyncCommand::new(git)
         .args(&["submodule", "update", "--recursive"])
         .current_dir(&repo)
+        .stdin(Stdio::null())
         .output()
         .await?;
     let result = check_output(pull_output).and_then(|_| check_output(submodule_output));
@@ -74,6 +78,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
                 println!("{} {}:", style("Changed").yellow().bold(), &repo);
 
                 Command::new(&git)
+                    .stdin(Stdio::null())
                     .current_dir(&repo)
                     .args(&[
                         "--no-pager",
@@ -99,8 +104,9 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
 
 fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
     Command::new(git)
-        .args(&["rev-parse", "HEAD"])
+        .stdin(Stdio::null())
         .current_dir(repo)
+        .args(&["rev-parse", "HEAD"])
         .check_output()
         .map(|output| output.trim().to_string())
         .map_err(|e| {
@@ -113,8 +119,9 @@ fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
 
 fn has_remotes(git: &Path, repo: &str) -> Option<bool> {
     Command::new(git)
-        .args(&["remote", "show"])
+        .stdin(Stdio::null())
         .current_dir(repo)
+        .args(&["remote", "show"])
         .check_output()
         .map(|output| output.lines().count() > 0)
         .map_err(|e| {
@@ -155,8 +162,9 @@ impl Git {
 
                 if let Some(git) = &self.git {
                     let output = Command::new(&git)
-                        .args(&["rev-parse", "--show-toplevel"])
+                        .stdin(Stdio::null())
                         .current_dir(path)
+                        .args(&["rev-parse", "--show-toplevel"])
                         .check_output()
                         .ok()
                         .map(|output| output.trim().to_string());
