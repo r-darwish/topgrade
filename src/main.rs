@@ -237,6 +237,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Shell, "antigen", || zsh::run_antigen(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zplug", || zsh::run_zplug(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zinit", || zsh::run_zinit(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "zim", || zsh::run_zim(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
         runner.execute(Step::Shell, "fisher", || unix::run_fisher(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "oh-my-fish", || unix::run_oh_my_fish(&ctx))?;
