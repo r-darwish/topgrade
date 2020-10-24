@@ -111,10 +111,7 @@ impl Distribution {
     }
 
     pub fn redhat_based(self) -> bool {
-        match self {
-            Distribution::CentOS | Distribution::Fedora => true,
-            _ => false,
-        }
+        matches!(self, Distribution::CentOS | Distribution::Fedora)
     }
 }
 

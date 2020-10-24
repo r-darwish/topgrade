@@ -20,10 +20,7 @@ enum BoxStatus {
 
 impl BoxStatus {
     fn powered_on(self) -> bool {
-        match self {
-            BoxStatus::Running => true,
-            _ => false,
-        }
+        matches!(self, BoxStatus::Running)
     }
 }
 

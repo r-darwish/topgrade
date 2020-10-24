@@ -80,6 +80,26 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(zsh).args(&["-i", "-c", cmd.as_str()]).check_run()
 }
 
+pub fn run_zim(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+    let zsh = require("zsh")?;
+    env::var("ZIM_HOME")
+        .or_else(|_| {
+            Command::new("zsh")
+                .args(&["-c", "[[ -n ${ZIM_HOME} ]] && print -n ${ZIM_HOME}"])
+                .check_output()
+        })
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zim"))
+        .require()?;
+
+    print_separator("zim");
+
+    run_type
+        .execute(zsh)
+        .args(&["-i", "-c", "zimfw upgrade && zimfw update"])
+        .check_run()
+}
+
 pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
     require("zsh")?;
     let oh_my_zsh = ctx.base_dirs().home_dir().join(".oh-my-zsh").require()?;
