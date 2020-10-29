@@ -148,6 +148,7 @@ fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
     let sudo = ctx.sudo();
     let run_type = ctx.run_type();
     let cleanup = ctx.config().cleanup();
+    let yay_binary_name = ctx.config().yay_binary_name();
 
     let path = {
         let mut path = OsString::from("/usr/bin:");
@@ -156,7 +157,7 @@ fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
     };
     debug!("Running Arch update with path: {:?}", path);
 
-    if let Some(yay) = which("yay") {
+    if let Some(yay) = which(&yay_binary_name) {
         run_type
             .execute(&yay)
             .arg("-Pw")

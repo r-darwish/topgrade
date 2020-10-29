@@ -147,6 +147,7 @@ pub struct Brew {
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Linux {
+    yay_binary_name: Option<String>,
     yay_arguments: Option<String>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
@@ -580,6 +581,14 @@ impl Config {
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())
             .unwrap_or("")
+    }
+    #[allow(dead_code)]
+    pub fn yay_binary_name(&self) -> &str {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.yay_binary_name.as_deref())
+            .unwrap_or("yay")
     }
 
     /// Extra yay arguments

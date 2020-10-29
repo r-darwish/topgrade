@@ -63,6 +63,8 @@
 #greedy_cask = true
 
 #[linux]
+# The name yay equivalent program, for example paru
+#yay_binary_name = "yay"
 # Arguments to pass yay when updating packages
 #yay_arguments = "--nodevel"
 #trizen_arguments = "--devel"
