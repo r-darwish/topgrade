@@ -156,7 +156,7 @@ fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
     };
     debug!("Running Arch update with path: {:?}", path);
 
-    if let Some(yay) = which("yay") {
+    if let Some(yay) = which("yay").or_else(|| which("paru")) {
         run_type
             .execute(&yay)
             .arg("-Pw")
