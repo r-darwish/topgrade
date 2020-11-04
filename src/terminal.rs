@@ -296,3 +296,7 @@ pub fn set_desktop_notifications(desktop_notifications: bool) {
 pub fn prompt_yesno(question: &str) -> Result<bool, io::Error> {
     TERMINAL.lock().unwrap().prompt_yesno(question)
 }
+
+pub fn notify_desktop<P: AsRef<str>>(message: P, timeout: Option<Duration>) {
+    TERMINAL.lock().unwrap().notify_desktop(message, timeout)
+}
