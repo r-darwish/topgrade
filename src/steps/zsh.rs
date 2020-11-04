@@ -57,7 +57,7 @@ pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
     env::var("ZPLUG_HOME")
         .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join("zplug"))
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zplug"))
         .require()?;
 
     print_separator("zplug");
