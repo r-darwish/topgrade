@@ -22,10 +22,7 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         .require()?;
 
     print_separator("Fisher");
-    run_type
-        .execute(&fish)
-        .args(&["-c", "fisher update"])
-        .check_run()?;
+    run_type.execute(&fish).args(&["-c", "fisher update"]).check_run()?;
 
     run_type.execute(&fish).args(&["-c", "fisher"]).check_run()
 }
