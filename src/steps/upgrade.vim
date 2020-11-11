@@ -19,4 +19,9 @@ if exists(":PackerUpdate")
     PackerSync
 endif
 
+if exists(":DeinUpdate")
+    echo "DeinUpdate"
+    DeinUpdate
+endif
+
 quitall
