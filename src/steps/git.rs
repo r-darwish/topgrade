@@ -3,7 +3,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use console::style;
 use futures::stream::{iter, FuturesUnordered};
 use futures::StreamExt;
@@ -32,10 +32,10 @@ pub struct Repositories<'a> {
     glob_match_options: MatchOptions,
 }
 
-fn check_output(output: Output) -> std::result::Result<(), String> {
+fn check_output(output: Output) -> Result<()> {
     if !(output.status.success()) {
         let stderr = String::from_utf8(output.stderr).unwrap();
-        Err(stderr)
+        Err(anyhow!(stderr))
     } else {
         Ok(())
     }
@@ -67,7 +67,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
         .await?;
     let result = check_output(pull_output).and_then(|_| check_output(submodule_output));
 
-    if let Err(message) = result {
+    if let Err(message) = &result {
         println!("{} pulling {}", style("Failed").red().bold(), &repo);
         print!("{}", message);
     } else {
@@ -99,7 +99,7 @@ async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>
         }
     }
 
-    Ok(())
+    result.map(|_| ())
 }
 
 fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
