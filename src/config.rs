@@ -111,6 +111,7 @@ pub enum Step {
     Choosenim,
     Rtcl,
     Deno,
+    Gcloud,
 }
 
 #[derive(Deserialize, Default, Debug)]
