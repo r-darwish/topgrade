@@ -113,6 +113,17 @@ pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
     run_type.execute(&krew).args(&["upgrade"]).check_run()
 }
 
+pub fn run_gcloud_components_update(run_type: RunType) -> Result<()> {
+    let gcloud = utils::require("gcloud")?;
+
+    print_separator("gcloud");
+
+    run_type
+        .execute(&gcloud)
+        .args(&["components", "update", "--quiet"])
+        .check_run()
+}
+
 pub fn run_jetpack(run_type: RunType) -> Result<()> {
     let jetpack = utils::require("jetpack")?;
 
