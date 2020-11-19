@@ -21,7 +21,7 @@ impl Powershell {
 
         let profile = path.as_ref().and_then(|path| {
             Command::new(path)
-                .args(&["-Command", "echo $profile"])
+                .args(&["-Command", "Split-Path $profile"])
                 .check_output()
                 .map(|output| PathBuf::from(output.trim()))
                 .and_then(|p| p.require())
