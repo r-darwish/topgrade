@@ -32,11 +32,7 @@ impl Emacs {
             }
         }
         #[cfg(unix)]
-        return base_dirs
-            .home_dir()
-            .join(".emacs.d")
-            .if_exists()
-            .or_else(|| emacs_xdg_dir);
+        return base_dirs.home_dir().join(".emacs.d").if_exists().or(emacs_xdg_dir);
 
         #[cfg(windows)]
         return env::var("HOME")

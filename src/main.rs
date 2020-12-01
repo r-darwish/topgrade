@@ -1,4 +1,4 @@
-#![allow(clippy::cognitive_complexity)]
+#![allow(clippy::cognitive_complexity, clippy::clippy::rc_buffer)]
 mod config;
 mod ctrlc;
 mod error;
