@@ -26,7 +26,7 @@ impl BoxStatus {
 
 #[derive(Debug)]
 pub struct VagrantBox {
-    path: Rc<PathBuf>,
+    path: Rc<Path>,
     name: String,
     initial_status: BoxStatus,
 }
@@ -53,7 +53,7 @@ struct Vagrant {
 
 impl Vagrant {
     fn get_boxes<'a>(&self, directory: &'a str) -> Result<Vec<VagrantBox>> {
-        let path = Rc::new(PathBuf::from(directory));
+        let path: Rc<Path> = Path::new(directory).into();
 
         let output = Command::new(&self.path)
             .arg("status")
@@ -111,7 +111,7 @@ impl<'a> TemporaryPowerOn<'a> {
         ctx.run_type()
             .execute(vagrant)
             .args(&[subcommand, &vagrant_box.name])
-            .current_dir(vagrant_box.path.as_path())
+            .current_dir(vagrant_box.path.clone())
             .check_run()?;
         Ok(TemporaryPowerOn {
             vagrant,
@@ -138,7 +138,7 @@ impl<'a> Drop for TemporaryPowerOn<'a> {
             .run_type()
             .execute(self.vagrant)
             .args(&[subcommand, &self.vagrant_box.name])
-            .current_dir(self.vagrant_box.path.as_path())
+            .current_dir(self.vagrant_box.path.clone())
             .check_run()
             .ok();
     }
@@ -194,7 +194,7 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
 
     ctx.run_type()
         .execute(&vagrant.path)
-        .current_dir(&vagrant_box.path.as_path())
+        .current_dir(&vagrant_box.path)
         .args(&["ssh", "-c", &command])
         .check_run()
 }
