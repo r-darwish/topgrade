@@ -28,6 +28,22 @@ impl Check for Output {
     }
 }
 
+pub trait CheckWithCodes {
+    fn check_with_codes(self, codes: &[i32]) -> Result<()>;
+}
+
+impl CheckWithCodes for ExitStatus {
+    fn check_with_codes(self, codes: &[i32]) -> Result<()> {
+        // Set the default to be -1 because the option represents a signal termination
+        let code = self.code().unwrap_or(-1);
+        if self.success() || codes.contains(&code) {
+            Ok(())
+        } else {
+            Err(TopgradeError::ProcessFailed(self).into())
+        }
+    }
+}
+
 pub trait PathExt
 where
     Self: Sized,

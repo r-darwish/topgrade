@@ -1,6 +1,6 @@
 //! Utilities for command execution
 use crate::error::TopgradeError;
-use crate::utils::Check;
+use crate::utils::{Check, CheckWithCodes};
 use anyhow::Result;
 use log::{debug, trace};
 use std::ffi::{OsStr, OsString};
@@ -166,6 +166,12 @@ impl Executor {
     pub fn check_run(&mut self) -> Result<()> {
         self.spawn()?.wait()?.check()
     }
+
+    /// An extension of `check_run` that allows you to set a sequence of codes
+    /// that can indicate success of a script
+    pub fn check_run_with_codes(&mut self, codes: &[i32]) -> Result<()> {
+        self.spawn()?.wait()?.check_with_codes(codes)
+    }
 }
 
 pub enum ExecutorOutput {
@@ -227,6 +233,15 @@ impl Check for ExecutorExitStatus {
     fn check(self) -> Result<()> {
         match self {
             ExecutorExitStatus::Wet(e) => e.check(),
+            ExecutorExitStatus::Dry => Ok(()),
+        }
+    }
+}
+
+impl CheckWithCodes for ExecutorExitStatus {
+    fn check_with_codes(self, codes: &[i32]) -> Result<()> {
+        match self {
+            ExecutorExitStatus::Wet(e) => e.check_with_codes(codes),
             ExecutorExitStatus::Dry => Ok(()),
         }
     }
