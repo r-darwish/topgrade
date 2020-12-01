@@ -169,6 +169,7 @@ impl Executor {
 
     /// An extension of `check_run` that allows you to set a sequence of codes
     /// that can indicate success of a script
+    #[allow(dead_code)]
     pub fn check_run_with_codes(&mut self, codes: &[i32]) -> Result<()> {
         self.spawn()?.wait()?.check_with_codes(codes)
     }
