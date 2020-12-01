@@ -1828,7 +1828,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "6.0.0"
+version = "6.0.1"
 dependencies = [
  "anyhow",
  "cfg-if 0.1.10",
