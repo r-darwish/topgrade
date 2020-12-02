@@ -142,5 +142,5 @@ pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
         .execute("zsh")
         .env("ZSH", &oh_my_zsh)
         .arg(&oh_my_zsh.join("tools/upgrade.sh"))
-        .check_run()
+        .check_run_with_codes(&[80])
 }
