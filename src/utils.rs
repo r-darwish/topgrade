@@ -12,16 +12,6 @@ pub trait Check {
     fn check(self) -> Result<()>;
 }
 
-impl Check for ExitStatus {
-    fn check(self) -> Result<()> {
-        if self.success() {
-            Ok(())
-        } else {
-            Err(TopgradeError::ProcessFailed(self).into())
-        }
-    }
-}
-
 impl Check for Output {
     fn check(self) -> Result<()> {
         self.status.check()
@@ -30,6 +20,14 @@ impl Check for Output {
 
 pub trait CheckWithCodes {
     fn check_with_codes(self, codes: &[i32]) -> Result<()>;
+}
+
+// Anything that implements CheckWithCodes also implements check
+// if check_with_codes is given an empty array of codes to check
+impl<T: CheckWithCodes> Check for T {
+    fn check(self) -> Result<()> {
+        self.check_with_codes(&[])
+    }
 }
 
 impl CheckWithCodes for ExitStatus {

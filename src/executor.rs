@@ -230,15 +230,6 @@ pub enum ExecutorExitStatus {
     Dry,
 }
 
-impl Check for ExecutorExitStatus {
-    fn check(self) -> Result<()> {
-        match self {
-            ExecutorExitStatus::Wet(e) => e.check(),
-            ExecutorExitStatus::Dry => Ok(()),
-        }
-    }
-}
-
 impl CheckWithCodes for ExecutorExitStatus {
     fn check_with_codes(self, codes: &[i32]) -> Result<()> {
         match self {
