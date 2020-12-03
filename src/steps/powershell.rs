@@ -59,10 +59,6 @@ impl Powershell {
 
         let mut cmd = vec!["Update-Module"];
 
-        if ctx.config().yes() {
-            cmd.push("-AcceptLicense");
-        }
-
         if ctx.config().verbose() {
             cmd.push("-Verbose")
         }
