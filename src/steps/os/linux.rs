@@ -249,7 +249,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
                     .if_exists()
                     .unwrap_or_else(|| Path::new("/usr/bin/yum")),
             )
-            .arg("upgrade");
+            .arg("distro-sync");
 
         if let Some(args) = ctx.config().dnf_arguments() {
             command.args(args.split_whitespace());
