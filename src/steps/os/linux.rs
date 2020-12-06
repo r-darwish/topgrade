@@ -244,9 +244,9 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
         let mut command = ctx.run_type().execute(&sudo);
         if let Some(dnf) = Path::new("/usr/bin/dnf").if_exists() {
-            command.arg(dnf).arg("distro-sync")
+            command.arg(dnf).arg("distro-sync");
         } else {
-            command.args(&["/usr/bin/yum", "upgrade"])
+            command.args(&["/usr/bin/yum", "upgrade"]);
         }
 
         if let Some(args) = ctx.config().dnf_arguments() {
