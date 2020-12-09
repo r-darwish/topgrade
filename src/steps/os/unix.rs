@@ -15,6 +15,7 @@ use std::process::Command;
 use std::{env, path::Path};
 
 #[derive(Copy, Clone, Debug)]
+#[allow(dead_code)]
 pub enum BrewVariant {
     Linux,
     MacIntel,
