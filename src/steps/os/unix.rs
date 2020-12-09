@@ -14,6 +14,36 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, path::Path};
 
+#[derive(Copy, Clone, Debug)]
+pub enum BrewVariant {
+    Linux,
+    MacIntel,
+    MacArm,
+}
+
+impl BrewVariant {
+    fn binary_name(self) -> &'static str {
+        match self {
+            BrewVariant::Linux => "/home/linuxbrew/.linuxbrew/bin/brew",
+            BrewVariant::MacIntel => "/usr/local/bin/brew",
+            BrewVariant::MacArm => "/opt/homebrew/bin/brew",
+        }
+    }
+
+    fn both_both_exist() -> bool {
+        Path::new("/usr/local/bin/brew").exists() && Path::new("/opt/homebrew/bin/brew").exists()
+    }
+
+    pub fn step_title(self) -> &'static str {
+        let both_exists = Self::both_both_exist();
+        match self {
+            BrewVariant::MacArm if both_exists => "Brew (ARM)",
+            BrewVariant::MacIntel if both_exists => "Brew (Intel)",
+            _ => "Brew",
+        }
+    }
+}
+
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let fish = require("fish")?;
     base_dirs
@@ -38,9 +68,9 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
-pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
-    let brew = require("brew")?;
-    print_separator("Brew");
+pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
+    let brew = require(variant.binary_name())?;
+    print_separator(variant.step_title());
     let run_type = ctx.run_type();
 
     let cask_upgrade_exists = Command::new(&brew)
