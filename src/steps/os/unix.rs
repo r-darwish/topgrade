@@ -1,10 +1,10 @@
-#[cfg(target_os = "linux")]
-use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
+#[cfg(target_os = "linux")]
+use crate::{error::SkipStep, executor::Executor};
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
@@ -43,6 +43,22 @@ impl BrewVariant {
             _ => "Brew",
         }
     }
+
+    fn execute(self, run_type: RunType) -> Executor {
+        match self {
+            BrewVariant::MacIntel if cfg!(target_arch = "aarch64") => {
+                let mut command = run_type.execute("arch");
+                command.arg("-x86_64").arg(self.binary_name());
+                command
+            }
+            BrewVariant::MacArm if cfg!(target_arch = "x86_64") => {
+                let mut command = run_type.execute("arch");
+                command.arg("-arm64e").arg(self.binary_name());
+                command
+            }
+            _ => run_type.execute(self.binary_name()),
+        }
+    }
 }
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -70,11 +86,12 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
 }
 
 pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
-    let brew = require(variant.binary_name())?;
+    require(variant.binary_name())?;
     print_separator(variant.step_title());
     let run_type = ctx.run_type();
 
-    let cask_upgrade_exists = Command::new(&brew)
+    let cask_upgrade_exists = variant
+        .execute(RunType::Wet)
         .args(&["--repository", "buo/cask-upgrade"])
         .check_output()
         .map(|p| Path::new(p.trim()).exists())?;
@@ -87,8 +104,8 @@ pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
         brew_args.push("--greedy");
     }
 
-    run_type.execute(&brew).arg("update").check_run()?;
-    run_type.execute(&brew).args(&brew_args).check_run()?;
+    variant.execute(run_type).arg("update").check_run()?;
+    variant.execute(run_type).args(&brew_args).check_run()?;
 
     if cask_upgrade_exists {
         let mut args = vec!["cu", "-y"];
@@ -96,11 +113,11 @@ pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
             args.push("-a");
         }
 
-        run_type.execute(&brew).args(&args).check_run()?;
+        variant.execute(run_type).args(&args).check_run()?;
     }
 
     if ctx.config().cleanup() {
-        run_type.execute(&brew).arg("cleanup").check_run()?;
+        variant.execute(run_type).arg("cleanup").check_run()?;
     }
 
     Ok(())
