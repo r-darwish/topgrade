@@ -1,10 +1,10 @@
+#[cfg(target_os = "linux")]
+use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
-#[cfg(target_os = "linux")]
-use crate::{error::SkipStep, executor::Executor};
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
