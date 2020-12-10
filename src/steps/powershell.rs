@@ -21,7 +21,7 @@ impl Powershell {
 
         let profile = path.as_ref().and_then(|path| {
             Command::new(path)
-                .args(&["-Command", "Split-Path $profile"])
+                .args(&["-NoProfile", "-Command", "Split-Path $profile"])
                 .check_output()
                 .map(|output| PathBuf::from(output.trim()))
                 .and_then(|p| p.require())
@@ -42,7 +42,11 @@ impl Powershell {
     #[cfg(windows)]
     pub fn has_module(powershell: &PathBuf, command: &str) -> bool {
         Command::new(&powershell)
-            .args(&["-Command", &format!("Get-Module -ListAvailable {}", command)])
+            .args(&[
+                "-NoProfile",
+                "-Command",
+                &format!("Get-Module -ListAvailable {}", command),
+            ])
             .check_output()
             .map(|result| !result.is_empty())
             .unwrap_or(false)
@@ -94,6 +98,7 @@ impl Powershell {
 
         command
             .args(&[
+                "-NoProfile",
                 "-Command",
                 &format!(
                     "Import-Module PSWindowsUpdate; Install-WindowsUpdate -MicrosoftUpdate {} -Verbose",
