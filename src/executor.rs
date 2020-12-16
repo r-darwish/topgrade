@@ -264,3 +264,26 @@ impl CommandExt for Command {
         Ok(String::from_utf8(output.stdout)?)
     }
 }
+
+impl CommandExt for Executor {
+    fn check_output(&mut self) -> Result<String> {
+        let output = match self.output()? {
+            ExecutorOutput::Wet(output) => output,
+            ExecutorOutput::Dry => unreachable!(),
+        };
+        let status = output.status;
+        if !status.success() {
+            let stderr = String::from_utf8(output.stderr).unwrap_or_default();
+            return Err(TopgradeError::ProcessFailedWithOutput(status, stderr).into());
+        }
+        Ok(String::from_utf8(output.stdout)?)
+    }
+
+    fn string_output(&mut self) -> Result<String> {
+        let output = match self.output()? {
+            ExecutorOutput::Wet(output) => output,
+            ExecutorOutput::Dry => unreachable!(),
+        };
+        Ok(String::from_utf8(output.stdout)?)
+    }
+}
