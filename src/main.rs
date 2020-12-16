@@ -136,6 +136,8 @@ fn run() -> Result<()> {
         runner.execute(Step::System, "etc-update", || {
             linux::run_etc_update(sudo.as_ref(), run_type)
         })?;
+
+        runner.execute(Step::Brew, "Brew", || unix::run_brew(&ctx, unix::BrewVariant::Linux))?;
     }
 
     #[cfg(windows)]
@@ -144,18 +146,22 @@ fn run() -> Result<()> {
         runner.execute(Step::Scoop, "Scoop", || windows::run_scoop(config.cleanup(), run_type))?;
     }
 
+    #[cfg(target_os = "macos")]
+    {
+        runner.execute(Step::Brew, "Brew (ARM)", || {
+            unix::run_brew(&ctx, unix::BrewVariant::MacArm)
+        })?;
+        runner.execute(Step::Brew, "Brew (Intel)", || {
+            unix::run_brew(&ctx, unix::BrewVariant::MacIntel)
+        })?;
+        runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
+        runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
+            macos::run_msupdate(&ctx)
+        })?;
+    }
+
     #[cfg(unix)]
     {
-        runner.execute(Step::Brew, "Brew", || unix::run_brew(&ctx))?;
-
-        #[cfg(target_os = "macos")]
-        {
-            runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
-            runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
-                macos::run_msupdate(&ctx)
-            })?;
-        }
-
         runner.execute(Step::Yadm, "yadm", || unix::run_yadm(&ctx))?;
         runner.execute(Step::Nix, "nix", || unix::run_nix(&ctx))?;
         runner.execute(Step::HomeManager, "home-manager", || unix::run_home_manager(run_type))?;

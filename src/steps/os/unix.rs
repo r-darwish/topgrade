@@ -2,7 +2,7 @@
 use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
 use anyhow::Result;
@@ -13,6 +13,53 @@ use std::os::unix::fs::MetadataExt;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, path::Path};
+
+#[derive(Copy, Clone, Debug)]
+#[allow(dead_code)]
+pub enum BrewVariant {
+    Linux,
+    MacIntel,
+    MacArm,
+}
+
+impl BrewVariant {
+    fn binary_name(self) -> &'static str {
+        match self {
+            BrewVariant::Linux => "/home/linuxbrew/.linuxbrew/bin/brew",
+            BrewVariant::MacIntel => "/usr/local/bin/brew",
+            BrewVariant::MacArm => "/opt/homebrew/bin/brew",
+        }
+    }
+
+    fn both_both_exist() -> bool {
+        Path::new("/usr/local/bin/brew").exists() && Path::new("/opt/homebrew/bin/brew").exists()
+    }
+
+    pub fn step_title(self) -> &'static str {
+        let both_exists = Self::both_both_exist();
+        match self {
+            BrewVariant::MacArm if both_exists => "Brew (ARM)",
+            BrewVariant::MacIntel if both_exists => "Brew (Intel)",
+            _ => "Brew",
+        }
+    }
+
+    fn execute(self, run_type: RunType) -> Executor {
+        match self {
+            BrewVariant::MacIntel if cfg!(target_arch = "aarch64") => {
+                let mut command = run_type.execute("arch");
+                command.arg("-x86_64").arg(self.binary_name());
+                command
+            }
+            BrewVariant::MacArm if cfg!(target_arch = "x86_64") => {
+                let mut command = run_type.execute("arch");
+                command.arg("-arm64e").arg(self.binary_name());
+                command
+            }
+            _ => run_type.execute(self.binary_name()),
+        }
+    }
+}
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let fish = require("fish")?;
@@ -38,12 +85,13 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
-pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
-    let brew = require("brew")?;
-    print_separator("Brew");
+pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
+    require(variant.binary_name())?;
+    print_separator(variant.step_title());
     let run_type = ctx.run_type();
 
-    let cask_upgrade_exists = Command::new(&brew)
+    let cask_upgrade_exists = variant
+        .execute(RunType::Wet)
         .args(&["--repository", "buo/cask-upgrade"])
         .check_output()
         .map(|p| Path::new(p.trim()).exists())?;
@@ -56,8 +104,8 @@ pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
         brew_args.push("--greedy");
     }
 
-    run_type.execute(&brew).arg("update").check_run()?;
-    run_type.execute(&brew).args(&brew_args).check_run()?;
+    variant.execute(run_type).arg("update").check_run()?;
+    variant.execute(run_type).args(&brew_args).check_run()?;
 
     if cask_upgrade_exists {
         let mut args = vec!["cu", "-y"];
@@ -65,11 +113,11 @@ pub fn run_brew(ctx: &ExecutionContext) -> Result<()> {
             args.push("-a");
         }
 
-        run_type.execute(&brew).args(&args).check_run()?;
+        variant.execute(run_type).args(&args).check_run()?;
     }
 
     if ctx.config().cleanup() {
-        run_type.execute(&brew).arg("cleanup").check_run()?;
+        variant.execute(run_type).arg("cleanup").check_run()?;
     }
 
     Ok(())
