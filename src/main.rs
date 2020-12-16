@@ -148,10 +148,10 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        runner.execute(Step::Brew, unix::BrewVariant::MacArm.step_title(), || {
+        runner.execute(Step::Brew, "Brew (ARM)", || {
             unix::run_brew(&ctx, unix::BrewVariant::MacArm)
         })?;
-        runner.execute(Step::Brew, unix::BrewVariant::MacIntel.step_title(), || {
+        runner.execute(Step::Brew, "Brew (Intel)", || {
             unix::run_brew(&ctx, unix::BrewVariant::MacIntel)
         })?;
         runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
