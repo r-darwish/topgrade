@@ -69,6 +69,7 @@
 #enable_tlmgr = true
 #emerge_sync_flags = "-q"
 #emerge_update_flags = "-uDNa --with-bdeps=y world"
+#redhat_disrto_sync = false
 
 [windows]
 # Manually select Windows updates
