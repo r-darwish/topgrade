@@ -153,6 +153,7 @@ pub struct Linux {
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
+    redhat_distro_sync: Option<bool>,
     emerge_sync_flags: Option<String>,
     emerge_update_flags: Option<String>,
 }
@@ -627,13 +628,23 @@ impl Config {
             .and_then(|vagrant| vagrant.always_suspend)
     }
 
-    /// Extra yay arguments
+    /// Enable tlmgr on Linux
     #[allow(dead_code)]
     pub fn enable_tlmgr_linux(&self) -> bool {
         self.config_file
             .linux
             .as_ref()
             .and_then(|linux| linux.enable_tlmgr)
+            .unwrap_or(false)
+    }
+
+    /// Use distro-sync in Red Hat based distrbutions
+    #[allow(dead_code)]
+    pub fn redhat_distro_sync(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.redhat_distro_sync)
             .unwrap_or(false)
     }
 
