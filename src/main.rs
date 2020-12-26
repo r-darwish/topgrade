@@ -263,6 +263,7 @@ fn run() -> Result<()> {
     )))]
     runner.execute(Step::Atom, "apm", || generic::run_apm(run_type))?;
     runner.execute(Step::Rustup, "rustup", || generic::run_rustup(&base_dirs, run_type))?;
+    runner.execute(Step::Dotnet, "dotnet", || generic::run_dotnet_upgrade(&ctx))?;
     runner.execute(Step::Choosenim, "choosenim", || generic::run_choosenim(&ctx))?;
     runner.execute(Step::Cargo, "cargo", || generic::run_cargo_update(run_type))?;
     runner.execute(Step::Flutter, "Flutter", || generic::run_flutter_upgrade(run_type))?;

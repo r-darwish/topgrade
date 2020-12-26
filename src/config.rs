@@ -72,6 +72,7 @@ pub enum Step {
     Composer,
     CustomCommands,
     Deno,
+    Dotnet,
     Emacs,
     Firmware,
     Flatpak,
