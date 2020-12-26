@@ -298,3 +298,29 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 
     Ok(())
 }
+
+pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let dotnet = utils::require("dotnet")?;
+
+    let output = Command::new(dotnet)
+        .args(&["tool", "list", "--global"])
+        .check_output()?;
+
+    let mut packages = output.split('\n').skip(2).filter(|line| !line.is_empty()).peekable();
+
+    if packages.peek().is_none() {
+        return Err(SkipStep(String::from("No dotnet global tools installed")).into());
+    }
+
+    print_separator(".NET");
+
+    for package in packages {
+        let package_name = package.split_whitespace().next().unwrap();
+        ctx.run_type()
+            .execute("dotnet")
+            .args(&["tool", "update", package_name, "--global"])
+            .check_run()?;
+    }
+
+    Ok(())
+}

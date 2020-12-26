@@ -34,7 +34,7 @@
 # Cleanup temporary or old files
 #cleanup = true
 
-#[git]
+[git]
 #max_concurrency = 5
 # Additional git repositories to pull
 #repos = [
@@ -48,29 +48,30 @@
 # Arguments to pass Git when pulling Repositories
 #arguments = "--rebase --autostash"
 
-#[composer]
+[composer]
 #self_update = true
 
 # Commands to run before anything
-#[pre_commands]
+[pre_commands]
 #"Emacs Snapshot" = "rm -rf ~/.emacs.d/elpa.bak && cp -rl ~/.emacs.d/elpa ~/.emacs.d/elpa.bak"
 
 # Custom commands
-#[commands]
+[commands]
 #"Python Environment" = "~/dev/.env/bin/pip install -i https://pypi.python.org/simple -U --upgrade-strategy eager jupyter"
 
-#[brew]
+[brew]
 #greedy_cask = true
 
-#[linux]
+[linux]
 # Arguments to pass yay when updating packages
 #yay_arguments = "--nodevel"
 #trizen_arguments = "--devel"
 #enable_tlmgr = true
 #emerge_sync_flags = "-q"
 #emerge_update_flags = "-uDNa --with-bdeps=y world"
+#redhat_disrto_sync = false
 
-#[windows]
+[windows]
 # Manually select Windows updates
 #accept_all_updates = false
 #open_remotes_in_new_terminal = true
