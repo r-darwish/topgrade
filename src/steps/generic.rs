@@ -312,7 +312,7 @@ pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
         return Err(SkipStep(String::from("No dotnet global tools installed")).into());
     }
 
-    print_separator("Dotnet");
+    print_separator(".NET");
 
     for package in packages {
         let package_name = package.split_whitespace().next().unwrap();
