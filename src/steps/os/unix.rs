@@ -85,9 +85,27 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
-pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
+pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
     require(variant.binary_name())?;
     print_separator(variant.step_title());
+    let run_type = ctx.run_type();
+
+    variant.execute(run_type).arg("update").check_run()?;
+    variant
+        .execute(run_type)
+        .args(&["upgrade", "--ignore-pinned", "--formula"])
+        .check_run()?;
+
+    if ctx.config().cleanup() {
+        variant.execute(run_type).arg("cleanup").check_run()?;
+    }
+
+    Ok(())
+}
+
+pub fn run_brew_cask(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
+    require(variant.binary_name())?;
+    print_separator(format!("{} - Cask", variant.step_title()));
     let run_type = ctx.run_type();
 
     let cask_upgrade_exists = variant
@@ -96,25 +114,21 @@ pub fn run_brew(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
         .check_output()
         .map(|p| Path::new(p.trim()).exists())?;
 
-    let mut brew_args = vec!["upgrade", "--ignore-pinned"];
+    let mut brew_args = vec![];
 
     if cask_upgrade_exists {
-        brew_args.push("--formula")
-    } else if ctx.config().brew_cask_greedy() {
-        brew_args.push("--greedy");
-    }
-
-    variant.execute(run_type).arg("update").check_run()?;
-    variant.execute(run_type).args(&brew_args).check_run()?;
-
-    if cask_upgrade_exists {
-        let mut args = vec!["cu", "-y"];
+        brew_args.extend(&["cu", "-y"]);
         if ctx.config().brew_cask_greedy() {
-            args.push("-a");
+            brew_args.push("-a");
         }
-
-        variant.execute(run_type).args(&args).check_run()?;
+    } else {
+        brew_args.extend(&["--cask", "upgrade"]);
+        if ctx.config().brew_cask_greedy() {
+            brew_args.push("--greedy");
+        }
     }
+
+    variant.execute(run_type).args(&brew_args).check_run()?;
 
     if ctx.config().cleanup() {
         variant.execute(run_type).arg("cleanup").check_run()?;
