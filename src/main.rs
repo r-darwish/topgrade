@@ -137,7 +137,9 @@ fn run() -> Result<()> {
             linux::run_etc_update(sudo.as_ref(), run_type)
         })?;
 
-        runner.execute(Step::Brew, "Brew", || unix::run_brew(&ctx, unix::BrewVariant::Linux))?;
+        runner.execute(Step::BrewFormula, "Brew", || {
+            unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
+        })?;
     }
 
     #[cfg(windows)]
@@ -148,11 +150,17 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        runner.execute(Step::Brew, "Brew (ARM)", || {
-            unix::run_brew(&ctx, unix::BrewVariant::MacArm)
+        runner.execute(Step::BrewFormula, "Brew (ARM)", || {
+            unix::run_brew_formula(&ctx, unix::BrewVariant::MacArm)
         })?;
-        runner.execute(Step::Brew, "Brew (Intel)", || {
-            unix::run_brew(&ctx, unix::BrewVariant::MacIntel)
+        runner.execute(Step::BrewFormula, "Brew (Intel)", || {
+            unix::run_brew_formula(&ctx, unix::BrewVariant::MacIntel)
+        })?;
+        runner.execute(Step::BrewCask, "Brew Cask (ARM)", || {
+            unix::run_brew_cask(&ctx, unix::BrewVariant::MacArm)
+        })?;
+        runner.execute(Step::BrewCask, "Brew Cask (Intel)", || {
+            unix::run_brew_cask(&ctx, unix::BrewVariant::MacIntel)
         })?;
         runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
         runner.execute(Step::MicrosoftAutoUpdate, "Microsoft AutoUpdate", || {
