@@ -2,7 +2,9 @@
 use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
+#[cfg(target_os = "macos")]
+use crate::executor::CommandExt;
+use crate::executor::{Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, PathExt};
 use anyhow::Result;
