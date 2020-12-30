@@ -65,7 +65,8 @@ type Commands = BTreeMap<String, String>;
 pub enum Step {
     Asdf,
     Atom,
-    Brew,
+    BrewCask,
+    BrewFormula,
     Cargo,
     Chocolatey,
     Choosenim,

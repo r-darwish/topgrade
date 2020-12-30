@@ -137,7 +137,7 @@ fn run() -> Result<()> {
             linux::run_etc_update(sudo.as_ref(), run_type)
         })?;
 
-        runner.execute(Step::Brew, "Brew", || {
+        runner.execute(Step::BrewFormula, "Brew", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
         })?;
     }
@@ -150,16 +150,16 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        runner.execute(Step::Brew, "Brew (ARM)", || {
+        runner.execute(Step::BrewFormula, "Brew (ARM)", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::MacArm)
         })?;
-        runner.execute(Step::Brew, "Brew (Intel)", || {
+        runner.execute(Step::BrewFormula, "Brew (Intel)", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::MacIntel)
         })?;
-        runner.execute(Step::Brew, "Brew Cask (ARM)", || {
+        runner.execute(Step::BrewCask, "Brew Cask (ARM)", || {
             unix::run_brew_cask(&ctx, unix::BrewVariant::MacArm)
         })?;
-        runner.execute(Step::Brew, "Brew Cask (Intel)", || {
+        runner.execute(Step::BrewCask, "Brew Cask (Intel)", || {
             unix::run_brew_cask(&ctx, unix::BrewVariant::MacIntel)
         })?;
         runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
