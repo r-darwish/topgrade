@@ -103,6 +103,7 @@ pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<
     Ok(())
 }
 
+#[cfg(target_os = "macos")]
 pub fn run_brew_cask(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
     require(variant.binary_name())?;
     print_separator(format!("{} - Cask", variant.step_title()));
