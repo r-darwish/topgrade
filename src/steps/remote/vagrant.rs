@@ -52,7 +52,7 @@ struct Vagrant {
 }
 
 impl Vagrant {
-    fn get_boxes<'a>(&self, directory: &'a str) -> Result<Vec<VagrantBox>> {
+    fn get_boxes(&self, directory: &str) -> Result<Vec<VagrantBox>> {
         let path: Rc<Path> = Path::new(directory).into();
 
         let output = Command::new(&self.path)

@@ -222,7 +222,7 @@ impl Git {
             futures_iterator.collect::<FuturesUnordered<_>>().boxed()
         };
 
-        let mut basic_rt = runtime::Runtime::new()?;
+        let basic_rt = runtime::Runtime::new()?;
         let results = basic_rt.block_on(async { stream_of_futures.collect::<Vec<Result<()>>>().await });
 
         let error = results.into_iter().find(|r| r.is_err());
