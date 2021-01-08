@@ -125,7 +125,7 @@ pub fn run_brew_cask(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()>
             brew_args.push("-a");
         }
     } else {
-        brew_args.extend(&["--cask", "upgrade"]);
+        brew_args.extend(&["upgrade", "--cask"]);
         if ctx.config().brew_cask_greedy() {
             brew_args.push("--greedy");
         }
