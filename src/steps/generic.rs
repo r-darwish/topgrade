@@ -306,6 +306,10 @@ pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
         .args(&["tool", "list", "--global"])
         .check_output()?;
 
+    if !output.starts_with("Package Id") {
+        return Err(SkipStep(String::from("dotnet does not output packages")).into());
+    }
+
     let mut packages = output.split('\n').skip(2).filter(|line| !line.is_empty()).peekable();
 
     if packages.peek().is_none() {
