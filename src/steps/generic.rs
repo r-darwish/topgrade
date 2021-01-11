@@ -302,9 +302,16 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let dotnet = utils::require("dotnet")?;
 
-    let output = Command::new(dotnet)
-        .args(&["tool", "list", "--global"])
-        .check_output()?;
+    let output = Command::new(dotnet).args(&["tool", "list", "--global"]).output()?;
+
+    if !output.status.success() {
+        return Err(SkipStep(format!("dotnet failed with exit code {:?}", output.status)).into());
+    }
+
+    let output = String::from_utf8(output.stdout)?;
+    if !output.starts_with("Package Id") {
+        return Err(SkipStep(String::from("dotnet did not output packages")).into());
+    }
 
     let mut packages = output.split('\n').skip(2).filter(|line| !line.is_empty()).peekable();
 
