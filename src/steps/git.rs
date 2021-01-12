@@ -12,11 +12,11 @@ use log::{debug, error};
 use tokio::process::Command as AsyncCommand;
 use tokio::runtime;
 
-use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::utils::{which, PathExt};
+use crate::{error::SkipStep, terminal::print_warning};
 
 #[cfg(windows)]
 static PATH_PREFIX: &str = "\\\\?\\";
@@ -30,6 +30,7 @@ pub struct Repositories<'a> {
     git: &'a Git,
     repositories: HashSet<String>,
     glob_match_options: MatchOptions,
+    bad_patterns: Vec<String>,
 }
 
 fn check_output(output: Output) -> Result<()> {
@@ -185,6 +186,10 @@ impl Git {
         }
 
         print_separator("Git repositories");
+        repositories
+            .bad_patterns
+            .iter()
+            .for_each(|pattern| print_warning(format!("Path {} did not contain any git repositories", pattern)));
         self.multi_pull(repositories, ctx)
     }
 
@@ -241,6 +246,7 @@ impl<'a> Repositories<'a> {
         Self {
             git,
             repositories: HashSet::new(),
+            bad_patterns: Vec::new(),
             glob_match_options,
         }
     }
@@ -278,6 +284,10 @@ impl<'a> Repositories<'a> {
                         error!("Error in path {}", e);
                     }
                 }
+            }
+
+            if last_git_repo.is_none() {
+                self.bad_patterns.push(String::from(pattern));
             }
         } else {
             error!("Bad glob pattern: {}", pattern);
