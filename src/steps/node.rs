@@ -6,10 +6,11 @@ use crate::utils::{require, PathExt};
 use crate::{error::SkipStep, execution_context::ExecutionContext};
 use anyhow::Result;
 use log::debug;
+use nix::unistd::Uid;
 
 use directories::BaseDirs;
-use std::path::PathBuf;
 use std::process::Command;
+use std::{os::unix::prelude::MetadataExt, path::PathBuf};
 
 struct NPM {
     command: PathBuf,
@@ -20,7 +21,7 @@ impl NPM {
         Self { command }
     }
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "linux")]
     fn root(&self) -> Result<PathBuf> {
         Command::new(&self.command)
             .args(&["root", "-g"])
@@ -38,13 +39,17 @@ impl NPM {
 pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
 
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "linux")]
     {
         let npm_root = npm.root()?;
-        if !npm_root.is_descendant_of(_base_dirs.home_dir()) {
+        let metadata = std::fs::metadata(&npm_root)?;
+        let uid = Uid::effective();
+
+        if metadata.uid() != uid.as_raw() {
             return Err(SkipStep(format!(
-                "NPM root at {} isn't a decandent of the user's home directory",
-                npm_root.display()
+                "NPM root at {} is owned by {} which is not the current user",
+                npm_root.display(),
+                uid
             ))
             .into());
         }
