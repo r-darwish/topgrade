@@ -5,13 +5,14 @@ use crate::terminal::print_separator;
 use crate::utils::{require, PathExt};
 use crate::{error::SkipStep, execution_context::ExecutionContext};
 use anyhow::Result;
+use directories::BaseDirs;
 use log::debug;
 #[cfg(unix)]
 use nix::unistd::Uid;
-
-use directories::BaseDirs;
+#[cfg(unix)]
+use std::os::unix::prelude::MetadataExt;
+use std::path::PathBuf;
 use std::process::Command;
-use std::{os::unix::prelude::MetadataExt, path::PathBuf};
 
 struct NPM {
     command: PathBuf,
