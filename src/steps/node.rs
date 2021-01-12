@@ -6,6 +6,7 @@ use crate::utils::{require, PathExt};
 use crate::{error::SkipStep, execution_context::ExecutionContext};
 use anyhow::Result;
 use log::debug;
+#[cfg(unix)]
 use nix::unistd::Uid;
 
 use directories::BaseDirs;
