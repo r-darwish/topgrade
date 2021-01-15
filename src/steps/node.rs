@@ -28,7 +28,7 @@ impl NPM {
         Command::new(&self.command)
             .args(&["root", "-g"])
             .check_output()
-            .map(PathBuf::from)
+            .map(|s| PathBuf::from(s.trim()))
     }
 
     fn upgrade(&self, run_type: RunType) -> Result<()> {
@@ -44,6 +44,10 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     #[cfg(target_os = "linux")]
     {
         let npm_root = npm.root()?;
+        if !npm_root.exists() {
+            return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(),)).into());
+        }
+
         let metadata = std::fs::metadata(&npm_root)?;
         let uid = Uid::effective();
 
@@ -51,7 +55,7 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
             return Err(SkipStep(format!(
                 "NPM root at {} is owned by {} which is not the current user",
                 npm_root.display(),
-                uid
+                metadata.uid()
             ))
             .into());
         }
