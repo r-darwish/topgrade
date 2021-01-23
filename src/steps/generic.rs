@@ -32,7 +32,7 @@ pub fn run_flutter_upgrade(run_type: RunType) -> Result<()> {
 
 pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let go = utils::require("go")?;
-    env::var("GOPATH")
+    let gopath = env::var("GOPATH")
         .unwrap_or_else(|_| base_dirs.home_dir().join("go").to_str().unwrap().to_string())
         .require()?;
 
@@ -40,6 +40,7 @@ pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type
         .execute(&go)
         .args(&["get", "-u", "all"])
+        .current_dir(gopath)
         .env_remove("GO111MODULE")
         .check_run()
 }
