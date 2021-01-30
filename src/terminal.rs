@@ -4,7 +4,7 @@ use crate::utils::which;
 use chrono::{Local, Timelike};
 use console::{style, Term};
 use lazy_static::lazy_static;
-use log::debug;
+use log::{debug, error};
 #[cfg(target_os = "macos")]
 use notify_rust::{Notification, Timeout};
 use std::cmp::{max, min};
@@ -221,15 +221,19 @@ impl Terminal {
             .ok();
 
         let answer = loop {
-            match self.term.read_char()? {
-                'y' | 'Y' => break Ok(true),
-                's' | 'S' => {
+            match self.term.read_char() {
+                Ok('y') | Ok('Y') => break Ok(true),
+                Ok('s') | Ok('S') => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
                     run_shell();
                     break Ok(true);
                 }
-                'n' | 'N' | '\r' | '\n' => break Ok(false),
-                'q' | 'Q' => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                Ok('n') | Ok('N') | Ok('\r') | Ok('\n') => break Ok(false),
+                Err(e) => {
+                    error!("Error reading from terminal: {}", e);
+                    break Ok(false);
+                }
+                Ok('q') | Ok('Q') => return Err(io::Error::from(io::ErrorKind::Interrupted)),
                 _ => (),
             }
         };
