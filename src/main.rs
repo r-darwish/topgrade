@@ -222,6 +222,9 @@ fn run() -> Result<()> {
                 .join("Packages/Microsoft.WindowsTerminal_8wekyb3d8bbwe/LocalState"),
         );
 
+        #[cfg(windows)]
+        windows::insert_startup_scripts(&ctx, &mut git_repos).ok();
+
         if let Some(profile) = powershell.profile() {
             git_repos.insert_if_repo(profile);
         }

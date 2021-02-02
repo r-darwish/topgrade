@@ -944,6 +944,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "parselnk"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d098204d9ef47f80312460c1555a152972ea9f0a67487a77b2ab7e03fd510d4f"
+dependencies = [
+ "bitflags 1.2.1",
+ "byteorder",
+ "chrono",
+ "thiserror",
+ "widestring",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1700,6 +1713,7 @@ dependencies = [
  "nix",
  "notify-rust",
  "openssl-probe",
+ "parselnk",
  "pretty_env_logger",
  "regex",
  "rust-ini",
@@ -1957,6 +1971,12 @@ dependencies = [
  "libc",
  "thiserror",
 ]
+
+[[package]]
+name = "widestring"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c168940144dd21fd8046987c16a46a33d5fc84eec29ef9dcddc2ac9e31526b7c"
 
 [[package]]
 name = "winapi"
