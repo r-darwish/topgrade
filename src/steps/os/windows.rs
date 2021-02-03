@@ -53,7 +53,7 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
 pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
     let wsl = require("wsl")?;
     let topgrade = Command::new(&wsl)
-        .args(&["which", "topgrade"])
+        .args(&["bash", "-c", "which topgrade"])
         .check_output()
         .map_err(|_| SkipStep(String::from("Could not find Topgrade installed in WSL")))?;
 
