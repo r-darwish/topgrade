@@ -102,7 +102,12 @@ pub fn run_zim(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
 
 pub fn run_oh_my_zsh(ctx: &ExecutionContext) -> Result<()> {
     require("zsh")?;
-    let oh_my_zsh = ctx.base_dirs().home_dir().join(".oh-my-zsh").require()?;
+    let oh_my_zsh = ctx
+        .base_dirs()
+        .home_dir()
+        .join(".oh-my-zsh")
+        .require()
+        .or_else(|_| PathBuf::from("/usr/share/oh-my-zsh").require())?;
 
     print_separator("oh-my-zsh");
 
