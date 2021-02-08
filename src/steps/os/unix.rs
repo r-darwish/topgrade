@@ -16,6 +16,8 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::{env, path::Path};
 
+const INTEL_BREW: &str = "/usr/local/bin/brew";
+const ARM_BREW: &str = "/opt/homebrew/bin/brew";
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 pub enum BrewVariant {
@@ -28,13 +30,13 @@ impl BrewVariant {
     fn binary_name(self) -> &'static str {
         match self {
             BrewVariant::Linux => "/home/linuxbrew/.linuxbrew/bin/brew",
-            BrewVariant::MacIntel => "/usr/local/bin/brew",
-            BrewVariant::MacArm => "/opt/homebrew/bin/brew",
+            BrewVariant::MacIntel => INTEL_BREW,
+            BrewVariant::MacArm => ARM_BREW,
         }
     }
 
     fn both_both_exist() -> bool {
-        Path::new("/usr/local/bin/brew").exists() && Path::new("/opt/homebrew/bin/brew").exists()
+        Path::new(INTEL_BREW).exists() && Path::new(ARM_BREW).exists()
     }
 
     pub fn step_title(self) -> &'static str {
