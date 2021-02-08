@@ -29,7 +29,7 @@ pub enum BrewVariant {
 impl BrewVariant {
     fn binary_name(self) -> &'static str {
         match self {
-            BrewVariant::Linux => "/home/linuxbrew/.linuxbrew/bin/brew",
+            BrewVariant::Linux => "brew",
             BrewVariant::MacIntel => INTEL_BREW,
             BrewVariant::MacArm => ARM_BREW,
         }
