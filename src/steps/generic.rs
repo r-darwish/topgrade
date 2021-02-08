@@ -1,9 +1,12 @@
 #![allow(unused_imports)]
-use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
 use crate::utils::{self, PathExt};
+use crate::{
+    error::{SkipStep, TopgradeError},
+    terminal::print_warning,
+};
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
@@ -13,9 +16,15 @@ use std::process::Command;
 use tempfile::tempfile_in;
 
 pub fn run_cargo_update(run_type: RunType) -> Result<()> {
-    let cargo_update = utils::require("cargo-install-update")?;
-
     print_separator("Cargo");
+
+    let cargo_update = match utils::require("cargo-install-update") {
+        Ok(e) => e,
+        Err(e) => {
+            print_warning("cargo-update isn't installed so Topgrade can't upgrade cargo packages.\nInstall cargo-update by running `cargo install cargo-update`");
+            return Err(e);
+        }
+    };
 
     run_type
         .execute(cargo_update)
