@@ -75,6 +75,17 @@ pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(&fish).args(&["-c", "fisher update"]).check_run()
 }
 
+pub fn run_bashit(ctx: &ExecutionContext) -> Result<()> {
+    ctx.base_dirs().home_dir().join(".bash_it").require()?;
+
+    print_separator("Bash-it");
+
+    ctx.run_type()
+        .execute("bash")
+        .args(&["-lc", "bash-it update stable"])
+        .check_run()
+}
+
 pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     let fish = require("fish")?;
     ctx.base_dirs()
