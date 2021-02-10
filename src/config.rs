@@ -189,6 +189,7 @@ pub struct ConfigFile {
     cleanup: Option<bool>,
     notify_each_step: Option<bool>,
     accept_all_windows_updates: Option<bool>,
+    bashit_branch: Option<String>,
     only: Option<Vec<Step>>,
     composer: Option<Composer>,
     brew: Option<Brew>,
@@ -526,6 +527,12 @@ impl Config {
     #[allow(dead_code)]
     pub fn yes(&self) -> bool {
         self.config_file.assume_yes.unwrap_or(self.opt.yes)
+    }
+
+    /// Bash-it branch
+    #[allow(dead_code)]
+    pub fn bashit_branch(&self) -> &str {
+        self.config_file.bashit_branch.as_deref().unwrap_or("stable")
     }
 
     /// Whether to accept all Windows updates
