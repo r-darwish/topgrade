@@ -34,7 +34,10 @@ fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(windows)]
     let base_dir = base_dirs.cache_dir();
 
-    base_dir.join("nvim/init.vim").require()
+    base_dir
+        .join("nvim/init.vim")
+        .require()
+        .or_else(|_| base_dir.join("nvim/init.lua").require())
 }
 
 fn upgrade(vim: &PathBuf, vimrc: &PathBuf, ctx: &ExecutionContext) -> Result<()> {
