@@ -90,7 +90,11 @@ pub fn run_vsc(run_type: RunType) -> Result<()> {
 
     print_separator("Visual Studio Code");
 
-    run_type.execute(shell()).arg("-c").arg("for ext in $(code --list-extensions); do code --force --install-extension \"$ext\"; done").check_run()
+    run_type
+        .execute(shell())
+        .arg("-c")
+        .arg("for ext in $(code --list-extensions); do code --force --install-extension \"$ext\"; done")
+        .check_run()
 }
 
 pub fn run_apm(run_type: RunType) -> Result<()> {
