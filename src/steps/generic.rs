@@ -79,12 +79,6 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
 }
 
-#[cfg(not(any(
-    target_os = "freebsd",
-    target_os = "openbsd",
-    target_os = "netbsd",
-    target_os = "dragonfly"
-)))]
 pub fn run_vscode(run_type: RunType) -> Result<()> {
     let vscode = utils::require("code")?;
 
@@ -102,6 +96,12 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
     Ok(())
 }
 
+#[cfg(not(any(
+    target_os = "freebsd",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "dragonfly"
+)))]
 pub fn run_apm(run_type: RunType) -> Result<()> {
     let apm = utils::require("apm")?;
 
