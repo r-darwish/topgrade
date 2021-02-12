@@ -86,15 +86,20 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     target_os = "dragonfly"
 )))]
 pub fn run_vscode(run_type: RunType) -> Result<()> {
-    let _vscode = utils::require("code")?;
+    let vscode = utils::require("code")?;
 
     print_separator("Visual Studio Code");
 
-    run_type
-        .execute(shell())
-        .arg("-c")
-        .arg("for ext in $(code --list-extensions); do code --force --install-extension \"$ext\"; done")
-        .check_run()
+    let plugins = run_type.execute(&vscode).args(&["--list-extensions"]).check_output()?;
+
+    for plugin in plugins.lines() {
+        run_type
+            .execute(&vscode)
+            .args(&["--force", "--install-extension", plugin])
+            .check_run()?;
+    }
+
+    Ok(())
 }
 
 pub fn run_apm(run_type: RunType) -> Result<()> {
