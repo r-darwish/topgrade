@@ -85,8 +85,8 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     target_os = "netbsd",
     target_os = "dragonfly"
 )))]
-pub fn run_vsc(run_type: RunType) -> Result<()> {
-    let _vsc = utils::require("code")?;
+pub fn run_vscode(run_type: RunType) -> Result<()> {
+    let _vscode = utils::require("code")?;
 
     print_separator("Visual Studio Code");
 
