@@ -112,6 +112,7 @@ pub enum Step {
     Vagrant,
     Vcpkg,
     Vim,
+    VSC,
     WindowsAppStore,
     Wsl,
     Yadm,

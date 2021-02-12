@@ -85,6 +85,14 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     target_os = "netbsd",
     target_os = "dragonfly"
 )))]
+pub fn run_vsc(run_type: RunType) -> Result<()> {
+    let _vsc = utils::require("code")?;
+
+    print_separator("Visual Studio Code");
+
+    run_type.execute(shell()).arg("-c").arg("for ext in $(code --list-extensions); do code --force --install-extension \"$ext\"; done").check_run()
+}
+
 pub fn run_apm(run_type: RunType) -> Result<()> {
     let apm = utils::require("apm")?;
 
