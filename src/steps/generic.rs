@@ -79,6 +79,23 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
 }
 
+pub fn run_vscode(run_type: RunType) -> Result<()> {
+    let vscode = utils::require("code")?;
+
+    print_separator("Visual Studio Code");
+
+    let plugins = run_type.execute(&vscode).args(&["--list-extensions"]).check_output()?;
+
+    for plugin in plugins.lines() {
+        run_type
+            .execute(&vscode)
+            .args(&["--force", "--install-extension", plugin])
+            .check_run()?;
+    }
+
+    Ok(())
+}
+
 #[cfg(not(any(
     target_os = "freebsd",
     target_os = "openbsd",
