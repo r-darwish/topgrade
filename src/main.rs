@@ -22,6 +22,7 @@ use self::error::Upgraded;
 use self::steps::{remote::*, *};
 use self::terminal::*;
 use anyhow::{anyhow, Result};
+use console::Key;
 use log::debug;
 
 use std::env;
@@ -390,14 +391,14 @@ fn run() -> Result<()> {
     if config.keep_at_end() {
         print_info("\n(R)eboot\n(S)hell\n(Q)uit");
         loop {
-            match get_char() {
-                's' | 'S' => {
+            match get_key() {
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
                     run_shell();
                 }
-                'r' | 'R' => {
+                Ok(Key::Char('r')) | Ok(Key::Char('R')) => {
                     reboot();
                 }
-                'q' | 'Q' => (),
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => (),
                 _ => {
                     continue;
                 }

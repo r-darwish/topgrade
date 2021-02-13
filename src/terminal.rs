@@ -2,7 +2,7 @@ use crate::report::StepResult;
 #[cfg(target_os = "linux")]
 use crate::utils::which;
 use chrono::{Local, Timelike};
-use console::{style, Term};
+use console::{style, Key, Term};
 use lazy_static::lazy_static;
 use log::{debug, error};
 #[cfg(target_os = "macos")]
@@ -221,19 +221,19 @@ impl Terminal {
             .ok();
 
         let answer = loop {
-            match self.term.read_char() {
-                Ok('y') | Ok('Y') => break Ok(true),
-                Ok('s') | Ok('S') => {
+            match self.term.read_key() {
+                Ok(Key::Char('y')) | Ok(Key::Char('Y')) => break Ok(true),
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
                     run_shell();
                     break Ok(true);
                 }
-                Ok('n') | Ok('N') | Ok('\r') | Ok('\n') => break Ok(false),
+                Ok(Key::Char('n')) | Ok(Key::Char('N')) | Ok(Key::Enter) => break Ok(false),
                 Err(e) => {
                     error!("Error reading from terminal: {}", e);
                     break Ok(false);
                 }
-                Ok('q') | Ok('Q') => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
                 _ => (),
             }
         };
@@ -243,8 +243,8 @@ impl Terminal {
         answer
     }
 
-    fn get_char(&self) -> Result<char, io::Error> {
-        self.term.read_char()
+    fn get_char(&self) -> Result<Key, io::Error> {
+        self.term.read_key()
     }
 }
 
@@ -281,8 +281,8 @@ pub fn is_dumb() -> bool {
     TERMINAL.lock().unwrap().width.is_none()
 }
 
-pub fn get_char() -> char {
-    TERMINAL.lock().unwrap().get_char().unwrap()
+pub fn get_key() -> Result<Key, io::Error> {
+    TERMINAL.lock().unwrap().get_char()
 }
 
 pub fn set_title(set_title: bool) {
