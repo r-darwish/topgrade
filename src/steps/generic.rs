@@ -16,6 +16,8 @@ use std::process::Command;
 use tempfile::tempfile_in;
 
 pub fn run_cargo_update(run_type: RunType) -> Result<()> {
+    utils::require("cargo")?;
+
     print_separator("Cargo");
 
     let cargo_update = match utils::require("cargo-install-update") {
