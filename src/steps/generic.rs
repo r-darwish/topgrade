@@ -11,6 +11,7 @@ use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
 use std::env;
+use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use tempfile::tempfile_in;
@@ -99,6 +100,21 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub fn run_micro(run_type: RunType) -> Result<()> {
+    let micro = utils::require("micro")?;
+
+    print_separator("micro");
+
+    let stdout = run_type.execute(&micro).args(&["-plugin", "update"]).string_output()?;
+    std::io::stdout().write_all(&stdout.as_bytes())?;
+
+    if stdout.contains("Nothing to install / update") || stdout.contains("One or more plugins installed") {
+        Ok(())
+    } else {
+        Err(anyhow::anyhow!("micro output does not indicate success: {}", stdout))
+    }
 }
 
 #[cfg(not(any(
