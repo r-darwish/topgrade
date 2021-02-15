@@ -86,7 +86,10 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
 
     print_separator("Visual Studio Code");
 
-    let plugins = run_type.execute(&vscode).args(&["--list-extensions"]).check_output()?;
+    let plugins = RunType::Wet
+        .execute(&vscode)
+        .args(&["--list-extensions"])
+        .check_output()?;
 
     for plugin in plugins.lines() {
         run_type
