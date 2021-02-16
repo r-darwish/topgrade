@@ -82,6 +82,14 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
 }
 
+pub fn run_fossil(run_type: RunType) -> Result<()> {
+    let fossil = utils::require("fossil")?;
+
+    print_separator("Fossil");
+
+    run_type.execute(&fossil).args(&["sync", "all"]).check_run()
+}
+
 pub fn run_vscode(run_type: RunType) -> Result<()> {
     let vscode = utils::require("code")?;
 

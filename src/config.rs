@@ -78,6 +78,7 @@ pub enum Step {
     Firmware,
     Flatpak,
     Flutter,
+    Fossil,
     Gcloud,
     Gem,
     GitRepos,
