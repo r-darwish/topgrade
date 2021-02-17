@@ -83,7 +83,7 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
 }
 
 pub fn run_vscode(run_type: RunType) -> Result<()> {
-    let vscode = utils::require("code")?;
+    let vscode = utils::require("code").or_else(|_| utils::require("codium"))?;
 
     print_separator("Visual Studio Code");
 
