@@ -84,7 +84,7 @@ pub fn run_bashit(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type()
         .execute("bash")
-        .args(&["-lc", &format!("bash-it update {}", ctx.config().bashit_branch())])
+        .args(&["-lic", &format!("bash-it update {}", ctx.config().bashit_branch())])
         .check_run()
 }
 
