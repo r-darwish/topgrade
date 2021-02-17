@@ -87,7 +87,7 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
 
     print_separator("Fossil");
 
-    run_type.execute(&fossil).args(&["sync", "all"]).check_run()
+    run_type.execute(&fossil).args(&["all", "sync"]).check_run()
 }
 
 pub fn run_vscode(run_type: RunType) -> Result<()> {
