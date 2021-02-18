@@ -145,7 +145,7 @@ fn run() -> Result<()> {
 
     #[cfg(windows)]
     {
-        runner.execute(Step::WindowsAppStore, "Windows App Store", || {
+        runner.execute(Step::MicrosoftStore, "Windows App Store", || {
             windows::upgrade_store_apps(&ctx)
         })?;
         runner.execute(Step::Chocolatey, "Chocolatey", || windows::run_chocolatey(&ctx))?;

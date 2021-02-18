@@ -115,7 +115,7 @@ pub enum Step {
     Vcpkg,
     Vim,
     VSCode,
-    WindowsAppStore,
+    MicrosoftStore,
     Wsl,
     Yadm,
 }

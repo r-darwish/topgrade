@@ -90,8 +90,8 @@ pub fn upgrade_store_apps(ctx: &ExecutionContext) -> Result<()> {
 
     let path = powershell.path().as_ref().unwrap();
     let sudo = require_option(ctx.sudo().as_ref(), String::from("Sudo is required"))?;
-    print_separator("Windows Store");
-    println!("Updating Windows Store applications in the background");
+    print_separator("Microsoft Store");
+    println!("Updating Microsoft Store applications in the background");
 
     ctx.run_type().execute(sudo).arg(path).args(&["-NoProfile", "-Command", "(Get-WmiObject -Namespace 'root\\cimv2\\mdm\\dmmap' -Class 'MDM_EnterpriseModernAppManagement_AppManagement01').UpdateScanMethod() | Out-Null"]).check_run()
 }
