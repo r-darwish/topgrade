@@ -114,7 +114,7 @@ pub enum Step {
     Vagrant,
     Vcpkg,
     Vim,
-    VSCode,
+    Vscode,
     MicrosoftStore,
     Wsl,
     Yadm,
