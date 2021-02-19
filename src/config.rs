@@ -89,6 +89,7 @@ pub enum Step {
     MacPorts,
     Micro,
     MicrosoftAutoUpdate,
+    MicrosoftStore,
     Myrepos,
     Nix,
     Node,
@@ -115,7 +116,6 @@ pub enum Step {
     Vcpkg,
     Vim,
     Vscode,
-    MicrosoftStore,
     Wsl,
     Yadm,
 }
