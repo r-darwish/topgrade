@@ -110,12 +110,15 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-pub fn run_micro(run_type: RunType) -> Result<()> {
+pub fn run_micro(_run_type: RunType) -> Result<()> {
     let micro = utils::require("micro")?;
 
     print_separator("micro");
 
-    let stdout = run_type.execute(&micro).args(&["-plugin", "update"]).string_output()?;
+    let stdout = RunType::Wet
+        .execute(&micro)
+        .args(&["-plugin", "update"])
+        .string_output()?;
     std::io::stdout().write_all(&stdout.as_bytes())?;
 
     if stdout.contains("Nothing to install / update") || stdout.contains("One or more plugins installed") {
