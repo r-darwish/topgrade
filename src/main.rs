@@ -277,8 +277,9 @@ fn run() -> Result<()> {
         target_os = "netbsd",
         target_os = "dragonfly"
     )))]
-    runner.execute(Step::VSCode, "vscode", || generic::run_vscode(run_type))?;
     runner.execute(Step::Atom, "apm", || generic::run_apm(run_type))?;
+    runner.execute(Step::VSCode, "vscode", || generic::run_vscode(run_type))?;
+    runner.execute(Step::VSCodium, "vscodium", || generic::run_vscodium(run_type))?;
     runner.execute(Step::Rustup, "rustup", || generic::run_rustup(&base_dirs, run_type))?;
     runner.execute(Step::Dotnet, ".NET", || generic::run_dotnet_upgrade(&ctx))?;
     runner.execute(Step::Choosenim, "choosenim", || generic::run_choosenim(&ctx))?;
