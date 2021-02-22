@@ -10,10 +10,10 @@ use crate::{
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
-use std::env;
 use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
+use std::{env, path::Path};
 use tempfile::tempfile_in;
 
 pub fn run_cargo_update(run_type: RunType) -> Result<()> {
@@ -90,15 +90,8 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
     run_type.execute(&fossil).args(&["all", "sync"]).check_run()
 }
 
-pub fn run_vscode(run_type: RunType) -> Result<()> {
-    let vscode = utils::require("code")?;
-
-    print_separator("Visual Studio Code");
-
-    let plugins = RunType::Wet
-        .execute(&vscode)
-        .args(&["--list-extensions"])
-        .check_output()?;
+pub fn run_vscode_variant(run_type: RunType, exe: &Path) -> Result<()> {
+    let plugins = RunType::Wet.execute(&exe).args(&["--list-extensions"]).check_output()?;
 
     let mut args = vec!["--force"];
 
@@ -107,9 +100,30 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
         args.push(plugin);
     }
 
-    run_type.execute(&vscode).args(args).check_run()?;
+    if args.len() == 1 {
+        println!("No extensions to update");
+        return Ok(());
+    }
+
+    run_type.execute(&exe).args(args).check_run()?;
 
     Ok(())
+}
+
+pub fn run_vscodium(run_type: RunType) -> Result<()> {
+    let vscode = utils::require("codium")?;
+
+    print_separator("Visual Studio Codium");
+
+    run_vscode_variant(run_type, &vscode)
+}
+
+pub fn run_vscode(run_type: RunType) -> Result<()> {
+    let vscode = utils::require("code")?;
+
+    print_separator("Visual Studio Code");
+
+    run_vscode_variant(run_type, &vscode)
 }
 
 pub fn run_micro(run_type: RunType) -> Result<()> {

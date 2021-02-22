@@ -116,6 +116,7 @@ pub enum Step {
     Vcpkg,
     Vim,
     Vscode,
+    Vscodium,
     Wsl,
     Yadm,
 }
