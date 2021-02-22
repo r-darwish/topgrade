@@ -100,12 +100,14 @@ pub fn run_vscode(run_type: RunType) -> Result<()> {
         .args(&["--list-extensions"])
         .check_output()?;
 
+    let mut args = vec!["--force"];
+
     for plugin in plugins.lines() {
-        run_type
-            .execute(&vscode)
-            .args(&["--force", "--install-extension", plugin])
-            .check_run()?;
+        args.push("--install-extension");
+        args.push(plugin);
     }
+
+    run_type.execute(&vscode).args(args).check_run()?;
 
     Ok(())
 }
