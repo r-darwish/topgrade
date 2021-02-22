@@ -24,4 +24,9 @@ if exists(":DeinUpdate")
     DeinUpdate
 endif
 
+if exists(":PaqUpdate")
+    echo "PaqUpdate"
+    PaqUpdate
+endif
+
 quitall
