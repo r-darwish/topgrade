@@ -100,6 +100,11 @@ pub fn run_vscode_variant(run_type: RunType, exe: &Path) -> Result<()> {
         args.push(plugin);
     }
 
+    if args.len() == 1 {
+        println!("No extensions to update");
+        return Ok(());
+    }
+
     run_type.execute(&exe).args(args).check_run()?;
 
     Ok(())
