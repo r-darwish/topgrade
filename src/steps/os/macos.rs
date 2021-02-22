@@ -15,8 +15,10 @@ pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
             .require()?;
     print_separator("Microsoft AutoUpdate");
 
-    ctx.run_type().execute(msupdate).arg("--list").check_run()?;
-    ctx.run_type().execute(msupdate).arg("--install").check_run()
+    ctx.run_type().execute(msupdate).arg("--list").spawn()?.wait()?;
+    ctx.run_type().execute(msupdate).arg("--install").spawn()?.wait()?;
+
+    Ok(())
 }
 
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {

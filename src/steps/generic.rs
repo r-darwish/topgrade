@@ -93,12 +93,14 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
 pub fn run_vscode_variant(run_type: RunType, exe: &Path) -> Result<()> {
     let plugins = RunType::Wet.execute(&exe).args(&["--list-extensions"]).check_output()?;
 
+    let mut args = vec!["--force"];
+
     for plugin in plugins.lines() {
-        run_type
-            .execute(&exe)
-            .args(&["--force", "--install-extension", plugin])
-            .check_run()?;
+        args.push("--install-extension");
+        args.push(plugin);
     }
+
+    run_type.execute(&exe).args(args).check_run()?;
 
     Ok(())
 }
