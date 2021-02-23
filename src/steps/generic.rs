@@ -42,11 +42,9 @@ pub fn run_flutter_upgrade(run_type: RunType) -> Result<()> {
     run_type.execute(&flutter).arg("upgrade").check_run()
 }
 
-pub fn run_go(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_go(run_type: RunType) -> Result<()> {
     let go = utils::require("go")?;
-    let gopath = env::var("GOPATH")
-        .unwrap_or_else(|_| base_dirs.home_dir().join("go").to_str().unwrap().to_string())
-        .require()?;
+    let gopath = run_type.execute(&go).args(&["env", "GOPATH"]).check_output()?;
 
     print_separator("Go");
     run_type
