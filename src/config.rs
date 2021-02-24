@@ -82,7 +82,6 @@ pub enum Step {
     Gcloud,
     Gem,
     GitRepos,
-    Go,
     HomeManager,
     Jetpack,
     Krew,
