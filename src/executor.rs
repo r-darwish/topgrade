@@ -101,6 +101,7 @@ impl Executor {
         self
     }
 
+    #[allow(dead_code)]
     /// See `std::process::Command::remove_env`
     pub fn env_remove<K>(&mut self, key: K) -> &mut Executor
     where
