@@ -93,7 +93,7 @@ pub fn upgrade_store_apps(ctx: &ExecutionContext) -> Result<()> {
     print_separator("Microsoft Store");
     println!("Updating Microsoft Store applications in the background");
 
-    ctx.run_type().execute(sudo).arg(path).args(&["-NoProfile", "-Command", "(Get-WmiObject -Namespace 'root\\cimv2\\mdm\\dmmap' -Class 'MDM_EnterpriseModernAppManagement_AppManagement01').UpdateScanMethod() > $null"]).check_run()
+    ctx.run_type().execute("cmd").arg("/c").args(&[sudo, path]).args(&["-NoProfile", "-Command", "(Get-WmiObject -Namespace 'root\\cimv2\\mdm\\dmmap' -Class 'MDM_EnterpriseModernAppManagement_AppManagement01').UpdateScanMethod() > $null"]).check_run()
 }
 
 pub fn reboot() {
