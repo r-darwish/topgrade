@@ -1,5 +1,5 @@
 //! Utilities for command execution
-use crate::error::TopgradeError;
+use crate::error::{DryRun, TopgradeError};
 use crate::utils::{Check, CheckWithCodes};
 use anyhow::Result;
 use log::{debug, trace};
@@ -270,7 +270,7 @@ impl CommandExt for Executor {
     fn check_output(&mut self) -> Result<String> {
         let output = match self.output()? {
             ExecutorOutput::Wet(output) => output,
-            ExecutorOutput::Dry => unreachable!(),
+            ExecutorOutput::Dry => return Err(DryRun().into()),
         };
         let status = output.status;
         if !status.success() {
@@ -283,7 +283,7 @@ impl CommandExt for Executor {
     fn string_output(&mut self) -> Result<String> {
         let output = match self.output()? {
             ExecutorOutput::Wet(output) => output,
-            ExecutorOutput::Dry => unreachable!(),
+            ExecutorOutput::Dry => return Err(DryRun().into()),
         };
         Ok(String::from_utf8(output.stdout)?)
     }

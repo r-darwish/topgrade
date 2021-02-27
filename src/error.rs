@@ -23,6 +23,10 @@ pub enum TopgradeError {
 pub struct StepFailed;
 
 #[derive(Error, Debug)]
+#[error("Dry running")]
+pub struct DryRun();
+
+#[derive(Error, Debug)]
 #[error("{0}")]
 pub struct SkipStep(pub String);
 
