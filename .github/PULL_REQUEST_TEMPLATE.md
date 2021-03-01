@@ -1,10 +1,10 @@
 ## Standards checklist:
 
 - [ ] The PR title is descriptive.
-- [ ] The code compiles
-- [ ] The code passes rustfmt
-- [ ] The code passes clippy
-- [ ] The code passes tests
+- [ ] The code compiles (`cargo build`)
+- [ ] The code passes rustfmt (`cargo fmt`)
+- [ ] The code passes clippy (`cargo clippy`)
+- [ ] The code passes tests (`cargo test`)
 - [ ] *Optional:* I have tested the code myself
     - [ ] I also tested that Topgrade skips the step where needed
 
