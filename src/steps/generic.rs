@@ -224,7 +224,10 @@ pub fn run_pip3_update(run_type: RunType) -> Result<()> {
     let pip3 = utils::require("pip3")?;
     print_separator("pip3");
 
-    run_type.execute(&pip3).args(&["install", "--upgrade", "pip"]).check_run()
+    run_type
+        .execute(&pip3)
+        .args(&["install", "--upgrade", "pip"])
+        .check_run()
 }
 
 pub fn run_stack_update(run_type: RunType) -> Result<()> {
