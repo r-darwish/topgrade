@@ -95,6 +95,7 @@ pub enum Step {
     Opam,
     Pearl,
     Pipx,
+    Pip3,
     Pkg,
     Powershell,
     Remotes,

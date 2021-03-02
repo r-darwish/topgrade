@@ -220,6 +220,16 @@ pub fn run_pipx_update(run_type: RunType) -> Result<()> {
     run_type.execute(&pipx).arg("upgrade-all").check_run()
 }
 
+pub fn run_pip3_update(run_type: RunType) -> Result<()> {
+    let pip3 = utils::require("pip3")?;
+    print_separator("pip3");
+
+    run_type
+        .execute(&pip3)
+        .args(&["install", "--upgrade", "--user", "pip"])
+        .check_run()
+}
+
 pub fn run_stack_update(run_type: RunType) -> Result<()> {
     let stack = utils::require("stack")?;
     print_separator("stack");
