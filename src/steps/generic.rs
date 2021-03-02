@@ -226,7 +226,7 @@ pub fn run_pip3_update(run_type: RunType) -> Result<()> {
 
     run_type
         .execute(&pip3)
-        .args(&["install", "--upgrade", "pip"])
+        .args(&["install", "--upgrade", "--user", "pip"])
         .check_run()
 }
 
