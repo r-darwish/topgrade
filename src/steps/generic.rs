@@ -398,3 +398,11 @@ pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
 
     Ok(())
 }
+
+pub fn run_raco_update(run_type: RunType) -> Result<()> {
+    let raco = utils::require("raco")?;
+
+    print_separator("Racket Package Manager");
+
+    run_type.execute(&raco).args(&["pkg", "update", "--all"]).check_run()
+}

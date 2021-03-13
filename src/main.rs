@@ -312,6 +312,7 @@ fn run() -> Result<()> {
         generic::run_gcloud_components_update(run_type)
     })?;
     runner.execute(Step::Micro, "micro", || generic::run_micro(run_type))?;
+    runner.execute(Step::Raco, "raco", || generic::run_raco_update(run_type))?;
 
     #[cfg(target_os = "linux")]
     {
