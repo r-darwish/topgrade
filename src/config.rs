@@ -98,6 +98,7 @@ pub enum Step {
     Pip3,
     Pkg,
     Powershell,
+    Raco,
     Remotes,
     Restarts,
     Rtcl,
