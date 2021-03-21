@@ -483,7 +483,7 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
 
     print_separator("Firmware upgrades");
 
-    for argument in vec!["refresh", "get-updates"].into_iter() {
+    for argument in vec!["refresh", "update"].into_iter() {
         let exit_status = run_type.execute(&fwupdmgr).arg(argument).spawn()?.wait()?;
 
         if let ExecutorExitStatus::Wet(e) = exit_status {
