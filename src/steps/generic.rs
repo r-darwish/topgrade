@@ -10,14 +10,19 @@ use crate::{
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
-use std::io::Write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, path::Path};
+use std::{fs, io::Write, os::macos::fs::MetadataExt};
 use tempfile::tempfile_in;
 
-pub fn run_cargo_update(run_type: RunType) -> Result<()> {
+pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
     utils::require("cargo")?;
+    let toml_file = ctx.base_dirs().home_dir().join(".cargo/.crates.toml").require()?;
+
+    if fs::metadata(toml_file)?.len() == 0 {
+        return Err(SkipStep(String::from(".cargo/.crates.toml exists but empty")).into());
+    }
 
     print_separator("Cargo");
 
@@ -29,7 +34,7 @@ pub fn run_cargo_update(run_type: RunType) -> Result<()> {
         }
     };
 
-    run_type
+    ctx.run_type()
         .execute(cargo_update)
         .args(&["install-update", "--git", "--all"])
         .check_run()
