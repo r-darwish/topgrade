@@ -13,7 +13,7 @@ use log::debug;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, path::Path};
-use std::{fs, io::Write, os::macos::fs::MetadataExt};
+use std::{fs, io::Write};
 use tempfile::tempfile_in;
 
 pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
