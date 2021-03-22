@@ -1,6 +1,6 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use anyhow::Result;
@@ -474,7 +474,7 @@ pub fn run_needrestart(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> 
     Ok(())
 }
 
-pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
+pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
     let fwupdmgr = require("fwupdmgr")?;
 
     if is_wsl()? {
@@ -483,17 +483,18 @@ pub fn run_fwupdmgr(run_type: RunType) -> Result<()> {
 
     print_separator("Firmware upgrades");
 
-    for argument in vec!["refresh", "update"].into_iter() {
-        let exit_status = run_type.execute(&fwupdmgr).arg(argument).spawn()?.wait()?;
+    ctx.run_type()
+        .execute(&fwupdmgr)
+        .arg("refresh")
+        .check_run_with_codes(&[2])?;
 
-        if let ExecutorExitStatus::Wet(e) = exit_status {
-            if !(e.success() || e.code().map(|c| c == 2).unwrap_or(false)) {
-                return Err(TopgradeError::ProcessFailed(e).into());
-            }
-        }
+    let mut upgrade = ctx.run_type().execute(&fwupdmgr);
+
+    upgrade.arg("upgrade");
+    if ctx.config().yes() {
+        upgrade.arg("-y");
     }
-
-    Ok(())
+    upgrade.check_run_with_codes(&[2])
 }
 
 pub fn flatpak_update(run_type: RunType) -> Result<()> {
