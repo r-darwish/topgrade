@@ -333,7 +333,7 @@ fn run() -> Result<()> {
         runner.execute(Step::System, "pihole", || {
             linux::run_pihole_update(sudo.as_ref(), run_type)
         })?;
-        runner.execute(Step::Firmware, "Firmware upgrades", || linux::run_fwupdmgr(run_type))?;
+        runner.execute(Step::Firmware, "Firmware upgrades", || linux::run_fwupdmgr(&ctx))?;
         runner.execute(Step::Restarts, "Restarts", || {
             linux::run_needrestart(sudo.as_ref(), run_type)
         })?;
