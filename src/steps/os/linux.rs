@@ -88,14 +88,13 @@ impl Distribution {
         print_separator("System update");
         let sudo = ctx.sudo();
         let run_type = ctx.run_type();
-        let yes = ctx.config().yes();
         let cleanup = ctx.config().cleanup();
 
         match self {
             Distribution::Arch => upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
-            Distribution::Debian => upgrade_debian(&sudo, cleanup, run_type, yes),
+            Distribution::Debian => upgrade_debian(ctx),
             Distribution::Gentoo => upgrade_gentoo(ctx),
             Distribution::Suse => upgrade_suse(&sudo, run_type),
             Distribution::Void => upgrade_void(&sudo, run_type),
@@ -352,24 +351,27 @@ fn upgrade_gentoo(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_debian(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType, yes: bool) -> Result<()> {
-    if let Some(sudo) = &sudo {
+fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = &ctx.sudo() {
         let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("/usr/bin/apt-get"));
-        run_type.execute(&sudo).arg(&apt).arg("update").check_run()?;
+        ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
 
-        let mut command = run_type.execute(&sudo);
+        let mut command = ctx.run_type().execute(&sudo);
         command.arg(&apt).arg("dist-upgrade");
-        if yes {
+        if ctx.config().yes() {
             command.arg("-y");
+        }
+        if let Some(args) = ctx.config().apt_arguments() {
+            command.args(args.split_whitespace());
         }
         command.check_run()?;
 
-        if cleanup {
-            run_type.execute(&sudo).arg(&apt).arg("clean").check_run()?;
+        if ctx.config().cleanup() {
+            ctx.run_type().execute(&sudo).arg(&apt).arg("clean").check_run()?;
 
-            let mut command = run_type.execute(&sudo);
+            let mut command = ctx.run_type().execute(&sudo);
             command.arg(&apt).arg("autoremove");
-            if yes {
+            if ctx.config().yes() {
                 command.arg("-y");
             }
             command.check_run()?;

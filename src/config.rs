@@ -160,6 +160,7 @@ pub struct Linux {
     yay_arguments: Option<String>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
+    apt_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
     redhat_distro_sync: Option<bool>,
     emerge_sync_flags: Option<String>,
@@ -608,7 +609,16 @@ impl Config {
             .unwrap_or("--devel")
     }
 
-    /// Extra yay arguments
+    /// Extra apt arguments
+    #[allow(dead_code)]
+    pub fn apt_arguments(&self) -> Option<&str> {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.apt_arguments.as_deref())
+    }
+
+    /// Extra dnf arguments
     #[allow(dead_code)]
     pub fn dnf_arguments(&self) -> Option<&str> {
         self.config_file
