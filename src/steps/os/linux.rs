@@ -22,6 +22,7 @@ struct OsRelease {
     id: String,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Distribution {
     Arch,
