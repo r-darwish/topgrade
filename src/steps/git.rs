@@ -42,7 +42,7 @@ fn check_output(output: Output) -> Result<()> {
     }
 }
 
-async fn pull_repository(repo: String, git: &PathBuf, ctx: &ExecutionContext<'_>) -> Result<()> {
+async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -> Result<()> {
     let path = repo.to_string();
     let before_revision = get_head_revision(git, &repo);
 

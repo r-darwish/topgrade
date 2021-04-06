@@ -14,6 +14,7 @@ use std::os::unix::prelude::MetadataExt;
 use std::path::PathBuf;
 use std::process::Command;
 
+#[allow(clippy::upper_case_acronyms)]
 struct NPM {
     command: PathBuf,
 }
