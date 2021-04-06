@@ -86,6 +86,7 @@ pub enum Step {
     Jetpack,
     Krew,
     MacPorts,
+    Mas,
     Micro,
     MicrosoftAutoUpdate,
     MicrosoftStore,

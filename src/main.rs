@@ -341,7 +341,7 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "macos")]
     {
-        runner.execute(Step::System, "App Store", || macos::run_mas(run_type))?;
+        runner.execute(Step::Mas, "App Store", || macos::run_mas(run_type))?;
         runner.execute(Step::System, "System upgrade", || macos::upgrade_macos(&ctx))?;
     }
 
