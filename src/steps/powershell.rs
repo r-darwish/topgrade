@@ -3,7 +3,7 @@ use crate::executor::CommandExt;
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
 use anyhow::Result;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub struct Powershell {
@@ -45,7 +45,7 @@ impl Powershell {
     }
 
     #[cfg(windows)]
-    pub fn has_module(powershell: &PathBuf, command: &str) -> bool {
+    pub fn has_module(powershell: &Path, command: &str) -> bool {
         Command::new(&powershell)
             .args(&[
                 "-NoProfile",
