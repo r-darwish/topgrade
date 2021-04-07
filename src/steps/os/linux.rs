@@ -36,6 +36,7 @@ pub enum Distribution {
     Solus,
     Exherbo,
     NixOS,
+    KDENeon,
 }
 
 impl Distribution {
@@ -55,6 +56,7 @@ impl Distribution {
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
             Some("nixos") => Distribution::NixOS,
+            Some("neon") => Distribution::KDENeon,
             _ => {
                 if let Some(id_like) = id_like {
                     if id_like.contains(&"debian") || id_like.contains(&"ubuntu") {
@@ -101,6 +103,7 @@ impl Distribution {
             Distribution::Solus => upgrade_solus(&sudo, run_type),
             Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
             Distribution::NixOS => upgrade_nixos(&sudo, cleanup, run_type),
+            Distribution::KDENeon => upgrade_neon(ctx),
         }
     }
 
@@ -456,6 +459,31 @@ fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Re
         }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+fn upgrade_neon(ctx: &ExecutionContext) -> Result<()> {
+    // KDE neon is ubuntu based but uses it's own manager, pkcon
+    // running apt update with KDE neon is an error
+    // in theory rpm based distributions use pkcon as well, though that
+    // seems rare
+    // if that comes up we need to create a Distribution::PackageKit or some such
+    if let Some(sudo) = &ctx.sudo() {
+        let pkcon = which("pkcon").unwrap();
+        // pkcon ignores update with update and refresh provided together
+        ctx.run_type().execute(&sudo).arg(&pkcon).arg("refresh").check_run()?;
+        let mut exe = ctx.run_type().execute(&sudo);
+        let cmd = exe.arg(&pkcon).arg("update");
+        if ctx.config().yes() {
+            cmd.arg("-y");
+        }
+        if ctx.config().cleanup() {
+            cmd.arg("--autoremove");
+        }
+        // from pkcon man, exit code 5 is 'Nothing useful was done.'
+        cmd.check_run_with_codes(&[5])?;
     }
 
     Ok(())
