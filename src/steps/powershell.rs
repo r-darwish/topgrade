@@ -3,7 +3,9 @@ use crate::executor::CommandExt;
 use crate::terminal::{is_dumb, print_separator};
 use crate::utils::{require_option, which, PathExt};
 use anyhow::Result;
-use std::path::{Path, PathBuf};
+#[cfg(windows)]
+use std::path::Path;
+use std::path::PathBuf;
 use std::process::Command;
 
 pub struct Powershell {
