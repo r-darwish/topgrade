@@ -80,40 +80,22 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
     run_type.execute(&fossil).args(&["all", "sync"]).check_run()
 }
 
-pub fn run_vscode_variant(run_type: RunType, exe: &Path) -> Result<()> {
-    let plugins = RunType::Wet.execute(&exe).args(&["--list-extensions"]).check_output()?;
-
-    let mut args = vec!["--force"];
-
-    for plugin in plugins.lines() {
-        args.push("--install-extension");
-        args.push(plugin);
-    }
-
-    if args.len() == 1 {
-        println!("No extensions to update");
-        return Ok(());
-    }
-
-    run_type.execute(&exe).args(args).check_run()?;
-
-    Ok(())
-}
-
-pub fn run_vscodium(run_type: RunType) -> Result<()> {
-    let vscode = utils::require("codium")?;
+pub fn run_vscodium(_run_type: RunType) -> Result<()> {
+    let _vscode = utils::require("codium")?;
 
     print_separator("Visual Studio Codium");
 
-    run_vscode_variant(run_type, &vscode)
+    print_warning("This step has been removed from Topgrade due to its unreliability");
+    Ok(())
 }
 
-pub fn run_vscode(run_type: RunType) -> Result<()> {
-    let vscode = utils::require("code")?;
+pub fn run_vscode(_run_type: RunType) -> Result<()> {
+    let _vscode = utils::require("code")?;
 
     print_separator("Visual Studio Code");
 
-    run_vscode_variant(run_type, &vscode)
+    print_warning("This step has been removed from Topgrade due to its unreliability");
+    Ok(())
 }
 
 pub fn run_micro(run_type: RunType) -> Result<()> {
