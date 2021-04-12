@@ -100,6 +100,18 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
+pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
+    let fish = require("fish")?;
+    ctx.base_dirs()
+        .home_dir()
+        .join(".local/share/fish/plug/kidonng/fish-plug/functions/plug.fish")
+        .require()?;
+
+    print_separator("fish-plug");
+
+    ctx.run_type().execute(&fish).args(&["-c", "plug update"]).check_run()
+}
+
 pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
     require(variant.binary_name())?;
     print_separator(variant.step_title());
