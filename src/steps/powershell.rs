@@ -34,11 +34,6 @@ impl Powershell {
     }
 
     #[cfg(windows)]
-    pub fn path(&self) -> &Option<PathBuf> {
-        &self.path
-    }
-
-    #[cfg(windows)]
     pub fn windows_powershell() -> Self {
         Powershell {
             path: which("powershell").filter(|_| !is_dumb()),

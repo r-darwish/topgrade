@@ -1,9 +1,9 @@
+use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
 use crate::powershell;
 use crate::terminal::print_separator;
 use crate::utils::require;
 use crate::{error::SkipStep, steps::git::Repositories};
-use crate::{execution_context::ExecutionContext, utils::require_option};
 use anyhow::Result;
 use log::debug;
 use std::convert::TryFrom;
@@ -83,17 +83,6 @@ pub fn windows_update(ctx: &ExecutionContext) -> Result<()> {
     println!("Running Windows Update. Check the control panel for progress.");
     ctx.run_type().execute(&usoclient).arg("ScanInstallWait").check_run()?;
     ctx.run_type().execute(&usoclient).arg("StartInstall").check_run()
-}
-
-pub fn upgrade_store_apps(ctx: &ExecutionContext) -> Result<()> {
-    let powershell = powershell::Powershell::windows_powershell();
-
-    let path = powershell.path().as_ref().unwrap();
-    let sudo = require_option(ctx.sudo().as_ref(), String::from("Sudo is required"))?;
-    print_separator("Microsoft Store");
-    println!("Updating Microsoft Store applications in the background");
-
-    ctx.run_type().execute("cmd").arg("/c").args(&[sudo, path]).args(&["-NoProfile", "-Command", "(Get-WmiObject -Namespace 'root\\cimv2\\mdm\\dmmap' -Class 'MDM_EnterpriseModernAppManagement_AppManagement01').UpdateScanMethod() > $null"]).check_run()
 }
 
 pub fn reboot() {

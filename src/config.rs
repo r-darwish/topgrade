@@ -89,7 +89,6 @@ pub enum Step {
     Mas,
     Micro,
     MicrosoftAutoUpdate,
-    MicrosoftStore,
     Myrepos,
     Nix,
     Node,
