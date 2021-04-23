@@ -117,8 +117,6 @@ pub enum Step {
     Vagrant,
     Vcpkg,
     Vim,
-    Vscode,
-    Vscodium,
     Wsl,
     Yadm,
 }

@@ -80,24 +80,6 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
     run_type.execute(&fossil).args(&["all", "sync"]).check_run()
 }
 
-pub fn run_vscodium(_run_type: RunType) -> Result<()> {
-    let _vscode = utils::require("codium")?;
-
-    print_separator("Visual Studio Codium");
-
-    print_warning("This step has been removed from Topgrade due to its unreliability");
-    Ok(())
-}
-
-pub fn run_vscode(_run_type: RunType) -> Result<()> {
-    let _vscode = utils::require("code")?;
-
-    print_separator("Visual Studio Code");
-
-    print_warning("This step has been removed from Topgrade due to its unreliability");
-    Ok(())
-}
-
 pub fn run_micro(run_type: RunType) -> Result<()> {
     let micro = utils::require("micro")?;
 
