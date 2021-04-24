@@ -521,7 +521,7 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
 
     let mut upgrade = ctx.run_type().execute(&fwupdmgr);
 
-    upgrade.arg("upgrade");
+    upgrade.arg("update");
     if ctx.config().yes() {
         upgrade.arg("-y");
     }
