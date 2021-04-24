@@ -69,6 +69,10 @@ impl Powershell {
             cmd.push("-Verbose")
         }
 
+        if ctx.config().yes() {
+            cmd.push("-Confirm")
+        }
+
         println!("Updating modules...");
         ctx.run_type()
             .execute(&powershell)
