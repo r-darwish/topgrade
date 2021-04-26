@@ -88,7 +88,6 @@ pub enum Step {
     MacPorts,
     Mas,
     Micro,
-    MicrosoftAutoUpdate,
     Myrepos,
     Nix,
     Node,

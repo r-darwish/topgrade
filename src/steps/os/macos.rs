@@ -9,18 +9,6 @@ use anyhow::Result;
 use log::debug;
 use std::{path::Path, process::Command};
 
-pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
-    let msupdate =
-        Path::new("/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate")
-            .require()?;
-    print_separator("Microsoft AutoUpdate");
-
-    ctx.run_type().execute(msupdate).arg("--list").spawn()?.wait()?;
-    ctx.run_type().execute(msupdate).arg("--install").spawn()?.wait()?;
-
-    Ok(())
-}
-
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
     require("port")?;
     let sudo = ctx.sudo().as_ref().unwrap();
