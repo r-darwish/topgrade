@@ -1,25 +1,10 @@
 use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
 use crate::terminal::{print_separator, prompt_yesno};
-use crate::{
-    error::TopgradeError,
-    utils::{require, PathExt},
-};
+use crate::{error::TopgradeError, utils::require};
 use anyhow::Result;
 use log::debug;
-use std::{path::Path, process::Command};
-
-pub fn run_msupdate(ctx: &ExecutionContext) -> Result<()> {
-    let msupdate =
-        Path::new("/Library/Application Support/Microsoft/MAU2.0/Microsoft AutoUpdate.app/Contents/MacOS/msupdate")
-            .require()?;
-    print_separator("Microsoft AutoUpdate");
-
-    ctx.run_type().execute(msupdate).arg("--list").spawn()?.wait()?;
-    ctx.run_type().execute(msupdate).arg("--install").spawn()?.wait()?;
-
-    Ok(())
-}
+use std::process::Command;
 
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
     require("port")?;
