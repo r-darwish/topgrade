@@ -1,13 +1,10 @@
 use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
 use crate::terminal::{print_separator, prompt_yesno};
-use crate::{
-    error::TopgradeError,
-    utils::{require, PathExt},
-};
+use crate::{error::TopgradeError, utils::require};
 use anyhow::Result;
 use log::debug;
-use std::{path::Path, process::Command};
+use std::process::Command;
 
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
     require("port")?;
