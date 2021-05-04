@@ -85,7 +85,7 @@ pub enum Step {
     HomeManager,
     Jetpack,
     Krew,
-    MacPorts,
+    Macports,
     Mas,
     Micro,
     Myrepos,

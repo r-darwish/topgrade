@@ -163,7 +163,7 @@ fn run() -> Result<()> {
         runner.execute(Step::BrewCask, "Brew Cask (Intel)", || {
             unix::run_brew_cask(&ctx, unix::BrewVariant::MacIntel)
         })?;
-        runner.execute(Step::MacPorts, "MacPorts", || macos::run_macports(&ctx))?;
+        runner.execute(Step::Macports, "MacPorts", || macos::run_macports(&ctx))?;
     }
 
     #[cfg(unix)]
