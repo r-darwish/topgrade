@@ -1,9 +1,9 @@
 use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
+use crate::executor::RunType;
 use crate::powershell;
+use crate::steps::git::Repositories;
 use crate::terminal::print_separator;
 use crate::utils::require;
-use crate::{error::SkipStep, steps::git::Repositories};
 use anyhow::Result;
 use log::debug;
 use std::convert::TryFrom;
