@@ -18,10 +18,14 @@ use tempfile::tempfile_in;
 
 pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
     utils::require("cargo")?;
-    let toml_file = ctx.base_dirs().home_dir().join(".cargo/.crates.toml").require()?;
+    let cargo_dir = env::var_os("CARGO_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| ctx.base_dirs().home_dir().join(".cargo"))
+        .require()?;
+    let toml_file = cargo_dir.join(".crates.toml").require()?;
 
-    if fs::metadata(toml_file)?.len() == 0 {
-        return Err(SkipStep(String::from(".cargo/.crates.toml exists but empty")).into());
+    if fs::metadata(&toml_file)?.len() == 0 {
+        return Err(SkipStep(format!("{} exists but empty", &toml_file.display())).into());
     }
 
     print_separator("Cargo");
