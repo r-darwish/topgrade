@@ -94,15 +94,13 @@ pub fn insert_startup_scripts(ctx: &ExecutionContext, git_repos: &mut Repositori
         .base_dirs()
         .data_dir()
         .join("Microsoft\\Windows\\Start Menu\\Programs\\Startup");
-    for entry in std::fs::read_dir(&startup_dir)? {
-        if let Ok(entry) = entry {
-            let path = entry.path();
-            if path.extension().and_then(OsStr::to_str) == Some("lnk") {
-                if let Ok(lnk) = parselnk::Lnk::try_from(Path::new(&path)) {
-                    debug!("Startup link: {:?}", lnk);
-                    if let Some(path) = lnk.relative_path() {
-                        git_repos.insert_if_repo(&startup_dir.join(path));
-                    }
+    for entry in std::fs::read_dir(&startup_dir)?.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(OsStr::to_str) == Some("lnk") {
+            if let Ok(lnk) = parselnk::Lnk::try_from(Path::new(&path)) {
+                debug!("Startup link: {:?}", lnk);
+                if let Some(path) = lnk.relative_path() {
+                    git_repos.insert_if_repo(&startup_dir.join(path));
                 }
             }
         }
