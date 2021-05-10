@@ -159,6 +159,7 @@ pub struct Linux {
     apt_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
     redhat_distro_sync: Option<bool>,
+    rpm_ostree: Option<bool>,
     emerge_sync_flags: Option<String>,
     emerge_update_flags: Option<String>,
 }
@@ -667,6 +668,16 @@ impl Config {
             .as_ref()
             .and_then(|linux| linux.redhat_distro_sync)
             .unwrap_or(false)
+    }
+
+    /// Use rpm-ostree in *when rpm-ostree is detected* (default: true)
+    #[allow(dead_code)]
+    pub fn rpm_ostree(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|linux| linux.rpm_ostree)
+            .unwrap_or(true)
     }
 
     /// Should we ignore failures for this step

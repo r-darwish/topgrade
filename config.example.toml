@@ -70,6 +70,7 @@
 #emerge_sync_flags = "-q"
 #emerge_update_flags = "-uDNa --with-bdeps=y world"
 #redhat_distro_sync = false
+#rpm_ostree = false
 
 [windows]
 # Manually select Windows updates
