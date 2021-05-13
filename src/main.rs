@@ -313,6 +313,9 @@ fn run() -> Result<()> {
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
     }
 
+    #[cfg(target_os = "macos")]
+    runner.execute(Step::Silnite, "silnite", || macos::run_silnite(&ctx))?;
+
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             runner.execute(Step::CustomCommands, name, || {
