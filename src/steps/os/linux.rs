@@ -237,15 +237,17 @@ fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
 }
 
 fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
-    if let Some(ostree) = Path::new("/usr/bin/rpm-ostree").if_exists() {
-        let mut command = ctx.run_type().execute(ostree);
-        command.arg("upgrade");
-        if ctx.config().yes() {
-            command.arg("-y");
-        }
+    let _ = if let Some(ostree) = Path::new("/usr/bin/rpm-ostree").if_exists() {
+        if ctx.config().rpm_ostree() {
+            let mut command = ctx.run_type().execute(ostree);
+            command.arg("upgrade");
+            if ctx.config().yes() {
+                command.arg("-y");
+            }
 
-        return command.check_run();
-    }
+            return command.check_run();
+        }
+    };
 
     if let Some(sudo) = &ctx.sudo() {
         let mut command = ctx.run_type().execute(&sudo);
