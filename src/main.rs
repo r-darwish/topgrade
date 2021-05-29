@@ -301,6 +301,7 @@ fn run() -> Result<()> {
     runner.execute(Step::Gem, "gem", || generic::run_gem(&base_dirs, run_type))?;
     runner.execute(Step::Sheldon, "sheldon", || generic::run_sheldon(&ctx))?;
     runner.execute(Step::Rtcl, "rtcl", || generic::run_rtcl(&ctx))?;
+    runner.execute(Step::Bin, "bin", || generic::bin_update(&ctx))?;
     runner.execute(Step::Gcloud, "gcloud", || {
         generic::run_gcloud_components_update(run_type)
     })?;

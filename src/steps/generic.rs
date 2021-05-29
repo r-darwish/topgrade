@@ -379,3 +379,10 @@ pub fn run_raco_update(run_type: RunType) -> Result<()> {
 
     run_type.execute(&raco).args(&["pkg", "update", "--all"]).check_run()
 }
+
+pub fn bin_update(ctx: &ExecutionContext) -> Result<()> {
+    let bin = utils::require("bin")?;
+
+    print_separator("Bin");
+    ctx.run_type().execute(&bin).arg("update").check_run()
+}
