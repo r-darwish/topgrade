@@ -104,6 +104,7 @@ pub enum Step {
     Rustup,
     Scoop,
     Sdkman,
+    Silnite,
     Sheldon,
     Shell,
     Snap,
