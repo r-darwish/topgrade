@@ -63,7 +63,7 @@ pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
         let uid = Uid::effective();
 
         if metadata.uid() != uid.as_raw() {
-            if metadata.uid() == 0 && (ctx.config().npm().use_sudo()) {
+            if metadata.uid() == 0 && (ctx.config().npm_use_sudo()) {
                 use_sudo = true;
             }
 
