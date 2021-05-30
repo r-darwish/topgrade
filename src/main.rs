@@ -200,6 +200,9 @@ fn run() -> Result<()> {
             git_repos.insert_if_repo(base_dirs.home_dir().join(".config/nvim"));
         }
 
+        git_repos.insert_if_repo(base_dirs.home_dir().join(".ideavimrc"));
+        git_repos.insert_if_repo(base_dirs.home_dir().join(".intellimacs"));
+
         #[cfg(unix)]
         {
             git_repos.insert_if_repo(zsh::zshrc(&base_dirs));
