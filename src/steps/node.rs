@@ -65,14 +65,14 @@ pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
         if metadata.uid() != uid.as_raw() {
             if metadata.uid() == 0 && (ctx.config().npm_use_sudo()) {
                 use_sudo = true;
-            }
-
-            return Err(SkipStep(format!(
+            } else {
+                return Err(SkipStep(format!(
                     "NPM root at {} is owned by {} which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo",
                     npm_root.display(),
                     metadata.uid()
                 ))
                     .into());
+            }
         }
     }
 
