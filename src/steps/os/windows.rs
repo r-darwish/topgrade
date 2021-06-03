@@ -35,6 +35,14 @@ pub fn run_chocolatey(ctx: &ExecutionContext) -> Result<()> {
     command.check_run()
 }
 
+pub fn run_winget(ctx: &ExecutionContext) -> Result<()> {
+    let winget = require("winget")?;
+
+    print_separator("winget");
+
+    ctx.run_type().execute(&winget).args(&["upgrade", "--all"]).check_run()
+}
+
 pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
     let scoop = require("scoop")?;
 

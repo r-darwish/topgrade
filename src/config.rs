@@ -117,6 +117,7 @@ pub enum Step {
     Vagrant,
     Vcpkg,
     Vim,
+    Winget,
     Wsl,
     Yadm,
 }

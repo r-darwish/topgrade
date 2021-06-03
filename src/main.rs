@@ -147,6 +147,7 @@ fn run() -> Result<()> {
     {
         runner.execute(Step::Chocolatey, "Chocolatey", || windows::run_chocolatey(&ctx))?;
         runner.execute(Step::Scoop, "Scoop", || windows::run_scoop(config.cleanup(), run_type))?;
+        runner.execute(Step::Winget, "Winget", || windows::run_winget(&ctx))?;
     }
 
     #[cfg(target_os = "macos")]
