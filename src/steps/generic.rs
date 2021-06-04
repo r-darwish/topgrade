@@ -2,7 +2,7 @@
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
-use crate::utils::{self, PathExt};
+use crate::utils::{self, require_option, PathExt};
 use crate::{
     error::{SkipStep, TopgradeError},
     terminal::print_warning,
@@ -17,11 +17,17 @@ use std::{fs, io::Write};
 use tempfile::tempfile_in;
 
 pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
-    utils::require("cargo")?;
     let cargo_dir = env::var_os("CARGO_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| ctx.base_dirs().home_dir().join(".cargo"))
         .require()?;
+    utils::require("cargo").or_else(|_| {
+        require_option(
+            cargo_dir.join("bin/cargo").if_exists(),
+            String::from("No cargo detected"),
+        )
+    })?;
+
     let toml_file = cargo_dir.join(".crates.toml").require()?;
 
     if fs::metadata(&toml_file)?.len() == 0 {
@@ -29,12 +35,15 @@ pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
     }
 
     print_separator("Cargo");
-
-    let cargo_update = match utils::require("cargo-install-update") {
-        Ok(e) => e,
-        Err(e) => {
-            print_warning("cargo-update isn't installed so Topgrade can't upgrade cargo packages.\nInstall cargo-update by running `cargo install cargo-update`");
-            return Err(e);
+    let cargo_update = utils::require("cargo-install-update")
+        .ok()
+        .or_else(|| cargo_dir.join("bin/cargo-install-update").if_exists());
+    let cargo_update = match cargo_update {
+        Some(e) => e,
+        None => {
+            let message = String::from("cargo-update isn't installed so Topgrade can't upgrade cargo packages.\nInstall cargo-update by running `cargo install cargo-update`");
+            print_warning(&message);
+            return Err(SkipStep(message).into());
         }
     };
 
