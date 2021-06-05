@@ -417,7 +417,7 @@ fn run() -> Result<()> {
     terminal::notify_desktop(
         format!(
             "Topgrade finished {}",
-            if failed { "with errors" } else { "sucessfully" }
+            if failed { "with errors" } else { "successfully" }
         ),
         None,
     );
