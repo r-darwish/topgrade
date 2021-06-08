@@ -203,12 +203,12 @@ pub fn run_pipx_update(run_type: RunType) -> Result<()> {
 }
 
 pub fn run_pip3_update(run_type: RunType) -> Result<()> {
-    let pip3 = utils::require("pip3")?;
+    let python3 = utils::require("python3")?;
     print_separator("pip3");
 
     run_type
-        .execute(&pip3)
-        .args(&["install", "--upgrade", "--user", "pip"])
+        .execute(&python3)
+        .args(&["-m", "pip", "install", "--upgrade", "--user", "pip"])
         .check_run()
 }
 
