@@ -32,15 +32,25 @@ impl NPM {
             .map(|s| PathBuf::from(s.trim()))
     }
 
-    fn upgrade(&self, run_type: RunType) -> Result<()> {
-        run_type.execute(&self.command).args(&["update", "-g"]).check_run()?;
+    fn upgrade(&self, run_type: RunType, use_sudo: bool) -> Result<()> {
+        if use_sudo {
+            run_type
+                .execute("sudo")
+                .arg(&self.command)
+                .args(&["update", "-g"])
+                .check_run()?;
+        } else {
+            run_type.execute(&self.command).args(&["update", "-g"]).check_run()?;
+        }
 
         Ok(())
     }
 }
 
-pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
+    #[allow(unused_mut)]
+    let mut use_sudo = false;
 
     #[cfg(target_os = "linux")]
     {
@@ -53,17 +63,21 @@ pub fn run_npm_upgrade(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
         let uid = Uid::effective();
 
         if metadata.uid() != uid.as_raw() {
-            return Err(SkipStep(format!(
-                "NPM root at {} is owned by {} which is not the current user",
-                npm_root.display(),
-                metadata.uid()
-            ))
-            .into());
+            if metadata.uid() == 0 && (ctx.config().npm_use_sudo()) {
+                use_sudo = true;
+            } else {
+                return Err(SkipStep(format!(
+                    "NPM root at {} is owned by {} which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo",
+                    npm_root.display(),
+                    metadata.uid()
+                ))
+                    .into());
+            }
         }
     }
 
     print_separator("Node Package Manager");
-    npm.upgrade(run_type)
+    npm.upgrade(ctx.run_type(), use_sudo)
 }
 
 pub fn yarn_global_update(run_type: RunType) -> Result<()> {

@@ -149,6 +149,13 @@ pub struct Windows {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(clippy::upper_case_acronyms)]
+pub struct NPM {
+    use_sudo: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
@@ -204,6 +211,7 @@ pub struct ConfigFile {
     linux: Option<Linux>,
     git: Option<Git>,
     windows: Option<Windows>,
+    npm: Option<NPM>,
     vagrant: Option<Vagrant>,
 }
 
@@ -710,6 +718,15 @@ impl Config {
             .windows
             .as_ref()
             .and_then(|windows| windows.open_remotes_in_new_terminal)
+            .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn npm_use_sudo(&self) -> bool {
+        self.config_file
+            .npm
+            .as_ref()
+            .and_then(|npm| npm.use_sudo)
             .unwrap_or(false)
     }
 
