@@ -205,6 +205,10 @@ pub fn run_pipx_update(run_type: RunType) -> Result<()> {
 pub fn run_pip3_update(run_type: RunType) -> Result<()> {
     let pip3 = utils::require("pip3")?;
     print_separator("pip3");
+    if std::env::var("VIRTUAL_ENV").is_ok() {
+        print_warning("This step is will be skipped when running inside a virtual environment");
+        return Err(SkipStep("Does not run inside a virtual environment".to_string()).into());
+    }
 
     run_type
         .execute(&pip3)
