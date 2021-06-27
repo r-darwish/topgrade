@@ -80,6 +80,13 @@ pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
     npm.upgrade(ctx.run_type(), use_sudo)
 }
 
+pub fn pnpm_global_update(run_type: RunType) -> Result<()> {
+    let pnpm = require("pnpm")?;
+
+    print_separator("Performant Node Package Manager");
+    run_type.execute(&pnpm).args(&["update", "-g"]).check_run()
+}
+
 pub fn yarn_global_update(run_type: RunType) -> Result<()> {
     let yarn = require("yarn")?;
 

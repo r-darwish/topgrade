@@ -299,6 +299,7 @@ fn run() -> Result<()> {
     runner.execute(Step::Vim, "voom", || vim::run_voom(&base_dirs, run_type))?;
     runner.execute(Step::Node, "npm", || node::run_npm_upgrade(&ctx))?;
     runner.execute(Step::Node, "yarn", || node::yarn_global_update(run_type))?;
+    runner.execute(Step::Node, "pnpm", || node::pnpm_global_update(run_type))?;
     runner.execute(Step::Deno, "deno", || node::deno_upgrade(&ctx))?;
     runner.execute(Step::Composer, "composer", || generic::run_composer_update(&ctx))?;
     runner.execute(Step::Krew, "krew", || generic::run_krew_upgrade(run_type))?;
