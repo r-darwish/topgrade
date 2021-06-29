@@ -521,13 +521,17 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
         .arg("refresh")
         .check_run_with_codes(&[2])?;
 
-    let mut upgrade = ctx.run_type().execute(&fwupdmgr);
+    let mut updmgr = ctx.run_type().execute(&fwupdmgr);
 
-    upgrade.arg("update");
-    if ctx.config().yes() {
-        upgrade.arg("-y");
+    if ctx.config().firmware_upgrade() {
+        updmgr.arg("update");
+        if ctx.config().yes() {
+            updmgr.arg("-y");
+        }
+    } else {
+        updmgr.arg("get-updates");
     }
-    upgrade.check_run_with_codes(&[2])
+    updmgr.check_run_with_codes(&[2])
 }
 
 pub fn flatpak_update(run_type: RunType) -> Result<()> {

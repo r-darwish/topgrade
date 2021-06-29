@@ -85,3 +85,7 @@
 [npm]
 # Use sudo if the NPM directory isn't owned by the current user
 #use_sudo = true
+
+[firmware]
+# Offer to update firmware; if false just check for and display available updates
+#upgrade = false
