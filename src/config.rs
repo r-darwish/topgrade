@@ -744,7 +744,7 @@ impl Config {
             .firmware
             .as_ref()
             .and_then(|firmware| firmware.upgrade)
-            .unwrap_or(true)
+            .unwrap_or(false)
     }
 
     #[cfg(target_os = "linux")]
