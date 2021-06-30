@@ -89,3 +89,7 @@
 [firmware]
 # Offer to update firmware; if false just check for and display available updates
 #upgrade = true
+
+[flatpak]
+# Use sudo for updating the system-wide installation
+#use_sudo = true
