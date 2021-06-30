@@ -156,6 +156,13 @@ pub struct NPM {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(clippy::upper_case_acronyms)]
+pub struct Firmware {
+    upgrade: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
@@ -212,6 +219,7 @@ pub struct ConfigFile {
     git: Option<Git>,
     windows: Option<Windows>,
     npm: Option<NPM>,
+    firmware: Option<Firmware>,
     vagrant: Option<Vagrant>,
 }
 
@@ -727,6 +735,15 @@ impl Config {
             .npm
             .as_ref()
             .and_then(|npm| npm.use_sudo)
+            .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn firmware_upgrade(&self) -> bool {
+        self.config_file
+            .firmware
+            .as_ref()
+            .and_then(|firmware| firmware.upgrade)
             .unwrap_or(false)
     }
 
