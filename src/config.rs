@@ -163,6 +163,13 @@ pub struct Firmware {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
+#[allow(clippy::upper_case_acronyms)]
+pub struct Flatpak {
+    use_sudo: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Brew {
     greedy_cask: Option<bool>,
 }
@@ -221,6 +228,7 @@ pub struct ConfigFile {
     npm: Option<NPM>,
     firmware: Option<Firmware>,
     vagrant: Option<Vagrant>,
+    flatpak: Option<Flatpak>,
 }
 
 fn config_directory(base_dirs: &BaseDirs) -> PathBuf {
@@ -744,6 +752,15 @@ impl Config {
             .firmware
             .as_ref()
             .and_then(|firmware| firmware.upgrade)
+            .unwrap_or(false)
+    }
+
+    #[cfg(target_os = "linux")]
+    pub fn flatpak_use_sudo(&self) -> bool {
+        self.config_file
+            .flatpak
+            .as_ref()
+            .and_then(|flatpak| flatpak.use_sudo)
             .unwrap_or(false)
     }
 

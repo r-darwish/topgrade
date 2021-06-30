@@ -315,7 +315,7 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(run_type))?;
+        runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
     }
 

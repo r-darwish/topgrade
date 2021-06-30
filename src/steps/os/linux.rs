@@ -534,18 +534,30 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
     updmgr.check_run_with_codes(&[2])
 }
 
-pub fn flatpak_update(run_type: RunType) -> Result<()> {
+pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
     let flatpak = require("flatpak")?;
+    let sudo = require_option(ctx.sudo().as_ref(), String::from("sudo is not installed"))?;
+    let run_type = ctx.run_type();
     print_separator("Flatpak User Packages");
 
     run_type
         .execute(&flatpak)
         .args(&["update", "--user", "-y"])
         .check_run()?;
-    run_type
-        .execute(&flatpak)
-        .args(&["update", "--system", "-y"])
-        .check_run()
+
+    print_separator("Flatpak System Packages");
+    if ctx.config().flatpak_use_sudo() {
+        run_type
+            .execute(sudo)
+            .arg(flatpak)
+            .args(&["update", "--system", "-y"])
+            .check_run()
+    } else {
+        run_type
+            .execute(&flatpak)
+            .args(&["update", "--system", "-y"])
+            .check_run()
+    }
 }
 
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
