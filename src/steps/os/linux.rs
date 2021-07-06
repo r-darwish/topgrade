@@ -557,7 +557,7 @@ pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
         .check_run()?;
 
     print_separator("Flatpak System Packages");
-    if ctx.config().flatpak_use_sudo() {
+    if ctx.config().flatpak_use_sudo() || std::env::var("SSH_CLIENT").is_ok() {
         run_type
             .execute(sudo)
             .arg(flatpak)
