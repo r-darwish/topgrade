@@ -87,18 +87,6 @@ pub fn pnpm_global_update(run_type: RunType) -> Result<()> {
     run_type.execute(&pnpm).args(&["update", "-g"]).check_run()
 }
 
-pub fn yarn_global_update(run_type: RunType) -> Result<()> {
-    let yarn = require("yarn")?;
-
-    let output = Command::new(&yarn).arg("--version").string_output()?;
-    if output.contains("Hadoop") {
-        return Err(SkipStep(String::from("Installed yarn is Hadoop's yarn")).into());
-    }
-
-    print_separator("Yarn");
-    run_type.execute(&yarn).args(&["global", "upgrade", "-s"]).check_run()
-}
-
 pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let deno = require("deno")?;
 
