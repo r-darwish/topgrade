@@ -1831,17 +1831,17 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "7.0.1"
+version = "7.1.0"
 dependencies = [
- "anyhow",
- "cfg-if 1.0.0",
- "chrono",
- "console",
- "directories",
- "futures",
- "glob",
- "lazy_static",
- "log",
+    "anyhow",
+    "cfg-if 1.0.0",
+    "chrono",
+    "console",
+    "directories",
+    "futures",
+    "glob",
+    "lazy_static",
+    "log",
  "nix 0.20.0",
  "notify-rust",
  "openssl-probe",
