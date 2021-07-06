@@ -25,6 +25,7 @@ struct OsRelease {
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Distribution {
+    Alpine,
     Arch,
     CentOS,
     ClearLinux,
@@ -46,6 +47,7 @@ impl Distribution {
         let id_like: Option<Vec<&str>> = section.get("ID_LIKE").map(|s| s.split_whitespace().collect());
 
         Ok(match id {
+            Some("alpine") => Distribution::Alpine,
             Some("centos") | Some("rhel") | Some("ol") => Distribution::CentOS,
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
@@ -93,6 +95,7 @@ impl Distribution {
         let cleanup = ctx.config().cleanup();
 
         match self {
+            Distribution::Alpine => upgrade_alpine_linux(ctx),
             Distribution::Arch => upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
@@ -143,6 +146,14 @@ pub fn show_pacnew() {
             println!("{}", entry.path().display());
         }
     }
+}
+
+fn upgrade_alpine_linux(ctx: &ExecutionContext) -> Result<()> {
+    let apk = require("apk")?;
+    let sudo = ctx.sudo().as_ref().unwrap();
+
+    ctx.run_type().execute(sudo).arg(&apk).arg("update").check_run()?;
+    ctx.run_type().execute(sudo).arg(&apk).arg("upgrade").check_run()
 }
 
 fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
