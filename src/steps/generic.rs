@@ -274,14 +274,8 @@ pub fn run_chezmoi_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()>
 
     print_separator("chezmoi");
 
-    run_type
-        .execute(&chezmoi)
-        .arg("update")
-        .check_run()?;
-    run_type
-        .execute(&chezmoi)
-        .arg("update")
-        .check_run()
+    run_type.execute(&chezmoi).arg("update").check_run()?;
+    run_type.execute(&chezmoi).arg("update").check_run()
 }
 
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
