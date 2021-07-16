@@ -268,6 +268,22 @@ pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
     command.check_run()
 }
 
+pub fn run_chezmoi_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+    let chezmoi = utils::require("chezmoi")?;
+    base_dirs.home_dir().join(".local/share/chezmoi").require()?;
+
+    print_separator("chezmoi");
+
+    run_type
+        .execute(&chezmoi)
+        .arg("update")
+        .check_run()?;
+    run_type
+        .execute(&chezmoi)
+        .arg("update")
+        .check_run()
+}
+
 pub fn run_myrepos_update(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let myrepos = utils::require("mr")?;
     base_dirs.home_dir().join(".mrconfig").require()?;
