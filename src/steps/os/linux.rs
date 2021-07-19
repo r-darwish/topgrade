@@ -5,7 +5,7 @@ use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use anyhow::Result;
 use ini::Ini;
-use log::debug;
+use log::{debug, warn};
 use serde::Deserialize;
 use std::env::var_os;
 use std::ffi::OsString;
