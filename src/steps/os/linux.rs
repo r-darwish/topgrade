@@ -135,8 +135,8 @@ fn update_bedrock(ctx: &ExecutionContext) -> Result<()> {
     let output = Command::new("brl").arg("list").output()?;
     debug!("brl list: {:?} {:?}", output.stdout, output.stderr);
 
-    let distributions = String::from_utf8(output.stdout).unwrap().split('\n');
-    for distribution in distributions {
+    let parsed_output = String::from_utf8(output.stdout).unwrap();
+    for distribution in parsed_output.split('\n') {
         debug!("Bedrock distribution {}", distribution);
         match distribution {
             "arch" => upgrade_arch_linux(ctx)?,
