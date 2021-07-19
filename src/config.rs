@@ -69,6 +69,7 @@ pub enum Step {
     BrewFormula,
     Bin,
     Cargo,
+    Chezmoi,
     Chocolatey,
     Choosenim,
     Composer,
