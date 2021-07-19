@@ -132,6 +132,23 @@ fn update_bedrock(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type().execute(sudo).args(&["brl", "update"]);
 
+    let output = Command::new("brl").arg("list").output()?;
+    debug!("brl list: {:?} {:?}", output.stdout, output.stderr);
+
+    let distributions = String::from(output.stdout).split('\n');
+    for distribution in distributions {
+        debug!("Bedrock distribution {}", distribution);
+        match distribution {
+            "arch" => upgrade_arch_linux(ctx)?,
+            "debian" | "ubuntu" => upgrade_debian(ctx)?,
+            "centos" | "fedora" => upgrade_redhat(ctx)?,
+            "bedrock" => {}
+            _ => {
+                warn!("Unknown distribution {}", distribution);
+            }
+        }
+    }
+
     Ok(())
 }
 
