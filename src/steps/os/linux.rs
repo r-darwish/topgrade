@@ -27,6 +27,7 @@ struct OsRelease {
 pub enum Distribution {
     Alpine,
     Arch,
+    Bedrock,
     CentOS,
     ClearLinux,
     Fedora,
@@ -79,6 +80,10 @@ impl Distribution {
     }
 
     pub fn detect() -> Result<Self> {
+        if PathBuf::from("/bedrock/etc/release").exists() {
+            return Ok(Distribution::Bedrock);
+        }
+
         if PathBuf::from(OS_RELEASE_PATH).exists() {
             let os_release = Ini::load_from_file(OS_RELEASE_PATH)?;
 
@@ -107,6 +112,7 @@ impl Distribution {
             Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
             Distribution::NixOS => upgrade_nixos(&sudo, cleanup, run_type),
             Distribution::KDENeon => upgrade_neon(ctx),
+            Distribution::Bedrock => update_bedrock(ctx),
         }
     }
 
@@ -119,6 +125,14 @@ impl Distribution {
     pub fn redhat_based(self) -> bool {
         matches!(self, Distribution::CentOS | Distribution::Fedora)
     }
+}
+
+fn update_bedrock(ctx: &ExecutionContext) -> Result<()> {
+    let sudo = require_option(ctx.sudo().as_ref(), String::from("Sudo required"))?;
+
+    ctx.run_type().execute(sudo).args(&["brl", "update"]);
+
+    Ok(())
 }
 
 fn is_wsl() -> Result<bool> {
