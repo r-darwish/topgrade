@@ -293,6 +293,9 @@ fn run() -> Result<()> {
     runner.execute(Step::Myrepos, "myrepos", || {
         generic::run_myrepos_update(&base_dirs, run_type)
     })?;
+    runner.execute(Step::Chezmoi, "chezmoi", || {
+        generic::run_chezmoi_update(&base_dirs, run_type)
+    })?;
     runner.execute(Step::Jetpack, "jetpack", || generic::run_jetpack(run_type))?;
     runner.execute(Step::Vim, "vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
     runner.execute(Step::Vim, "Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
