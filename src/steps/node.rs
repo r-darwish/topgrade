@@ -87,9 +87,9 @@ pub fn pnpm_global_update(run_type: RunType) -> Result<()> {
     run_type.execute(&pnpm).args(&["update", "-g"]).check_run()
 }
 
-pub fn deno_upgrade(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
+pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let deno = require("deno")?;
-    let deno_dir = base_dirs.home_dir().join(".deno");
+    let deno_dir = ctx.base_dirs().home_dir().join(".deno");
 
     if !deno.canonicalize()?.is_descendant_of(&deno_dir) {
         let skip_reason = SkipStep("Deno installed outside of .deno directory".to_string());
