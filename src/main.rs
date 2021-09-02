@@ -186,6 +186,9 @@ fn run() -> Result<()> {
         freebsd::upgrade_packages(sudo.as_ref(), run_type)
     })?;
 
+    #[cfg(target_os = "android")]
+    runner.execute(Step::Pkg, "Termux Packages", || android::upgrade_packages(&ctx))?;
+
     let emacs = emacs::Emacs::new(&base_dirs);
     if config.use_predefined_git_repos() {
         if config.should_run(Step::Emacs) {
