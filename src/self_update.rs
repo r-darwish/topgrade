@@ -17,7 +17,7 @@ pub fn self_update() -> Result<()> {
     let result = Update::configure()
         .repo_owner("r-darwish")
         .repo_name("topgrade")
-        .target(&target)
+        .target(target)
         .bin_name(if cfg!(windows) { "topgrade.exe" } else { "topgrade" })
         .show_output(false)
         .show_download_progress(true)
