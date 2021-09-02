@@ -103,7 +103,7 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &ctx)?;
+            generic::run_custom_command(name, command, &ctx)?;
         }
     }
 
@@ -328,7 +328,7 @@ fn run() -> Result<()> {
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             runner.execute(Step::CustomCommands, name, || {
-                generic::run_custom_command(&name, &command, &ctx)
+                generic::run_custom_command(name, command, &ctx)
             })?;
         }
     }
@@ -392,7 +392,7 @@ fn run() -> Result<()> {
     let mut post_command_failed = false;
     if let Some(commands) = config.post_commands() {
         for (name, command) in commands {
-            if generic::run_custom_command(&name, &command, &ctx).is_err() {
+            if generic::run_custom_command(name, command, &ctx).is_err() {
                 post_command_failed = true;
             }
         }
