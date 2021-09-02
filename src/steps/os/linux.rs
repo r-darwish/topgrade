@@ -90,22 +90,19 @@ impl Distribution {
 
     pub fn upgrade(self, ctx: &ExecutionContext) -> Result<()> {
         print_separator("System update");
-        let sudo = ctx.sudo();
-        let run_type = ctx.run_type();
-        let cleanup = ctx.config().cleanup();
 
         match self {
             Distribution::Alpine => upgrade_alpine_linux(ctx),
             Distribution::Arch => upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
-            Distribution::ClearLinux => upgrade_clearlinux(sudo, run_type),
+            Distribution::ClearLinux => upgrade_clearlinux(ctx),
             Distribution::Debian => upgrade_debian(ctx),
             Distribution::Gentoo => upgrade_gentoo(ctx),
-            Distribution::Suse => upgrade_suse(sudo, run_type),
-            Distribution::Void => upgrade_void(sudo, run_type),
-            Distribution::Solus => upgrade_solus(sudo, run_type),
-            Distribution::Exherbo => upgrade_exherbo(sudo, cleanup, run_type),
-            Distribution::NixOS => upgrade_nixos(sudo, cleanup, run_type),
+            Distribution::Suse => upgrade_suse(ctx),
+            Distribution::Void => upgrade_void(ctx),
+            Distribution::Solus => upgrade_solus(ctx),
+            Distribution::Exherbo => upgrade_exherbo(ctx),
+            Distribution::NixOS => upgrade_nixos(ctx),
             Distribution::KDENeon => upgrade_neon(ctx),
         }
     }
@@ -290,14 +287,14 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type
+fn upgrade_suse(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = ctx.sudo() {
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/zypper", "refresh"])
             .check_run()?;
 
-        run_type
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/zypper", "dist-upgrade"])
             .check_run()?;
@@ -308,14 +305,14 @@ fn upgrade_suse(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_void(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type
+fn upgrade_void(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = ctx.sudo() {
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/xbps-install", "-Su", "xbps"])
             .check_run()?;
 
-        run_type
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/xbps-install", "-u"])
             .check_run()?;
@@ -399,9 +396,9 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type
+fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = ctx.sudo() {
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/eopkg", "upgrade"])
             .check_run()?;
@@ -412,9 +409,9 @@ fn upgrade_solus(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_clearlinux(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type
+fn upgrade_clearlinux(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = &ctx.sudo() {
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/swupd", "update"])
             .check_run()?;
@@ -425,28 +422,31 @@ fn upgrade_clearlinux(sudo: &Option<PathBuf>, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type.execute(&sudo).args(&["/usr/bin/cave", "sync"]).check_run()?;
+fn upgrade_exherbo(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = ctx.sudo() {
+        ctx.run_type()
+            .execute(&sudo)
+            .args(&["/usr/bin/cave", "sync"])
+            .check_run()?;
 
-        run_type
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/cave", "resolve", "world", "-c1", "-Cs", "-km", "-Km", "-x"])
             .check_run()?;
 
-        if cleanup {
-            run_type
+        if ctx.config().cleanup() {
+            ctx.run_type()
                 .execute(&sudo)
                 .args(&["/usr/bin/cave", "purge", "-x"])
                 .check_run()?;
         }
 
-        run_type
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/cave", "fix-linkage", "-x", "--", "-Cs"])
             .check_run()?;
 
-        run_type
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/usr/bin/eclectic", "config", "interactive"])
             .check_run()?;
@@ -457,15 +457,15 @@ fn upgrade_exherbo(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> 
     Ok(())
 }
 
-fn upgrade_nixos(sudo: &Option<PathBuf>, cleanup: bool, run_type: RunType) -> Result<()> {
-    if let Some(sudo) = &sudo {
-        run_type
+fn upgrade_nixos(ctx: &ExecutionContext) -> Result<()> {
+    if let Some(sudo) = ctx.sudo() {
+        ctx.run_type()
             .execute(&sudo)
             .args(&["/run/current-system/sw/bin/nixos-rebuild", "switch", "--upgrade"])
             .check_run()?;
 
-        if cleanup {
-            run_type
+        if ctx.config().cleanup() {
+            ctx.run_type()
                 .execute(&sudo)
                 .args(&["/run/current-system/sw/bin/nix-collect-garbage", "-d"])
                 .check_run()?;
