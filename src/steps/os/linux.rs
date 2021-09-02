@@ -98,14 +98,14 @@ impl Distribution {
             Distribution::Alpine => upgrade_alpine_linux(ctx),
             Distribution::Arch => upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
-            Distribution::ClearLinux => upgrade_clearlinux(&sudo, run_type),
+            Distribution::ClearLinux => upgrade_clearlinux(sudo, run_type),
             Distribution::Debian => upgrade_debian(ctx),
             Distribution::Gentoo => upgrade_gentoo(ctx),
-            Distribution::Suse => upgrade_suse(&sudo, run_type),
-            Distribution::Void => upgrade_void(&sudo, run_type),
-            Distribution::Solus => upgrade_solus(&sudo, run_type),
-            Distribution::Exherbo => upgrade_exherbo(&sudo, cleanup, run_type),
-            Distribution::NixOS => upgrade_nixos(&sudo, cleanup, run_type),
+            Distribution::Suse => upgrade_suse(sudo, run_type),
+            Distribution::Void => upgrade_void(sudo, run_type),
+            Distribution::Solus => upgrade_solus(sudo, run_type),
+            Distribution::Exherbo => upgrade_exherbo(sudo, cleanup, run_type),
+            Distribution::NixOS => upgrade_nixos(sudo, cleanup, run_type),
             Distribution::KDENeon => upgrade_neon(ctx),
         }
     }
@@ -614,112 +614,112 @@ mod tests {
     }
     #[test]
     fn test_arch_linux() {
-        test_template(&include_str!("os_release/arch"), Distribution::Arch);
-        test_template(&include_str!("os_release/arch32"), Distribution::Arch);
+        test_template(include_str!("os_release/arch"), Distribution::Arch);
+        test_template(include_str!("os_release/arch32"), Distribution::Arch);
     }
 
     #[test]
     fn test_centos() {
-        test_template(&include_str!("os_release/centos"), Distribution::CentOS);
+        test_template(include_str!("os_release/centos"), Distribution::CentOS);
     }
 
     #[test]
     fn test_rhel() {
-        test_template(&include_str!("os_release/rhel"), Distribution::CentOS);
+        test_template(include_str!("os_release/rhel"), Distribution::CentOS);
     }
 
     #[test]
     fn test_clearlinux() {
-        test_template(&include_str!("os_release/clearlinux"), Distribution::ClearLinux);
+        test_template(include_str!("os_release/clearlinux"), Distribution::ClearLinux);
     }
 
     #[test]
     fn test_debian() {
-        test_template(&include_str!("os_release/debian"), Distribution::Debian);
+        test_template(include_str!("os_release/debian"), Distribution::Debian);
     }
 
     #[test]
     fn test_ubuntu() {
-        test_template(&include_str!("os_release/ubuntu"), Distribution::Debian);
+        test_template(include_str!("os_release/ubuntu"), Distribution::Debian);
     }
 
     #[test]
     fn test_mint() {
-        test_template(&include_str!("os_release/mint"), Distribution::Debian);
+        test_template(include_str!("os_release/mint"), Distribution::Debian);
     }
 
     #[test]
     fn test_opensuse() {
-        test_template(&include_str!("os_release/opensuse"), Distribution::Suse);
+        test_template(include_str!("os_release/opensuse"), Distribution::Suse);
     }
 
     #[test]
     fn test_oraclelinux() {
-        test_template(&include_str!("os_release/oracle"), Distribution::CentOS);
+        test_template(include_str!("os_release/oracle"), Distribution::CentOS);
     }
 
     #[test]
     fn test_fedora() {
-        test_template(&include_str!("os_release/fedora"), Distribution::Fedora);
+        test_template(include_str!("os_release/fedora"), Distribution::Fedora);
     }
 
     #[test]
     fn test_antergos() {
-        test_template(&include_str!("os_release/antergos"), Distribution::Arch);
+        test_template(include_str!("os_release/antergos"), Distribution::Arch);
     }
 
     #[test]
     fn test_manjaro() {
-        test_template(&include_str!("os_release/manjaro"), Distribution::Arch);
+        test_template(include_str!("os_release/manjaro"), Distribution::Arch);
     }
 
     #[test]
     fn test_manjaro_arm() {
-        test_template(&include_str!("os_release/manjaro-arm"), Distribution::Arch);
+        test_template(include_str!("os_release/manjaro-arm"), Distribution::Arch);
     }
 
     #[test]
     fn test_anarchy() {
-        test_template(&include_str!("os_release/anarchy"), Distribution::Arch);
+        test_template(include_str!("os_release/anarchy"), Distribution::Arch);
     }
 
     #[test]
     fn test_gentoo() {
-        test_template(&include_str!("os_release/gentoo"), Distribution::Gentoo);
+        test_template(include_str!("os_release/gentoo"), Distribution::Gentoo);
     }
 
     #[test]
     fn test_exherbo() {
-        test_template(&include_str!("os_release/exherbo"), Distribution::Exherbo);
+        test_template(include_str!("os_release/exherbo"), Distribution::Exherbo);
     }
 
     #[test]
     fn test_amazon_linux() {
-        test_template(&include_str!("os_release/amazon_linux"), Distribution::CentOS);
+        test_template(include_str!("os_release/amazon_linux"), Distribution::CentOS);
     }
 
     #[test]
     fn test_nixos() {
-        test_template(&include_str!("os_release/nixos"), Distribution::NixOS);
+        test_template(include_str!("os_release/nixos"), Distribution::NixOS);
     }
 
     #[test]
     fn test_fedoraremixonwsl() {
-        test_template(&include_str!("os_release/fedoraremixforwsl"), Distribution::Fedora);
+        test_template(include_str!("os_release/fedoraremixforwsl"), Distribution::Fedora);
     }
 
     #[test]
     fn test_pengwinonwsl() {
-        test_template(&include_str!("os_release/pengwinonwsl"), Distribution::Debian);
+        test_template(include_str!("os_release/pengwinonwsl"), Distribution::Debian);
     }
 
     #[test]
     fn test_artix() {
-        test_template(&include_str!("os_release/artix"), Distribution::Arch);
+        test_template(include_str!("os_release/artix"), Distribution::Arch);
     }
 
     #[test]
     fn test_garuda() {
-        test_template(&include_str!("os_release/garuda"), Distribution::Arch);
+        test_template(include_str!("os_release/garuda"), Distribution::Arch);
     }
 }
