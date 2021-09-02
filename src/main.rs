@@ -173,6 +173,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Nix, "nix", || unix::run_nix(&ctx))?;
         runner.execute(Step::HomeManager, "home-manager", || unix::run_home_manager(run_type))?;
         runner.execute(Step::Asdf, "asdf", || unix::run_asdf(run_type))?;
+        runner.execute(Step::Pkgin, "pkgin", || unix::run_pkgin(&ctx))?;
     }
 
     #[cfg(target_os = "dragonfly")]

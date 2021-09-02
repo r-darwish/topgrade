@@ -98,6 +98,7 @@ pub enum Step {
     Pipx,
     Pip3,
     Pkg,
+    Pkgin,
     Pnpm,
     Powershell,
     Raco,

@@ -100,6 +100,24 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
+pub fn run_pkgin(ctx: &ExecutionContext) -> Result<()> {
+    let pkgin = require("pkgin")?;
+
+    let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
+    command.arg(&pkgin).arg("update");
+    if ctx.config().yes() {
+        command.arg("-y");
+    }
+    command.check_run()?;
+
+    let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
+    command.arg(&pkgin).arg("upgrade");
+    if ctx.config().yes() {
+        command.arg("-y");
+    }
+    command.check_run()
+}
+
 pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
     let fish = require("fish")?;
     ctx.base_dirs()
