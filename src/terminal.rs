@@ -1,12 +1,3 @@
-use crate::report::StepResult;
-#[cfg(target_os = "linux")]
-use crate::utils::which;
-use chrono::{Local, Timelike};
-use console::{style, Key, Term};
-use lazy_static::lazy_static;
-use log::{debug, error};
-#[cfg(target_os = "macos")]
-use notify_rust::{Notification, Timeout};
 use std::cmp::{max, min};
 use std::env;
 use std::io::{self, Write};
@@ -15,8 +6,19 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
+
+use chrono::{Local, Timelike};
+use console::{style, Key, Term};
+use lazy_static::lazy_static;
+use log::{debug, error};
+#[cfg(target_os = "macos")]
+use notify_rust::{Notification, Timeout};
 #[cfg(windows)]
 use which_crate::which;
+
+use crate::report::StepResult;
+#[cfg(target_os = "linux")]
+use crate::utils::which;
 
 lazy_static! {
     static ref TERMINAL: Mutex<Terminal> = Mutex::new(Terminal::new());
@@ -33,7 +35,12 @@ pub fn shell() -> &'static str {
 }
 
 pub fn run_shell() {
-    Command::new(shell()).spawn().unwrap().wait().unwrap();
+    Command::new(shell())
+        .env("IN_TOPGRADE", "1")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 }
 
 struct Terminal {
