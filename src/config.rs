@@ -620,8 +620,7 @@ impl Config {
     /// Extra trizen arguments
     #[allow(dead_code)]
     pub fn trizen_arguments(&self) -> &str {
-        &self
-            .config_file
+        self.config_file
             .linux
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())

@@ -72,7 +72,7 @@ async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -
         println!("{} pulling {}", style("Failed").red().bold(), &repo);
         print!("{}", message);
     } else {
-        let after_revision = get_head_revision(&git, &repo);
+        let after_revision = get_head_revision(git, &repo);
 
         match (&before_revision, &after_revision) {
             (Some(before), Some(after)) if before != after => {
@@ -219,7 +219,7 @@ impl Git {
                 }
                 _ => true, // repo has remotes or command to check for remotes has failed. proceed to pull anyway.
             })
-            .map(|repo| pull_repository(repo.clone(), &git, ctx));
+            .map(|repo| pull_repository(repo.clone(), git, ctx));
 
         let stream_of_futures = if let Some(limit) = ctx.config().git_concurrency_limit() {
             iter(futures_iterator).buffer_unordered(limit).boxed()
@@ -267,7 +267,7 @@ impl<'a> Repositories<'a> {
                 match entry {
                     Ok(path) => {
                         if let Some(last_git_repo) = &last_git_repo {
-                            if path.is_descendant_of(&last_git_repo) {
+                            if path.is_descendant_of(last_git_repo) {
                                 debug!(
                                     "Skipping {} because it's a decendant of last known repo {}",
                                     path.display(),

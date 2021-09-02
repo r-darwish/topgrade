@@ -99,7 +99,7 @@ pub fn run_micro(run_type: RunType) -> Result<()> {
     print_separator("micro");
 
     let stdout = run_type.execute(&micro).args(&["-plugin", "update"]).string_output()?;
-    std::io::stdout().write_all(&stdout.as_bytes())?;
+    std::io::stdout().write_all(stdout.as_bytes())?;
 
     if stdout.contains("Nothing to install / update") || stdout.contains("One or more plugins installed") {
         Ok(())

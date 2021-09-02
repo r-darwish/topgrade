@@ -110,7 +110,7 @@ pub fn run_in_tmux(args: &Option<String>) -> ! {
 pub fn run_command(ctx: &ExecutionContext, command: &str) -> Result<()> {
     Tmux::new(ctx.config().tmux_arguments())
         .build()
-        .args(&["new-window", "-a", "-t", "topgrade:1", &command])
+        .args(&["new-window", "-a", "-t", "topgrade:1", command])
         .env_remove("TMUX")
         .spawn()?
         .wait()?
