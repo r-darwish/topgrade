@@ -84,7 +84,7 @@ impl Powershell {
     pub fn supports_windows_update(&self) -> bool {
         self.path
             .as_ref()
-            .map(|p| Self::has_module(&p, "PSWindowsUpdate"))
+            .map(|p| Self::has_module(p, "PSWindowsUpdate"))
             .unwrap_or(false)
     }
 
