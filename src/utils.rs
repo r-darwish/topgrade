@@ -136,9 +136,5 @@ pub fn require<T: AsRef<OsStr> + Debug>(binary_name: T) -> Result<PathBuf> {
 
 #[allow(dead_code)]
 pub fn require_option<T>(option: Option<T>, cause: String) -> Result<T> {
-    if let Some(value) = option {
-        Ok(value)
-    } else {
-        Err(SkipStep(cause).into())
-    }
+    option.ok_or_else(|| SkipStep(cause).into())
 }
