@@ -49,7 +49,7 @@ pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type()
         .execute(cargo_update)
-        .args(&["install-update", "--git", "--all"])
+        .args(["install-update", "--git", "--all"])
         .check_run()
 }
 
@@ -82,7 +82,7 @@ pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("Sheldon");
 
-    ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
+    ctx.run_type().execute(&sheldon).args(["lock", "--update"]).check_run()
 }
 
 pub fn run_fossil(run_type: RunType) -> Result<()> {
@@ -90,7 +90,7 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
 
     print_separator("Fossil");
 
-    run_type.execute(&fossil).args(&["all", "sync"]).check_run()
+    run_type.execute(&fossil).args(["all", "sync"]).check_run()
 }
 
 pub fn run_micro(run_type: RunType) -> Result<()> {
@@ -98,7 +98,7 @@ pub fn run_micro(run_type: RunType) -> Result<()> {
 
     print_separator("micro");
 
-    let stdout = run_type.execute(&micro).args(&["-plugin", "update"]).string_output()?;
+    let stdout = run_type.execute(&micro).args(["-plugin", "update"]).string_output()?;
     std::io::stdout().write_all(stdout.as_bytes())?;
 
     if stdout.contains("Nothing to install / update") || stdout.contains("One or more plugins installed") {
@@ -119,7 +119,7 @@ pub fn run_apm(run_type: RunType) -> Result<()> {
 
     print_separator("Atom Package Manager");
 
-    run_type.execute(&apm).args(&["upgrade", "--confirm=false"]).check_run()
+    run_type.execute(&apm).args(["upgrade", "--confirm=false"]).check_run()
 }
 
 pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -128,7 +128,7 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("rustup");
 
     if rustup.canonicalize()?.is_descendant_of(base_dirs.home_dir()) {
-        run_type.execute(&rustup).args(&["self", "update"]).check_run()?;
+        run_type.execute(&rustup).args(["self", "update"]).check_run()?;
     }
 
     run_type.execute(&rustup).arg("update").check_run()
@@ -140,8 +140,8 @@ pub fn run_choosenim(ctx: &ExecutionContext) -> Result<()> {
     print_separator("choosenim");
     let run_type = ctx.run_type();
 
-    run_type.execute(&choosenim).args(&["update", "self"]).check_run()?;
-    run_type.execute(&choosenim).args(&["update", "stable"]).check_run()
+    run_type.execute(&choosenim).args(["update", "self"]).check_run()?;
+    run_type.execute(&choosenim).args(["update", "stable"]).check_run()
 }
 
 pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
@@ -149,7 +149,7 @@ pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
 
     print_separator("Krew");
 
-    run_type.execute(&krew).args(&["upgrade"]).check_run()
+    run_type.execute(&krew).args(["upgrade"]).check_run()
 }
 
 pub fn run_gcloud_components_update(run_type: RunType) -> Result<()> {
@@ -159,7 +159,7 @@ pub fn run_gcloud_components_update(run_type: RunType) -> Result<()> {
 
     run_type
         .execute(&gcloud)
-        .args(&["components", "update", "--quiet"])
+        .args(["components", "update", "--quiet"])
         .check_run()
 }
 
@@ -168,7 +168,7 @@ pub fn run_jetpack(run_type: RunType) -> Result<()> {
 
     print_separator("Jetpack");
 
-    run_type.execute(&jetpack).args(&["global", "update"]).check_run()
+    run_type.execute(&jetpack).args(["global", "update"]).check_run()
 }
 
 pub fn run_rtcl(ctx: &ExecutionContext) -> Result<()> {
@@ -192,7 +192,7 @@ pub fn run_vcpkg_update(run_type: RunType) -> Result<()> {
     let vcpkg = utils::require("vcpkg")?;
     print_separator("vcpkg");
 
-    run_type.execute(&vcpkg).args(&["upgrade", "--no-dry-run"]).check_run()
+    run_type.execute(&vcpkg).args(["upgrade", "--no-dry-run"]).check_run()
 }
 
 pub fn run_pipx_update(run_type: RunType) -> Result<()> {
@@ -212,7 +212,7 @@ pub fn run_pip3_update(run_type: RunType) -> Result<()> {
 
     run_type
         .execute(&pip3)
-        .args(&["install", "--upgrade", "--user", "pip"])
+        .args(["install", "--upgrade", "--user", "pip"])
         .check_run()
 }
 
@@ -263,7 +263,7 @@ pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
         c.arg(&tlmgr);
         c
     };
-    command.args(&["update", "--self", "--all"]);
+    command.args(["update", "--self", "--all"]);
 
     command.check_run()
 }
@@ -305,7 +305,7 @@ pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> 
 pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)
-        .args(&["global", "config", "--absolute", "--quiet", "home"])
+        .args(["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
         .map_err(|e| (SkipStep(format!("Error getting the composer directory: {}", e))))
         .map(|s| PathBuf::from(s.trim()))?
@@ -343,7 +343,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
         }
     }
 
-    let output = Command::new(&composer).args(&["global", "update"]).output()?;
+    let output = Command::new(&composer).args(["global", "update"]).output()?;
     let status = output.status;
     if !status.success() {
         return Err(TopgradeError::ProcessFailed(status).into());
@@ -364,7 +364,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let dotnet = utils::require("dotnet")?;
 
-    let output = Command::new(dotnet).args(&["tool", "list", "--global"]).output()?;
+    let output = Command::new(dotnet).args(["tool", "list", "--global"]).output()?;
 
     if !output.status.success() {
         return Err(SkipStep(format!("dotnet failed with exit code {:?}", output.status)).into());
@@ -387,7 +387,7 @@ pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
         let package_name = package.split_whitespace().next().unwrap();
         ctx.run_type()
             .execute("dotnet")
-            .args(&["tool", "update", package_name, "--global"])
+            .args(["tool", "update", package_name, "--global"])
             .check_run()?;
     }
 
@@ -399,7 +399,7 @@ pub fn run_raco_update(run_type: RunType) -> Result<()> {
 
     print_separator("Racket Package Manager");
 
-    run_type.execute(&raco).args(&["pkg", "update", "--all"]).check_run()
+    run_type.execute(&raco).args(["pkg", "update", "--all"]).check_run()
 }
 
 pub fn bin_update(ctx: &ExecutionContext) -> Result<()> {
