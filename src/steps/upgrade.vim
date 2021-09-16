@@ -16,7 +16,12 @@ endif
 
 if exists(":PackerUpdate")
     echo "Packer"
+    augroup TOPGRADE_AUCMDS
+      au!
+      autocmd User PackerComplete quitall
+    augroup END
     PackerSync
+    finish
 endif
 
 if exists(":DeinUpdate")
