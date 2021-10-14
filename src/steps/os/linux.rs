@@ -69,6 +69,8 @@ impl Distribution {
                         return Ok(Distribution::Suse);
                     } else if id_like.contains(&"arch") || id_like.contains(&"archlinux") {
                         return Ok(Distribution::Arch);
+                    } else if id_like.contains(&"alpine") {
+                        return Ok(Distribution::Alpine);
                     } else if id_like.contains(&"fedora") {
                         return Ok(Distribution::Fedora);
                     }
