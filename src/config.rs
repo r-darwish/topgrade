@@ -94,6 +94,7 @@ pub enum Step {
     Nix,
     Node,
     Opam,
+    Pacstall,
     Pearl,
     Pipx,
     Pip3,
