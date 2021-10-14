@@ -727,6 +727,6 @@ mod tests {
 
     #[test]
     fn test_pureos() {
-        test_template(&include_str!("os_release/pureos"), Distribution::Debian);
+        test_template(include_str!("os_release/pureos"), Distribution::Debian);
     }
 }
