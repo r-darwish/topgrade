@@ -45,16 +45,15 @@ impl NPM {
 
         Ok(())
     }
-}
 
-pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
-    let npm = require("npm").map(NPM::new)?;
-    #[allow(unused_mut)]
-    let mut use_sudo = false;
+    #[cfg(not(target_os = "linux"))]
+    pub fn should_use_sudo(&self) -> Result<bool> {
+        Ok(false)
+    }
 
     #[cfg(target_os = "linux")]
-    {
-        let npm_root = npm.root()?;
+    pub fn should_use_sudo(&self) -> Result<bool> {
+        let npm_root = self.root()?;
         if !npm_root.exists() {
             return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(),)).into());
         }
@@ -62,29 +61,44 @@ pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
         let metadata = std::fs::metadata(&npm_root)?;
         let uid = Uid::effective();
 
-        if metadata.uid() != uid.as_raw() {
-            if metadata.uid() == 0 && (ctx.config().npm_use_sudo()) {
-                use_sudo = true;
-            } else {
-                return Err(SkipStep(format!(
-                    "NPM root at {} is owned by {} which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo",
-                    npm_root.display(),
-                    metadata.uid()
-                ))
-                    .into());
-            }
-        }
+        Ok(metadata.uid() != uid.as_raw() && metadata.uid() == 0)
     }
+}
+
+fn should_use_sudo(npm: &NPM, ctx: &ExecutionContext) -> Result<bool> {
+    if npm.should_use_sudo()? {
+        if ctx.config().npm_use_sudo() {
+            Ok(true)
+        } else {
+            return Err(SkipStep(format!(
+                "NPM root is owned by another user which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo",
+            ))
+                .into());
+        }
+    } else {
+        Ok(false)
+    }
+}
+
+pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let npm = require("npm").map(NPM::new)?;
+    let use_sudo = should_use_sudo(&npm, ctx)?;
 
     print_separator("Node Package Manager");
     npm.upgrade(ctx.run_type(), use_sudo)
 }
 
-pub fn pnpm_global_update(run_type: RunType) -> Result<()> {
+pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
     let pnpm = require("pnpm")?;
+    let npm = require("npm").map(NPM::new)?;
+    let use_sudo = should_use_sudo(&npm, ctx)?;
 
     print_separator("Performant Node Package Manager");
-    run_type.execute(&pnpm).args(["update", "-g"]).check_run()
+    if use_sudo {
+        run_type.execute("sudo").arg(pnpm).args(["update", "-g"]).check_run()
+    } else {
+        run_type.execute(&pnpm).args(["update", "-g"]).check_run()
+    }
 }
 
 pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
