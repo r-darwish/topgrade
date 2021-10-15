@@ -52,7 +52,7 @@ impl Distribution {
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
-            Some("debian") => Distribution::Debian,
+            Some("debian" | "pureos") => Distribution::Debian,
             Some("arch" | "anarchy" | "manjaro-arm" | "garuda" | "artix") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
@@ -723,5 +723,10 @@ mod tests {
     #[test]
     fn test_garuda() {
         test_template(include_str!("os_release/garuda"), Distribution::Arch);
+    }
+
+    #[test]
+    fn test_pureos() {
+        test_template(include_str!("os_release/pureos"), Distribution::Debian);
     }
 }
