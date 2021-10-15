@@ -1,14 +1,13 @@
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
+use crate::steps::os::archlinux;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use anyhow::Result;
 use ini::Ini;
 use log::debug;
 use serde::Deserialize;
-use std::env::var_os;
-use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use walkdir::WalkDir;
@@ -95,7 +94,7 @@ impl Distribution {
 
         match self {
             Distribution::Alpine => upgrade_alpine_linux(ctx),
-            Distribution::Arch => upgrade_arch_linux(ctx),
+            Distribution::Arch => archlinux::upgrade_arch_linux(ctx),
             Distribution::CentOS | Distribution::Fedora => upgrade_redhat(ctx),
             Distribution::ClearLinux => upgrade_clearlinux(ctx),
             Distribution::Debian => upgrade_debian(ctx),
@@ -153,97 +152,6 @@ fn upgrade_alpine_linux(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type().execute(sudo).arg(&apk).arg("update").check_run()?;
     ctx.run_type().execute(sudo).arg(&apk).arg("upgrade").check_run()
-}
-
-fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
-    let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
-    let yes = ctx.config().yes();
-    let sudo = ctx.sudo();
-    let run_type = ctx.run_type();
-    let cleanup = ctx.config().cleanup();
-
-    let path = {
-        let mut path = OsString::from("/usr/bin:");
-        path.push(var_os("PATH").unwrap());
-        path
-    };
-    debug!("Running Arch update with path: {:?}", path);
-
-    let yay = which("yay");
-    if let Some(yay) = &yay {
-        run_type
-            .execute(&yay)
-            .arg("-Pw")
-            .spawn()
-            .and_then(|mut p| p.wait())
-            .ok();
-    }
-
-    if let Some(yay) = yay.or_else(|| which("paru")) {
-        let mut command = run_type.execute(&yay);
-
-        command
-            .arg("--pacman")
-            .arg(&pacman)
-            .arg("-Syu")
-            .args(ctx.config().yay_arguments().split_whitespace())
-            .env("PATH", path);
-
-        if yes {
-            command.arg("--noconfirm");
-        }
-        command.check_run()?;
-
-        if cleanup {
-            let mut command = run_type.execute(&yay);
-            command.arg("--pacman").arg(&pacman).arg("-Scc");
-            if yes {
-                command.arg("--noconfirm");
-            }
-            command.check_run()?;
-        }
-    } else if let Some(trizen) = which("trizen") {
-        let mut command = run_type.execute(&trizen);
-
-        command
-            .arg("-Syu")
-            .args(ctx.config().trizen_arguments().split_whitespace())
-            .env("PATH", path);
-
-        if yes {
-            command.arg("--noconfirm");
-        }
-        command.check_run()?;
-
-        if cleanup {
-            let mut command = run_type.execute(&trizen);
-            command.arg("-Sc");
-            if yes {
-                command.arg("--noconfirm");
-            }
-            command.check_run()?;
-        }
-    } else if let Some(sudo) = &sudo {
-        let mut command = run_type.execute(&sudo);
-        command.arg(&pacman).arg("-Syu").env("PATH", path);
-        if yes {
-            command.arg("--noconfirm");
-        }
-        command.check_run()?;
-
-        if cleanup {
-            let mut command = run_type.execute(&sudo);
-            command.arg(&pacman).arg("-Scc");
-            if yes {
-                command.arg("--noconfirm");
-            }
-            command.check_run()?;
-        }
-    } else {
-        print_warning("Neither sudo nor yay detected. Skipping system upgrade");
-    }
-
-    Ok(())
 }
 
 fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
@@ -614,6 +522,7 @@ mod tests {
             expected_distribution
         );
     }
+
     #[test]
     fn test_arch_linux() {
         test_template(include_str!("os_release/arch"), Distribution::Arch);
