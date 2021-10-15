@@ -177,10 +177,20 @@ pub struct Brew {
     greedy_cask: Option<bool>,
 }
 
+#[derive(Debug, Deserialize, Clone, Copy)]
+pub enum ArchPackageManager {
+    Autodetect,
+    Trizen,
+    Paru,
+    Yay,
+    Pacman,
+}
+
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    arch_package_manager: Option<ArchPackageManager>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
     apt_arguments: Option<String>,
@@ -625,6 +635,16 @@ impl Config {
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())
             .unwrap_or("")
+    }
+
+    /// Extra yay arguments
+    #[allow(dead_code)]
+    pub fn arch_package_manager(&self) -> ArchPackageManager {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.arch_package_manager)
+            .unwrap_or(ArchPackageManager::Autodetect)
     }
 
     /// Extra yay arguments

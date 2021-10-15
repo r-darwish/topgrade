@@ -1,5 +1,7 @@
 #[cfg(target_os = "android")]
 pub mod android;
+#[cfg(target_os = "linux")]
+mod archlinux;
 #[cfg(target_os = "dragonfly")]
 pub mod dragonfly;
 #[cfg(target_os = "freebsd")]
@@ -12,8 +14,6 @@ pub mod macos;
 pub mod unix;
 #[cfg(target_os = "windows")]
 pub mod windows;
-#[cfg(target_os = "linux")]
-mod archlinux;
 
 #[cfg(windows)]
 pub use windows::reboot;
