@@ -77,6 +77,14 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     command.check_run()
 }
 
+pub fn run_haxelib_update(run_type: RunType) -> Result<()> {
+    let haxelib = utils::require("haxelib")?;
+
+    print_separator("haxelib");
+
+    run_type.execute(&haxelib).args(["update"]).check_run()
+}
+
 pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     let sheldon = utils::require("sheldon")?;
 
