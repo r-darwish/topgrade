@@ -77,12 +77,28 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     command.check_run()
 }
 
-pub fn run_haxelib_update(run_type: RunType) -> Result<()> {
+pub fn run_haxelib_update(ctx: &ExecutionContext) -> Result<()> {
     let haxelib = utils::require("haxelib")?;
+
+    let haxelib_dir =
+        PathBuf::from(std::str::from_utf8(&Command::new(&haxelib).arg("config").output()?.stdout)?.trim()).require()?;
+
+    let directory_writable = tempfile_in(&haxelib_dir).is_ok();
+    debug!("{:?} writable: {}", haxelib_dir, directory_writable);
 
     print_separator("haxelib");
 
-    run_type.execute(&haxelib).args(["update"]).check_run()
+    let mut command = if directory_writable {
+        ctx.run_type().execute(&haxelib)
+    } else {
+        let mut c = ctx
+            .run_type()
+            .execute(ctx.sudo().as_ref().ok_or(TopgradeError::SudoRequired)?);
+        c.arg(&haxelib);
+        c
+    };
+
+    command.arg("update").check_run()
 }
 
 pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
