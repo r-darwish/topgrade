@@ -6,6 +6,7 @@ use std::env::var_os;
 use std::ffi::OsString;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use walkdir::WalkDir;
 
 fn get_execution_path() -> OsString {
     let mut path = OsString::from("/usr/bin:");
@@ -170,4 +171,25 @@ pub fn get_arch_package_manager(ctx: &ExecutionContext) -> Option<Box<dyn ArchPa
 pub fn upgrade_arch_linux(ctx: &ExecutionContext) -> Result<()> {
     let package_manager = get_arch_package_manager(ctx).unwrap();
     package_manager.upgrade(ctx)
+}
+
+pub fn show_pacnew() {
+    let mut iter = WalkDir::new("/etc")
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|f| {
+            f.path()
+                .extension()
+                .filter(|ext| ext == &"pacnew" || ext == &"pacsave")
+                .is_some()
+        })
+        .peekable();
+
+    if iter.peek().is_some() {
+        println!("\nPacman backup configuration files found:");
+
+        for entry in iter {
+            println!("{}", entry.path().display());
+        }
+    }
 }
