@@ -10,7 +10,6 @@ use log::{debug, warn};
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
-use walkdir::WalkDir;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
 
@@ -116,7 +115,7 @@ impl Distribution {
 
     pub fn show_summary(self) {
         if let Distribution::Arch = self {
-            show_pacnew();
+            archlinux::show_pacnew();
         }
     }
 
@@ -154,27 +153,6 @@ fn is_wsl() -> Result<bool> {
     let output = Command::new("uname").arg("-r").check_output()?;
     debug!("Uname output: {}", output);
     Ok(output.contains("microsoft"))
-}
-
-pub fn show_pacnew() {
-    let mut iter = WalkDir::new("/etc")
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|f| {
-            f.path()
-                .extension()
-                .filter(|ext| ext == &"pacnew" || ext == &"pacsave")
-                .is_some()
-        })
-        .peekable();
-
-    if iter.peek().is_some() {
-        println!("\nPacman backup configuration files found:");
-
-        for entry in iter {
-            println!("{}", entry.path().display());
-        }
-    }
 }
 
 fn upgrade_alpine_linux(ctx: &ExecutionContext) -> Result<()> {
