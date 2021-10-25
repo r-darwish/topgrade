@@ -12,7 +12,7 @@ edition = "2018"
 readme = "README.md"
 
 [dependencies]
-directories = "3.0.2"
+directories = "4.0.1"
 serde = { version = "1.0.125", features = ["derive"] }
 toml = "0.5.8"
 which_crate = { version = "4.1.0", package = "which" }
@@ -20,12 +20,12 @@ shellexpand = "2.1.0"
 structopt = "0.3.21"
 log = "0.4.14"
 walkdir = "2.3.2"
-console = "0.14.1"
+console = "0.15.0"
 lazy_static = "1.4.0"
 chrono = "0.4.19"
 pretty_env_logger = "0.4.0"
 glob = "0.3.0"
-strum = { version = "0.20.0", features = ["derive"] }
+strum = { version = "0.22.0", features = ["derive"] }
 thiserror = "1.0.24"
 anyhow = "1.0.40"
 tempfile = "3.2.0"
@@ -38,11 +38,11 @@ regex = "1.5.3"
 notify-rust = "4.5.0"
 
 [target.'cfg(unix)'.dependencies]
-nix = "0.20.0"
-self_update_crate = { version = "0.26.0", optional = true, package = "self_update", features = ["archive-tar", "compression-flate2"] }
+nix = "0.23.0"
+self_update_crate = { version = "0.27.0", optional = true, package = "self_update", features = ["archive-tar", "compression-flate2"] }
 
 [target.'cfg(windows)'.dependencies]
-self_update_crate = { version = "0.26.0", optional = true, package = "self_update", features = ["archive-zip", "compression-zip-deflate"] }
+self_update_crate = { version = "0.27.0", optional = true, package = "self_update", features = ["archive-zip", "compression-zip-deflate"] }
 winapi = "0.3.9"
 parselnk = "0.1.0"
 
