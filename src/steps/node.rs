@@ -55,7 +55,7 @@ impl NPM {
     pub fn should_use_sudo(&self) -> Result<bool> {
         let npm_root = self.root()?;
         if !npm_root.exists() {
-            return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(),)).into());
+            return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(), )).into());
         }
 
         let metadata = std::fs::metadata(&npm_root)?;
@@ -70,10 +70,8 @@ fn should_use_sudo(npm: &NPM, ctx: &ExecutionContext) -> Result<bool> {
         if ctx.config().npm_use_sudo() {
             Ok(true)
         } else {
-            return Err(SkipStep(format!(
-                "NPM root is owned by another user which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo",
-            ))
-                .into());
+            Err(SkipStep("NPM root is owned by another user which is not the current user. Set use_sudo = true under the NPM section in your configuration to run NPM as sudo".to_string())
+                .into())
         }
     } else {
         Ok(false)
@@ -95,9 +93,9 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("Performant Node Package Manager");
     if use_sudo {
-        run_type.execute("sudo").arg(pnpm).args(["update", "-g"]).check_run()
+        ctx.run_type().execute("sudo").arg(pnpm).args(["update", "-g"]).check_run()
     } else {
-        run_type.execute(&pnpm).args(["update", "-g"]).check_run()
+        ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
     }
 }
 
