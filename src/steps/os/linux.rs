@@ -137,7 +137,7 @@ fn update_bedrock(ctx: &ExecutionContext) -> Result<()> {
     for distribution in parsed_output.split('\n') {
         debug!("Bedrock distribution {}", distribution);
         match distribution {
-            "arch" => upgrade_arch_linux(ctx)?,
+            "arch" => archlinux::upgrade_arch_linux(ctx)?,
             "debian" | "ubuntu" => upgrade_debian(ctx)?,
             "centos" | "fedora" => upgrade_redhat(ctx)?,
             "bedrock" => {}
