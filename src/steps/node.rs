@@ -46,11 +46,6 @@ impl NPM {
         Ok(())
     }
 
-    #[cfg(not(target_os = "linux"))]
-    pub fn should_use_sudo(&self) -> Result<bool> {
-        Ok(false)
-    }
-
     #[cfg(target_os = "linux")]
     pub fn should_use_sudo(&self) -> Result<bool> {
         let npm_root = self.root()?;
@@ -65,6 +60,7 @@ impl NPM {
     }
 }
 
+#[cfg(target_os = "linux")]
 fn should_use_sudo(npm: &NPM, ctx: &ExecutionContext) -> Result<bool> {
     if npm.should_use_sudo()? {
         if ctx.config().npm_use_sudo() {
@@ -80,20 +76,25 @@ fn should_use_sudo(npm: &NPM, ctx: &ExecutionContext) -> Result<bool> {
 
 pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
-    let use_sudo = should_use_sudo(&npm, ctx)?;
 
     print_separator("Node Package Manager");
-    npm.upgrade(ctx.run_type(), use_sudo)
+    #[cfg(target_os = "linux")]
+    {
+        npm.upgrade(ctx.run_type(), should_use_sudo(&npm, ctx)?)
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        npm.upgrade(ctx.run_type(), false)
+    }
 }
 
 pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
     let pnpm = require("pnpm")?;
-    let npm = require("npm").map(NPM::new)?;
-    let use_sudo = should_use_sudo(&npm, ctx)?;
 
     print_separator("Performant Node Package Manager");
     #[cfg(target_os = "linux")]
-    if use_sudo {
+    if should_use_sudo(&require("npm").map(NPM::new)?, ctx)? {
         ctx.run_type()
             .execute("sudo")
             .arg(pnpm)
