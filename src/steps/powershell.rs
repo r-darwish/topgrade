@@ -23,7 +23,7 @@ impl Powershell {
 
         let profile = path.as_ref().and_then(|path| {
             Command::new(path)
-                .args(&["-NoProfile", "-Command", "Split-Path $profile"])
+                .args(["-NoProfile", "-Command", "Split-Path $profile"])
                 .check_output()
                 .map(|output| PathBuf::from(output.trim()))
                 .and_then(|p| p.require())
@@ -44,7 +44,7 @@ impl Powershell {
     #[cfg(windows)]
     pub fn has_module(powershell: &Path, command: &str) -> bool {
         Command::new(&powershell)
-            .args(&[
+            .args([
                 "-NoProfile",
                 "-Command",
                 &format!("Get-Module -ListAvailable {}", command),
@@ -76,7 +76,7 @@ impl Powershell {
         println!("Updating modules...");
         ctx.run_type()
             .execute(&powershell)
-            .args(&["-NoProfile", "-Command", &cmd.join(" ")])
+            .args(["-NoProfile", "-Command", &cmd.join(" ")])
             .check_run()
     }
 
@@ -84,7 +84,7 @@ impl Powershell {
     pub fn supports_windows_update(&self) -> bool {
         self.path
             .as_ref()
-            .map(|p| Self::has_module(&p, "PSWindowsUpdate"))
+            .map(|p| Self::has_module(p, "PSWindowsUpdate"))
             .unwrap_or(false)
     }
 
@@ -103,7 +103,7 @@ impl Powershell {
         };
 
         command
-            .args(&[
+            .args([
                 "-NoProfile",
                 "-Command",
                 &format!(

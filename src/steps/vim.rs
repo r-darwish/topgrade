@@ -48,9 +48,9 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     let output = ctx
         .run_type()
         .execute(&vim)
-        .args(&["-u"])
+        .arg("-u")
         .arg(vimrc)
-        .args(&["-U", "NONE", "-V1", "-nNesS"])
+        .args(["-U", "NONE", "-V1", "-nNesS"])
         .arg(tempfile.path())
         .output()?;
 
@@ -80,7 +80,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
         return Err(SkipStep(String::from("vim binary might by actually nvim")).into());
     }
 
-    let vimrc = vimrc(&base_dirs)?;
+    let vimrc = vimrc(base_dirs)?;
 
     print_separator("Vim");
     upgrade(&vim, &vimrc, ctx)
@@ -88,7 +88,7 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
 
 pub fn upgrade_neovim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
     let nvim = require("nvim")?;
-    let nvimrc = nvimrc(&base_dirs)?;
+    let nvimrc = nvimrc(base_dirs)?;
 
     print_separator("Neovim");
     upgrade(&nvim, &nvimrc, ctx)

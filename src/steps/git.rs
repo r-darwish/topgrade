@@ -53,7 +53,7 @@ async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -
     command
         .stdin(Stdio::null())
         .current_dir(&repo)
-        .args(&["pull", "--ff-only"]);
+        .args(["pull", "--ff-only"]);
 
     if let Some(extra_arguments) = ctx.config().git_arguments() {
         command.args(extra_arguments.split_whitespace());
@@ -61,7 +61,7 @@ async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -
 
     let pull_output = command.output().await?;
     let submodule_output = AsyncCommand::new(git)
-        .args(&["submodule", "update", "--recursive"])
+        .args(["submodule", "update", "--recursive"])
         .current_dir(&repo)
         .stdin(Stdio::null())
         .output()
@@ -72,7 +72,7 @@ async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -
         println!("{} pulling {}", style("Failed").red().bold(), &repo);
         print!("{}", message);
     } else {
-        let after_revision = get_head_revision(&git, &repo);
+        let after_revision = get_head_revision(git, &repo);
 
         match (&before_revision, &after_revision) {
             (Some(before), Some(after)) if before != after => {
@@ -81,7 +81,7 @@ async fn pull_repository(repo: String, git: &Path, ctx: &ExecutionContext<'_>) -
                 Command::new(&git)
                     .stdin(Stdio::null())
                     .current_dir(&repo)
-                    .args(&[
+                    .args([
                         "--no-pager",
                         "log",
                         "--no-decorate",
@@ -107,7 +107,7 @@ fn get_head_revision(git: &Path, repo: &str) -> Option<String> {
     Command::new(git)
         .stdin(Stdio::null())
         .current_dir(repo)
-        .args(&["rev-parse", "HEAD"])
+        .args(["rev-parse", "HEAD"])
         .check_output()
         .map(|output| output.trim().to_string())
         .map_err(|e| {
@@ -122,7 +122,7 @@ fn has_remotes(git: &Path, repo: &str) -> Option<bool> {
     Command::new(git)
         .stdin(Stdio::null())
         .current_dir(repo)
-        .args(&["remote", "show"])
+        .args(["remote", "show"])
         .check_output()
         .map(|output| output.lines().count() > 0)
         .map_err(|e| {
@@ -165,7 +165,7 @@ impl Git {
                     let output = Command::new(&git)
                         .stdin(Stdio::null())
                         .current_dir(path)
-                        .args(&["rev-parse", "--show-toplevel"])
+                        .args(["rev-parse", "--show-toplevel"])
                         .check_output()
                         .ok()
                         .map(|output| output.trim().to_string());
@@ -219,7 +219,7 @@ impl Git {
                 }
                 _ => true, // repo has remotes or command to check for remotes has failed. proceed to pull anyway.
             })
-            .map(|repo| pull_repository(repo.clone(), &git, ctx));
+            .map(|repo| pull_repository(repo.clone(), git, ctx));
 
         let stream_of_futures = if let Some(limit) = ctx.config().git_concurrency_limit() {
             iter(futures_iterator).buffer_unordered(limit).boxed()
@@ -267,7 +267,7 @@ impl<'a> Repositories<'a> {
                 match entry {
                     Ok(path) => {
                         if let Some(last_git_repo) = &last_git_repo {
-                            if path.is_descendant_of(&last_git_repo) {
+                            if path.is_descendant_of(last_git_repo) {
                                 debug!(
                                     "Skipping {} because it's a decendant of last known repo {}",
                                     path.display(),

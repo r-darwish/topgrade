@@ -1,12 +1,3 @@
-use crate::report::StepResult;
-#[cfg(target_os = "linux")]
-use crate::utils::which;
-use chrono::{Local, Timelike};
-use console::{style, Key, Term};
-use lazy_static::lazy_static;
-use log::{debug, error};
-#[cfg(target_os = "macos")]
-use notify_rust::{Notification, Timeout};
 use std::cmp::{max, min};
 use std::env;
 use std::io::{self, Write};
@@ -15,8 +6,19 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::sync::Mutex;
 use std::time::Duration;
+
+use chrono::{Local, Timelike};
+use console::{style, Key, Term};
+use lazy_static::lazy_static;
+use log::{debug, error};
+#[cfg(target_os = "macos")]
+use notify_rust::{Notification, Timeout};
 #[cfg(windows)]
 use which_crate::which;
+
+use crate::report::StepResult;
+#[cfg(target_os = "linux")]
+use crate::utils::which;
 
 lazy_static! {
     static ref TERMINAL: Mutex<Terminal> = Mutex::new(Terminal::new());
@@ -33,7 +35,12 @@ pub fn shell() -> &'static str {
 }
 
 pub fn run_shell() {
-    Command::new(shell()).spawn().unwrap().wait().unwrap();
+    Command::new(shell())
+        .env("IN_TOPGRADE", "1")
+        .spawn()
+        .unwrap()
+        .wait()
+        .unwrap();
 }
 
 struct Terminal {
@@ -90,7 +97,7 @@ impl Terminal {
                     if let Some(timeout) = timeout {
                         command.arg("-t");
                         command.arg(format!("{}", timeout.as_millis()));
-                        command.args(&["-a", "Topgrade"]);
+                        command.args(["-a", "Topgrade"]);
                         command.arg(message.as_ref());
                     }
                     command.output().ok();
@@ -222,18 +229,18 @@ impl Terminal {
 
         let answer = loop {
             match self.term.read_key() {
-                Ok(Key::Char('y')) | Ok(Key::Char('Y')) => break Ok(true),
-                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
+                Ok(Key::Char('y' | 'Y')) => break Ok(true),
+                Ok(Key::Char('s' | 'S')) => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
                     run_shell();
                     break Ok(true);
                 }
-                Ok(Key::Char('n')) | Ok(Key::Char('N')) | Ok(Key::Enter) => break Ok(false),
+                Ok(Key::Char('n' | 'N') | Key::Enter) => break Ok(false),
                 Err(e) => {
                     error!("Error reading from terminal: {}", e);
                     break Ok(false);
                 }
-                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                Ok(Key::Char('q' | 'Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
                 _ => (),
             }
         };

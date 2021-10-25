@@ -35,18 +35,18 @@ impl<'a> ExecutionContext<'a> {
     }
 
     pub fn git(&self) -> &Git {
-        &self.git
+        self.git
     }
 
     pub fn sudo(&self) -> &Option<PathBuf> {
-        &self.sudo
+        self.sudo
     }
 
     pub fn config(&self) -> &Config {
-        &self.config
+        self.config
     }
 
     pub fn base_dirs(&self) -> &BaseDirs {
-        &self.base_dirs
+        self.base_dirs
     }
 }

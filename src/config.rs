@@ -84,6 +84,8 @@ pub enum Step {
     Gcloud,
     Gem,
     GitRepos,
+    Haxelib,
+    GnomeShellExtensions,
     HomeManager,
     Jetpack,
     Krew,
@@ -94,10 +96,13 @@ pub enum Step {
     Nix,
     Node,
     Opam,
+    Pacstall,
     Pearl,
     Pipx,
     Pip3,
     Pkg,
+    Pkgin,
+    Pnpm,
     Powershell,
     Raco,
     Remotes,
@@ -175,10 +180,20 @@ pub struct Brew {
     greedy_cask: Option<bool>,
 }
 
+#[derive(Debug, Deserialize, Clone, Copy)]
+pub enum ArchPackageManager {
+    Autodetect,
+    Trizen,
+    Paru,
+    Yay,
+    Pacman,
+}
+
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    arch_package_manager: Option<ArchPackageManager>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
     apt_arguments: Option<String>,
@@ -284,7 +299,7 @@ impl ConfigFile {
         })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
-            for path in paths.iter_mut() {
+            for path in paths {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;
@@ -292,7 +307,7 @@ impl ConfigFile {
         }
 
         if let Some(paths) = result.git.as_mut().and_then(|git| git.repos.as_mut()) {
-            for path in paths.iter_mut() {
+            for path in paths {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;
@@ -618,12 +633,21 @@ impl Config {
     /// Extra trizen arguments
     #[allow(dead_code)]
     pub fn trizen_arguments(&self) -> &str {
-        &self
-            .config_file
+        self.config_file
             .linux
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())
             .unwrap_or("")
+    }
+
+    /// Extra yay arguments
+    #[allow(dead_code)]
+    pub fn arch_package_manager(&self) -> ArchPackageManager {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.arch_package_manager)
+            .unwrap_or(ArchPackageManager::Autodetect)
     }
 
     /// Extra yay arguments

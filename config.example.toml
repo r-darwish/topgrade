@@ -63,7 +63,7 @@
 #greedy_cask = true
 
 [linux]
-# Arguments to pass yay when updating packages
+# Arguments to pass yay (or paru) when updating packages
 #yay_arguments = "--nodevel"
 #trizen_arguments = "--devel"
 #enable_tlmgr = true

@@ -40,7 +40,7 @@ pub fn run_winget(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("winget");
 
-    ctx.run_type().execute(&winget).args(&["upgrade", "--all"]).check_run()
+    ctx.run_type().execute(&winget).args(["upgrade", "--all"]).check_run()
 }
 
 pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
@@ -48,11 +48,11 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
 
     print_separator("Scoop");
 
-    run_type.execute(&scoop).args(&["update"]).check_run()?;
-    run_type.execute(&scoop).args(&["update", "*"]).check_run()?;
+    run_type.execute(&scoop).args(["update"]).check_run()?;
+    run_type.execute(&scoop).args(["update", "*"]).check_run()?;
 
     if cleanup {
-        run_type.execute(&scoop).args(&["cleanup", "*"]).check_run()?;
+        run_type.execute(&scoop).args(["cleanup", "*"]).check_run()?;
     }
 
     Ok(())
@@ -61,13 +61,13 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
 pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
     let wsl = require("wsl")?;
     let topgrade = Command::new(&wsl)
-        .args(&["bash", "-lc", "which topgrade"])
+        .args(["bash", "-lc", "which topgrade"])
         .check_output()
         .map_err(|_| SkipStep(String::from("Could not find Topgrade installed in WSL")))?;
 
     let mut command = ctx.run_type().execute(&wsl);
     command
-        .args(&["bash", "-c"])
+        .args(["bash", "-c"])
         .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade));
 
     if ctx.config().yes() {
@@ -94,7 +94,7 @@ pub fn windows_update(ctx: &ExecutionContext) -> Result<()> {
 }
 
 pub fn reboot() {
-    Command::new("shutdown").args(&["/R", "/T", "0"]).spawn().ok();
+    Command::new("shutdown").args(["/R", "/T", "0"]).spawn().ok();
 }
 
 pub fn insert_startup_scripts(ctx: &ExecutionContext, git_repos: &mut Repositories) -> Result<()> {

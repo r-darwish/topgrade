@@ -110,7 +110,7 @@ impl<'a> TemporaryPowerOn<'a> {
 
         ctx.run_type()
             .execute(vagrant)
-            .args(&[subcommand, &vagrant_box.name])
+            .args([subcommand, &vagrant_box.name])
             .current_dir(vagrant_box.path.clone())
             .check_run()?;
         Ok(TemporaryPowerOn {
@@ -137,7 +137,7 @@ impl<'a> Drop for TemporaryPowerOn<'a> {
         self.ctx
             .run_type()
             .execute(self.vagrant)
-            .args(&[subcommand, &self.vagrant_box.name])
+            .args([subcommand, &self.vagrant_box.name])
             .current_dir(self.vagrant_box.path.clone())
             .check_run()
             .ok();
@@ -182,7 +182,7 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
             return Err(SkipStep(format!("Skipping powered off box {}", vagrant_box)).into());
         } else {
             print_separator(seperator);
-            _poweron = Some(vagrant.temporary_power_on(&vagrant_box, ctx)?);
+            _poweron = Some(vagrant.temporary_power_on(vagrant_box, ctx)?);
         }
     } else {
         print_separator(seperator);
@@ -195,6 +195,6 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
     ctx.run_type()
         .execute(&vagrant.path)
         .current_dir(&vagrant_box.path)
-        .args(&["ssh", "-c", &command])
+        .args(["ssh", "-c", &command])
         .check_run()
 }

@@ -103,7 +103,7 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.pre_commands() {
         for (name, command) in commands {
-            generic::run_custom_command(&name, &command, &ctx)?;
+            generic::run_custom_command(name, command, &ctx)?;
         }
     }
 
@@ -173,6 +173,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Nix, "nix", || unix::run_nix(&ctx))?;
         runner.execute(Step::HomeManager, "home-manager", || unix::run_home_manager(run_type))?;
         runner.execute(Step::Asdf, "asdf", || unix::run_asdf(run_type))?;
+        runner.execute(Step::Pkgin, "pkgin", || unix::run_pkgin(&ctx))?;
     }
 
     #[cfg(target_os = "dragonfly")]
@@ -184,6 +185,9 @@ fn run() -> Result<()> {
     runner.execute(Step::Pkg, "FreeBSD Packages", || {
         freebsd::upgrade_packages(sudo.as_ref(), run_type)
     })?;
+
+    #[cfg(target_os = "android")]
+    runner.execute(Step::Pkg, "Termux Packages", || android::upgrade_packages(&ctx))?;
 
     let emacs = emacs::Emacs::new(&base_dirs);
     if config.use_predefined_git_repos() {
@@ -265,6 +269,9 @@ fn run() -> Result<()> {
         runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
         runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
+        runner.execute(Step::GnomeShellExtensions, "Gnome Shell Extensions", || {
+            unix::upgrade_gnome_extensions(&ctx)
+        })?;
         runner.execute(Step::Sdkman, "SDKMAN!", || {
             unix::run_sdkman(&base_dirs, config.cleanup(), run_type)
         })?;
@@ -301,11 +308,12 @@ fn run() -> Result<()> {
     runner.execute(Step::Vim, "Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
     runner.execute(Step::Vim, "voom", || vim::run_voom(&base_dirs, run_type))?;
     runner.execute(Step::Node, "npm", || node::run_npm_upgrade(&ctx))?;
-    runner.execute(Step::Node, "pnpm", || node::pnpm_global_update(run_type))?;
+    runner.execute(Step::Pnpm, "pnpm", || node::pnpm_global_update(&ctx))?;
     runner.execute(Step::Deno, "deno", || node::deno_upgrade(&ctx))?;
     runner.execute(Step::Composer, "composer", || generic::run_composer_update(&ctx))?;
     runner.execute(Step::Krew, "krew", || generic::run_krew_upgrade(run_type))?;
     runner.execute(Step::Gem, "gem", || generic::run_gem(&base_dirs, run_type))?;
+    runner.execute(Step::Haxelib, "haxelib", || generic::run_haxelib_update(&ctx))?;
     runner.execute(Step::Sheldon, "sheldon", || generic::run_sheldon(&ctx))?;
     runner.execute(Step::Rtcl, "rtcl", || generic::run_rtcl(&ctx))?;
     runner.execute(Step::Bin, "bin", || generic::bin_update(&ctx))?;
@@ -319,6 +327,7 @@ fn run() -> Result<()> {
     {
         runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
+        runner.execute(Step::Pacstall, "pacstall", || linux::run_pacstall(&ctx))?;
     }
 
     #[cfg(target_os = "macos")]
@@ -327,7 +336,7 @@ fn run() -> Result<()> {
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             runner.execute(Step::CustomCommands, name, || {
-                generic::run_custom_command(&name, &command, &ctx)
+                generic::run_custom_command(name, command, &ctx)
             })?;
         }
     }
@@ -391,7 +400,7 @@ fn run() -> Result<()> {
     let mut post_command_failed = false;
     if let Some(commands) = config.post_commands() {
         for (name, command) in commands {
-            if generic::run_custom_command(&name, &command, &ctx).is_err() {
+            if generic::run_custom_command(name, command, &ctx).is_err() {
                 post_command_failed = true;
             }
         }
@@ -401,16 +410,10 @@ fn run() -> Result<()> {
         print_info("\n(R)eboot\n(S)hell\n(Q)uit");
         loop {
             match get_key() {
-                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
-                    run_shell();
-                }
-                Ok(Key::Char('r')) | Ok(Key::Char('R')) => {
-                    reboot();
-                }
-                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => (),
-                _ => {
-                    continue;
-                }
+                Ok(Key::Char('s' | 'S')) => run_shell(),
+                Ok(Key::Char('r' | 'R')) => reboot(),
+                Ok(Key::Char('q' | 'Q')) => (),
+                _ => continue,
             }
             break;
         }

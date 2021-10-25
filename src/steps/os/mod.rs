@@ -1,3 +1,7 @@
+#[cfg(target_os = "android")]
+pub mod android;
+#[cfg(target_os = "linux")]
+mod archlinux;
 #[cfg(target_os = "dragonfly")]
 pub mod dragonfly;
 #[cfg(target_os = "freebsd")]
