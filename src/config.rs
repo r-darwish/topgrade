@@ -84,6 +84,7 @@ pub enum Step {
     Gcloud,
     Gem,
     GitRepos,
+    Haxelib,
     GnomeShellExtensions,
     HomeManager,
     Jetpack,
