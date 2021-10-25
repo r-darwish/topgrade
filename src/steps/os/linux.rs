@@ -415,7 +415,7 @@ pub fn run_pacstall(ctx: &ExecutionContext) -> Result<()> {
     let pacstall = require("pacstall")?;
     ctx.run_type()
         .execute(pacstall)
-        .arg("-Syu")
+        .arg("-Up")
         .args(ctx.config().yay_arguments().split_whitespace())
         .check_run()
 }
