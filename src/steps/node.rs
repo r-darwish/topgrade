@@ -55,7 +55,7 @@ impl NPM {
     pub fn should_use_sudo(&self) -> Result<bool> {
         let npm_root = self.root()?;
         if !npm_root.exists() {
-            return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(), )).into());
+            return Err(SkipStep(format!("NPM root at {} doesn't exist", npm_root.display(),)).into());
         }
 
         let metadata = std::fs::metadata(&npm_root)?;
@@ -93,7 +93,11 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("Performant Node Package Manager");
     if use_sudo {
-        ctx.run_type().execute("sudo").arg(pnpm).args(["update", "-g"]).check_run()
+        ctx.run_type()
+            .execute("sudo")
+            .arg(pnpm)
+            .args(["update", "-g"])
+            .check_run()
     } else {
         ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
     }
