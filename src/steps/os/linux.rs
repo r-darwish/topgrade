@@ -411,6 +411,15 @@ fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
+pub fn run_pacstall(ctx: &ExecutionContext) -> Result<()> {
+    let pacstall = require("pacstall")?;
+    ctx.run_type()
+        .execute(pacstall)
+        .arg("-Up")
+        .args(ctx.config().yay_arguments().split_whitespace())
+        .check_run()
+}
+
 fn upgrade_clearlinux(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
         ctx.run_type()

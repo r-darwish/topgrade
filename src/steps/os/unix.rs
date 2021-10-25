@@ -18,6 +18,7 @@ use std::{env, path::Path};
 
 const INTEL_BREW: &str = "/usr/local/bin/brew";
 const ARM_BREW: &str = "/opt/homebrew/bin/brew";
+
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 pub enum BrewVariant {
@@ -128,6 +129,25 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
     print_separator("fish-plug");
 
     ctx.run_type().execute(&fish).args(["-c", "plug update"]).check_run()
+}
+
+pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
+    let gdbus = require("gdbus")?;
+    print_separator("Gnome Shell extensions");
+
+    ctx.run_type()
+        .execute(gdbus)
+        .args(&[
+            "call",
+            "--session",
+            "--dest",
+            "rg.gnome.Shell.Extensions",
+            "--object-path",
+            "org/gnome/Shell/Extensions",
+            "-method",
+            "org.gnome.Shell.Extensions.CheckForUpdates",
+        ])
+        .check_run()
 }
 
 pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {

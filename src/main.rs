@@ -269,6 +269,9 @@ fn run() -> Result<()> {
         runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
         runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
+        runner.execute(Step::GnomeShellExtensions, "Gnome Shell Extensions", || {
+            unix::upgrade_gnome_extensions(&ctx)
+        })?;
         runner.execute(Step::Sdkman, "SDKMAN!", || {
             unix::run_sdkman(&base_dirs, config.cleanup(), run_type)
         })?;
@@ -324,6 +327,7 @@ fn run() -> Result<()> {
     {
         runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
+        runner.execute(Step::Pacstall, "pacstall", || linux::run_pacstall(&ctx))?;
     }
 
     #[cfg(target_os = "macos")]
