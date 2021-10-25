@@ -92,6 +92,7 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
     let use_sudo = should_use_sudo(&npm, ctx)?;
 
     print_separator("Performant Node Package Manager");
+    #[cfg(target_os = "linux")]
     if use_sudo {
         ctx.run_type()
             .execute("sudo")
@@ -101,6 +102,9 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
     } else {
         ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
     }
+
+    #[cfg(not(target_os = "linux"))]
+    ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
 }
 
 pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
