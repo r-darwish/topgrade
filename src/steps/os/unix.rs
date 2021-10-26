@@ -141,10 +141,10 @@ pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
             "call",
             "--session",
             "--dest",
-            "rg.gnome.Shell.Extensions",
+            "org.gnome.Shell.Extensions",
             "--object-path",
             "org/gnome/Shell/Extensions",
-            "-method",
+            "--method",
             "org.gnome.Shell.Extensions.CheckForUpdates",
         ])
         .check_run()
