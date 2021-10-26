@@ -182,7 +182,6 @@ pub struct Brew {
 
 #[derive(Debug, Deserialize, Clone, Copy)]
 #[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
 pub enum ArchPackageManager {
     Autodetect,
     Trizen,
