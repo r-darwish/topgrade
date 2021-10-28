@@ -10,15 +10,15 @@ pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
     require("port")?;
     let sudo = ctx.sudo().as_ref().unwrap();
     print_separator("MacPorts");
-    ctx.run_type().execute(sudo).args(["port", "selfupdate"]).check_run()?;
+    ctx.run_type().execute(sudo).args(&["port", "selfupdate"]).check_run()?;
     ctx.run_type()
         .execute(sudo)
-        .args(["port", "-u", "upgrade", "outdated"])
+        .args(&["port", "-u", "upgrade", "outdated"])
         .check_run()?;
     if ctx.config().cleanup() {
         ctx.run_type()
             .execute(sudo)
-            .args(["port", "-N", "reclaim"])
+            .args(&["port", "-N", "reclaim"])
             .check_run()?;
     }
 
@@ -58,7 +58,7 @@ pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
     }
 
     let mut command = ctx.run_type().execute("softwareupdate");
-    command.args(["--install", "--all"]);
+    command.args(&["--install", "--all"]);
 
     if should_ask {
         command.arg("--no-scan");

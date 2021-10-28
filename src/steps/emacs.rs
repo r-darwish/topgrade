@@ -58,7 +58,7 @@ impl Emacs {
     fn update_doom(doom: &Path, run_type: RunType) -> Result<()> {
         print_separator("Doom Emacs");
 
-        run_type.execute(doom).args(["-y", "upgrade"]).check_run()
+        run_type.execute(doom).args(&["-y", "upgrade"]).check_run()
     }
 
     pub fn upgrade(&self, run_type: RunType) -> Result<()> {
@@ -76,7 +76,7 @@ impl Emacs {
         let mut command = run_type.execute(&emacs);
 
         command
-            .args(["--batch", "--debug-init", "-l"])
+            .args(&["--batch", "--debug-init", "-l"])
             .arg(init_file)
             .arg("--eval");
 
