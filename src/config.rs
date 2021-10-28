@@ -300,7 +300,7 @@ impl ConfigFile {
         })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
-            for path in paths {
+            for path in paths.iter_mut() {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;
@@ -308,7 +308,7 @@ impl ConfigFile {
         }
 
         if let Some(paths) = result.git.as_mut().and_then(|git| git.repos.as_mut()) {
-            for path in paths {
+            for path in paths.iter_mut() {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;

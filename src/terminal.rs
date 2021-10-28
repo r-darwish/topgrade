@@ -97,7 +97,7 @@ impl Terminal {
                     if let Some(timeout) = timeout {
                         command.arg("-t");
                         command.arg(format!("{}", timeout.as_millis()));
-                        command.args(["-a", "Topgrade"]);
+                        command.args(&["-a", "Topgrade"]);
                         command.arg(message.as_ref());
                     }
                     command.output().ok();
@@ -229,18 +229,18 @@ impl Terminal {
 
         let answer = loop {
             match self.term.read_key() {
-                Ok(Key::Char('y' | 'Y')) => break Ok(true),
-                Ok(Key::Char('s' | 'S')) => {
+                Ok(Key::Char('y')) | Ok(Key::Char('Y')) => break Ok(true),
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
                     run_shell();
                     break Ok(true);
                 }
-                Ok(Key::Char('n' | 'N') | Key::Enter) => break Ok(false),
+                Ok(Key::Char('n')) | Ok(Key::Char('N')) | Ok(Key::Enter) => break Ok(false),
                 Err(e) => {
                     error!("Error reading from terminal: {}", e);
                     break Ok(false);
                 }
-                Ok(Key::Char('q' | 'Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
                 _ => (),
             }
         };
