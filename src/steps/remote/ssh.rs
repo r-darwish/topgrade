@@ -17,7 +17,7 @@ pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
     }
 
     let env = format!("TOPGRADE_PREFIX={}", hostname);
-    args.extend(["env", &env, "$SHELL", "-lc", topgrade]);
+    args.extend(&["env", &env, "$SHELL", "-lc", topgrade]);
 
     if ctx.config().yes() {
         args.push("-y");
@@ -45,7 +45,7 @@ pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
         }
 
         let env = format!("TOPGRADE_PREFIX={}", hostname);
-        args.extend(["env", &env, "$SHELL", "-lc", topgrade]);
+        args.extend(&["env", &env, "$SHELL", "-lc", topgrade]);
 
         if ctx.config().yes() {
             args.push("-y");

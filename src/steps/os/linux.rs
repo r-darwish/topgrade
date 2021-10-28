@@ -46,12 +46,12 @@ impl Distribution {
 
         Ok(match id {
             Some("alpine") => Distribution::Alpine,
-            Some("centos" | "rhel" | "ol") => Distribution::CentOS,
+            Some("centos") | Some("rhel") | Some("ol") => Distribution::CentOS,
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
             Some("debian" | "pureos") => Distribution::Debian,
-            Some("arch" | "anarchy" | "manjaro-arm" | "garuda" | "artix") => Distribution::Arch,
+            Some("arch") | Some("anarchy") | Some("manjaro-arm") | Some("garuda") | Some("artix") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
             Some("exherbo") => Distribution::Exherbo,
@@ -179,12 +179,12 @@ fn upgrade_suse(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/zypper", "refresh"])
+            .args(&["/usr/bin/zypper", "refresh"])
             .check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/zypper", "dist-upgrade"])
+            .args(&["/usr/bin/zypper", "dist-upgrade"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -197,12 +197,12 @@ fn upgrade_void(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/xbps-install", "-Su", "xbps"])
+            .args(&["/usr/bin/xbps-install", "-Su", "xbps"])
             .check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/xbps-install", "-u"])
+            .args(&["/usr/bin/xbps-install", "-u"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -216,13 +216,13 @@ fn upgrade_gentoo(ctx: &ExecutionContext) -> Result<()> {
 
     if let Some(sudo) = &ctx.sudo() {
         if let Some(layman) = which("layman") {
-            run_type.execute(&sudo).arg(layman).args(["-s", "ALL"]).check_run()?;
+            run_type.execute(&sudo).arg(layman).args(&["-s", "ALL"]).check_run()?;
         }
 
         println!("Syncing portage");
         run_type
             .execute(&sudo)
-            .args(["/usr/bin/emerge", "--sync"])
+            .args(&["/usr/bin/emerge", "--sync"])
             .args(
                 ctx.config()
                     .emerge_sync_flags()
@@ -288,7 +288,7 @@ fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/eopkg", "upgrade"])
+            .args(&["/usr/bin/eopkg", "upgrade"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -310,7 +310,7 @@ fn upgrade_clearlinux(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/swupd", "update"])
+            .args(&["/usr/bin/swupd", "update"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -323,29 +323,29 @@ fn upgrade_exherbo(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/cave", "sync"])
+            .args(&["/usr/bin/cave", "sync"])
             .check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/cave", "resolve", "world", "-c1", "-Cs", "-km", "-Km", "-x"])
+            .args(&["/usr/bin/cave", "resolve", "world", "-c1", "-Cs", "-km", "-Km", "-x"])
             .check_run()?;
 
         if ctx.config().cleanup() {
             ctx.run_type()
                 .execute(&sudo)
-                .args(["/usr/bin/cave", "purge", "-x"])
+                .args(&["/usr/bin/cave", "purge", "-x"])
                 .check_run()?;
         }
 
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/cave", "fix-linkage", "-x", "--", "-Cs"])
+            .args(&["/usr/bin/cave", "fix-linkage", "-x", "--", "-Cs"])
             .check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
-            .args(["/usr/bin/eclectic", "config", "interactive"])
+            .args(&["/usr/bin/eclectic", "config", "interactive"])
             .check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
@@ -358,13 +358,13 @@ fn upgrade_nixos(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type()
             .execute(&sudo)
-            .args(["/run/current-system/sw/bin/nixos-rebuild", "switch", "--upgrade"])
+            .args(&["/run/current-system/sw/bin/nixos-rebuild", "switch", "--upgrade"])
             .check_run()?;
 
         if ctx.config().cleanup() {
             ctx.run_type()
                 .execute(&sudo)
-                .args(["/run/current-system/sw/bin/nix-collect-garbage", "-d"])
+                .args(&["/run/current-system/sw/bin/nix-collect-garbage", "-d"])
                 .check_run()?;
         }
     } else {
@@ -450,7 +450,7 @@ pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
 
     run_type
         .execute(&flatpak)
-        .args(["update", "--user", "-y"])
+        .args(&["update", "--user", "-y"])
         .check_run()?;
 
     print_separator("Flatpak System Packages");
@@ -458,12 +458,12 @@ pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
         run_type
             .execute(sudo)
             .arg(flatpak)
-            .args(["update", "--system", "-y"])
+            .args(&["update", "--system", "-y"])
             .check_run()
     } else {
         run_type
             .execute(&flatpak)
-            .args(["update", "--system", "-y"])
+            .args(&["update", "--system", "-y"])
             .check_run()
     }
 }

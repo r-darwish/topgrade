@@ -27,7 +27,7 @@ impl NPM {
     #[cfg(target_os = "linux")]
     fn root(&self) -> Result<PathBuf> {
         Command::new(&self.command)
-            .args(["root", "-g"])
+            .args(&["root", "-g"])
             .check_output()
             .map(|s| PathBuf::from(s.trim()))
     }
@@ -37,10 +37,10 @@ impl NPM {
             run_type
                 .execute("sudo")
                 .arg(&self.command)
-                .args(["update", "-g"])
+                .args(&["update", "-g"])
                 .check_run()?;
         } else {
-            run_type.execute(&self.command).args(["update", "-g"]).check_run()?;
+            run_type.execute(&self.command).args(&["update", "-g"]).check_run()?;
         }
 
         Ok(())
@@ -105,7 +105,7 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
     }
 
     #[cfg(not(target_os = "linux"))]
-    ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
+    ctx.run_type().execute(&pnpm).args(&["update", "-g"]).check_run()
 }
 
 pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {

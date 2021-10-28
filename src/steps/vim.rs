@@ -48,9 +48,9 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     let output = ctx
         .run_type()
         .execute(&vim)
-        .arg("-u")
+        .args(&["-u"])
         .arg(vimrc)
-        .args(["-U", "NONE", "-V1", "-nNesS"])
+        .args(&["-U", "NONE", "-V1", "-nNesS"])
         .arg(tempfile.path())
         .output()?;
 

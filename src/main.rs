@@ -410,10 +410,16 @@ fn run() -> Result<()> {
         print_info("\n(R)eboot\n(S)hell\n(Q)uit");
         loop {
             match get_key() {
-                Ok(Key::Char('s' | 'S')) => run_shell(),
-                Ok(Key::Char('r' | 'R')) => reboot(),
-                Ok(Key::Char('q' | 'Q')) => (),
-                _ => continue,
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
+                    run_shell();
+                }
+                Ok(Key::Char('r')) | Ok(Key::Char('R')) => {
+                    reboot();
+                }
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => (),
+                _ => {
+                    continue;
+                }
             }
             break;
         }

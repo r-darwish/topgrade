@@ -9,7 +9,10 @@ pub enum StepResult {
 
 impl StepResult {
     pub fn failed(&self) -> bool {
-        matches!(self, StepResult::Failure)
+        match self {
+            StepResult::Success | StepResult::Ignored | StepResult::Skipped(_) => false,
+            StepResult::Failure => true,
+        }
     }
 }
 
