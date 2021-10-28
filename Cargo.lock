@@ -1820,7 +1820,7 @@ dependencies = [
 
 [[package]]
 name = "topgrade"
-version = "8.0.1"
+version = "8.0.2"
 dependencies = [
  "anyhow",
  "cfg-if 1.0.0",
