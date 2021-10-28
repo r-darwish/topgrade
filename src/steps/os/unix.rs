@@ -143,7 +143,7 @@ pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
             "--dest",
             "org.gnome.Shell.Extensions",
             "--object-path",
-            "org/gnome/Shell/Extensions",
+            "/org/gnome/Shell/Extensions",
             "--method",
             "org.gnome.Shell.Extensions.CheckForUpdates",
         ])
