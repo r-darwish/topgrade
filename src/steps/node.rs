@@ -98,10 +98,10 @@ pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
         ctx.run_type()
             .execute("sudo")
             .arg(pnpm)
-            .args(["update", "-g"])
+            .args(&["update", "-g"])
             .check_run()
     } else {
-        ctx.run_type().execute(&pnpm).args(["update", "-g"]).check_run()
+        ctx.run_type().execute(&pnpm).args(&["update", "-g"]).check_run()
     }
 
     #[cfg(not(target_os = "linux"))]

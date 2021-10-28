@@ -50,7 +50,7 @@ impl Distribution {
             Some("clear-linux-os") => Distribution::ClearLinux,
             Some("fedora") => Distribution::Fedora,
             Some("void") => Distribution::Void,
-            Some("debian" | "pureos") => Distribution::Debian,
+            Some("debian") | Some("pureos") => Distribution::Debian,
             Some("arch") | Some("anarchy") | Some("manjaro-arm") | Some("garuda") | Some("artix") => Distribution::Arch,
             Some("solus") => Distribution::Solus,
             Some("gentoo") => Distribution::Gentoo,
