@@ -6,7 +6,7 @@ use crate::execution_context::ExecutionContext;
 use crate::executor::CommandExt;
 use crate::executor::{Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
-use crate::utils::{require, PathExt};
+use crate::utils::{require, require_option, PathExt};
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
@@ -133,6 +133,10 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
 
 pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
     let gdbus = require("gdbus")?;
+    require_option(
+        env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p == "GNOME"),
+        "Desktop doest not appear to be gnome".to_string(),
+    )?;
     print_separator("Gnome Shell extensions");
 
     ctx.run_type()
