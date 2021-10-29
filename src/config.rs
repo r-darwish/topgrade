@@ -195,6 +195,7 @@ pub enum ArchPackageManager {
 pub struct Linux {
     yay_arguments: Option<String>,
     arch_package_manager: Option<ArchPackageManager>,
+    show_arch_news: Option<bool>,
     trizen_arguments: Option<String>,
     dnf_arguments: Option<String>,
     apt_arguments: Option<String>,
@@ -639,6 +640,16 @@ impl Config {
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())
             .unwrap_or("")
+    }
+
+    /// Show news on Arch Linux
+    #[allow(dead_code)]
+    pub fn show_arch_news(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.show_arch_news)
+            .unwrap_or(true)
     }
 
     /// Extra yay arguments

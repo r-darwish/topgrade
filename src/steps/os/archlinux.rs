@@ -25,11 +25,13 @@ pub struct YayParu {
 
 impl ArchPackageManager for YayParu {
     fn upgrade(&self, ctx: &ExecutionContext) -> Result<()> {
-        Command::new(&self.executable)
-            .arg("-Pw")
-            .spawn()
-            .and_then(|mut p| p.wait())
-            .ok();
+        if ctx.config().show_arch_news() {
+            Command::new(&self.executable)
+                .arg("-Pw")
+                .spawn()
+                .and_then(|mut p| p.wait())
+                .ok();
+        }
 
         let mut command = ctx.run_type().execute(&self.executable);
 
