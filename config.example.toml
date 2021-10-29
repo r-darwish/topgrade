@@ -67,6 +67,7 @@
 #arch_package_manager = "pacman"
 # Arguments to pass yay (or paru) when updating packages
 #yay_arguments = "--nodevel"
+#show_arch_news = true
 #trizen_arguments = "--devel"
 #enable_tlmgr = true
 #emerge_sync_flags = "-q"
