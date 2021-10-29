@@ -134,7 +134,7 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
 pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
     let gdbus = require("gdbus")?;
     require_option(
-        env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p == "GNOME"),
+        env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p.contains("GNOME")),
         "Desktop doest not appear to be gnome".to_string(),
     )?;
     print_separator("Gnome Shell extensions");
