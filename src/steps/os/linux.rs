@@ -300,6 +300,11 @@ fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_pacstall(ctx: &ExecutionContext) -> Result<()> {
     let pacstall = require("pacstall")?;
     ctx.run_type()
+        .execute(&pacstall)
+        .arg("-U")
+        .args(ctx.config().yay_arguments().split_whitespace())
+        .check_run()?;
+    ctx.run_type()
         .execute(pacstall)
         .arg("-Up")
         .args(ctx.config().yay_arguments().split_whitespace())
