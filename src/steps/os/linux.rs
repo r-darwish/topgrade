@@ -498,6 +498,15 @@ pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     run_type.execute(sudo).arg(etc_update).check_run()
 }
 
+pub fn run_pacdiff(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
+    let sudo = require_option(sudo, String::from("sudo is not installed"))?;
+    let pacdiff = require("pacdiff")?;
+
+    print_separator("pacdiff");
+
+    run_type.execute(sudo).arg(pacdiff).check_run()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

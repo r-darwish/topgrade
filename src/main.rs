@@ -138,6 +138,8 @@ fn run() -> Result<()> {
             linux::run_etc_update(sudo.as_ref(), run_type)
         })?;
 
+        runner.execute(Step::Pacdiff, "pacdiff", || linux::run_pacdiff(sudo.as_ref(), run_type))?;
+
         runner.execute(Step::BrewFormula, "Brew", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
         })?;
