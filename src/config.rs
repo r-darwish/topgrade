@@ -214,6 +214,12 @@ pub struct Composer {
 
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
+pub struct Vim {
+    force_plug_update: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
 /// Configuration file
 pub struct ConfigFile {
     pre_commands: Option<Commands>,
@@ -244,6 +250,7 @@ pub struct ConfigFile {
     git: Option<Git>,
     windows: Option<Windows>,
     npm: Option<NPM>,
+    vim: Option<Vim>,
     firmware: Option<Firmware>,
     vagrant: Option<Vagrant>,
     flatpak: Option<Flatpak>,
@@ -623,6 +630,15 @@ impl Config {
             .composer
             .as_ref()
             .and_then(|c| c.self_update)
+            .unwrap_or(false)
+    }
+
+    /// Whether to force plug update in Vim
+    pub fn force_vim_plug_update(&self) -> bool {
+        self.config_file
+            .vim
+            .as_ref()
+            .and_then(|c| c.force_plug_update)
             .unwrap_or(false)
     }
 

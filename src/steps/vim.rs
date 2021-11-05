@@ -45,13 +45,21 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
     debug!("Wrote vim script to {:?}", tempfile.path());
 
-    let output = ctx
+    let mut command = ctx
         .run_type()
-        .execute(&vim)
+        .execute(&vim);
+
+    command
         .args(&["-u"])
         .arg(vimrc)
         .args(&["-U", "NONE", "-V1", "-nNesS"])
-        .arg(tempfile.path())
+        .arg(tempfile.path());
+
+    if ctx.config().force_vim_plug_update() {
+        command.env("TOPGRADE_FORCE_PLUGUPDATE", "true");
+    }
+
+    let output = command
         .output()?;
 
     if let ExecutorOutput::Wet(output) = output {
