@@ -639,7 +639,7 @@ impl Config {
             .vim
             .as_ref()
             .and_then(|c| c.force_plug_update)
-            .unwrap_or(false)
+            .unwrap_or_default()
     }
 
     /// Whether to send a desktop notification at the beginning of every step
