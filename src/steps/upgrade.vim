@@ -11,7 +11,11 @@ endif
 if exists(":PlugUpgrade")
     echo "Plug"
     PlugUpgrade
-    PlugUpdate
+    if $TOPGRADE_FORCE_PLUGUPDATE
+        PlugUpdate!
+    else
+        PlugUpdate
+    endif
 endif
 
 if exists(":PackerUpdate")
