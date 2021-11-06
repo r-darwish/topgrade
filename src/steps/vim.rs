@@ -27,7 +27,7 @@ pub fn vimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
 
 fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(unix)]
-    let base_dir =
+        let base_dir =
         // Bypass directories crate as nvim doesn't use the macOS-specific directories.
         std::env::var_os("XDG_CONFIG_HOME").map_or_else(|| base_dirs.home_dir().join(".config"), PathBuf::from);
 
@@ -45,14 +45,19 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
     debug!("Wrote vim script to {:?}", tempfile.path());
 
-    let output = ctx
-        .run_type()
-        .execute(&vim)
+    let mut command = ctx.run_type().execute(&vim);
+
+    command
         .args(&["-u"])
         .arg(vimrc)
         .args(&["-U", "NONE", "-V1", "-nNesS"])
-        .arg(tempfile.path())
-        .output()?;
+        .arg(tempfile.path());
+
+    if ctx.config().force_vim_plug_update() {
+        command.env("TOPGRADE_FORCE_PLUGUPDATE", "true");
+    }
+
+    let output = command.output()?;
 
     if let ExecutorOutput::Wet(output) = output {
         let status = output.status;
