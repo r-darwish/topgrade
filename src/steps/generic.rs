@@ -432,3 +432,10 @@ pub fn bin_update(ctx: &ExecutionContext) -> Result<()> {
     print_separator("Bin");
     ctx.run_type().execute(&bin).arg("update").check_run()
 }
+
+pub fn spicetify_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let spicetify = utils::require("spicetify")?;
+
+    print_separator("Spicetify");
+    ctx.run_type().execute(&spicetify).arg("upgrade").check_run()
+}
