@@ -37,7 +37,12 @@ impl Emacs {
         #[cfg(windows)]
         return env::var("HOME")
             .ok()
-            .and_then(|home| PathBuf::from(home).join(".emacs.d").if_exists())
+            .and_then(|home| {
+                PathBuf::from(&home)
+                    .join(".emacs.d")
+                    .if_exists()
+                    .or_else(|| PathBuf::from(&home).join(".config\\emacs").if_exists())
+            })
             .or_else(|| base_dirs.data_dir().join(".emacs.d").if_exists());
     }
 
