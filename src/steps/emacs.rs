@@ -1,4 +1,4 @@
-use crate::executor::RunType;
+use crate::execution_context::ExecutionContext;
 use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use anyhow::Result;
@@ -60,25 +60,32 @@ impl Emacs {
         self.directory.as_ref()
     }
 
-    fn update_doom(doom: &Path, run_type: RunType) -> Result<()> {
+    fn update_doom(doom: &Path, ctx: &ExecutionContext) -> Result<()> {
         print_separator("Doom Emacs");
 
-        run_type.execute(doom).args(&["-y", "upgrade"]).check_run()
+        let mut command = ctx.run_type().execute(doom);
+        command.args(&["-y", "upgrade"]);
+
+        if ctx.config().yes() {
+            command.arg("--force");
+        }
+
+        command.check_run()
     }
 
-    pub fn upgrade(&self, run_type: RunType) -> Result<()> {
+    pub fn upgrade(&self, ctx: &ExecutionContext) -> Result<()> {
         let emacs = require("emacs")?;
         let init_file = require_option(self.directory.as_ref(), String::from("Emacs directory does not exist"))?
             .join("init.el")
             .require()?;
 
         if let Some(doom) = &self.doom {
-            return Emacs::update_doom(doom, run_type);
+            return Emacs::update_doom(doom, ctx);
         }
 
         print_separator("Emacs");
 
-        let mut command = run_type.execute(&emacs);
+        let mut command = ctx.run_type().execute(&emacs);
 
         command
             .args(&["--batch", "--debug-init", "-l"])
