@@ -467,8 +467,8 @@ pub fn flatpak_update(cleanup: bool, ctx: &ExecutionContext) -> Result<()> {
     print_separator("Flatpak System Packages");
     if ctx.config().flatpak_use_sudo() || std::env::var("SSH_CLIENT").is_ok() {
         run_type
-            .execute(sudo)
-            .arg(flatpak)
+            .execute(&sudo)
+            .arg(&flatpak)
             .args(&["update", "--system", "-y"])
             .check_run()?;
         if cleanup {
@@ -485,7 +485,7 @@ pub fn flatpak_update(cleanup: bool, ctx: &ExecutionContext) -> Result<()> {
             .check_run()?;
         if cleanup {
             run_type
-                .execute(&flatpak)
+                .execute(flatpak)
                 .args(&["uninstall", "--system", "--unused"])
                 .check_run()?;
         }
