@@ -490,6 +490,8 @@ pub fn flatpak_update(cleanup: bool, ctx: &ExecutionContext) -> Result<()> {
                 .check_run()?;
         }
     }
+
+    Ok(())
 }
 
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
