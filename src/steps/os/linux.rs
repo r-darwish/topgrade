@@ -447,9 +447,10 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
     updmgr.check_run_with_codes(&[2])
 }
 
-pub fn flatpak_update(cleanup: bool, ctx: &ExecutionContext) -> Result<()> {
+pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
     let flatpak = require("flatpak")?;
     let sudo = require_option(ctx.sudo().as_ref(), String::from("sudo is not installed"))?;
+    let cleanup = ctx.config().cleanup();
     let run_type = ctx.run_type();
     print_separator("Flatpak User Packages");
 
