@@ -450,6 +450,7 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
 pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
     let flatpak = require("flatpak")?;
     let sudo = require_option(ctx.sudo().as_ref(), String::from("sudo is not installed"))?;
+    let cleanup = ctx.config().cleanup();
     let run_type = ctx.run_type();
     print_separator("Flatpak User Packages");
 
@@ -457,20 +458,41 @@ pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
         .execute(&flatpak)
         .args(&["update", "--user", "-y"])
         .check_run()?;
+    if cleanup {
+        run_type
+            .execute(&flatpak)
+            .args(&["uninstall", "--user", "--unused"])
+            .check_run()?;
+    }
 
     print_separator("Flatpak System Packages");
     if ctx.config().flatpak_use_sudo() || std::env::var("SSH_CLIENT").is_ok() {
         run_type
-            .execute(sudo)
-            .arg(flatpak)
+            .execute(&sudo)
+            .arg(&flatpak)
             .args(&["update", "--system", "-y"])
-            .check_run()
+            .check_run()?;
+        if cleanup {
+            run_type
+                .execute(sudo)
+                .arg(flatpak)
+                .args(&["uninstall", "--system", "--unused"])
+                .check_run()?;
+        }
     } else {
         run_type
             .execute(&flatpak)
             .args(&["update", "--system", "-y"])
-            .check_run()
+            .check_run()?;
+        if cleanup {
+            run_type
+                .execute(flatpak)
+                .args(&["uninstall", "--system", "--unused"])
+                .check_run()?;
+        }
     }
+
+    Ok(())
 }
 
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
