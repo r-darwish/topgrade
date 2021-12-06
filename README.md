@@ -20,12 +20,10 @@ On NixOS, use the `topgrade` package in `nixpkgs`.
 
 macOS users can install topgrade via [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/install.php).
 
-Other systems users can either use `cargo install` or use the compiled binaries from the release
-page. The compiled binaries contain a self-upgrading feature.
+Other systems users can either use `cargo install` or use the compiled binaries from the release page. The compiled
+binaries contain a self-upgrading feature.
 
-Topgrade isn't guaranteed to work on Rust versions older than the latest stable release. If you
-intend to install Topgrade using Cargo then you should either install Rust using rustup or use a
-distribution which ships the latest version of Rust, such as Arch Linux.
+Topgrade requires Rust 1.51 or above.
 
 ## Usage
 Just run `topgrade`. See [the wiki](https://github.com/r-darwish/topgrade/wiki/Step-list) for the list of things Topgrade supports
