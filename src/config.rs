@@ -591,6 +591,10 @@ impl Config {
         }
 
         if let Some(yes_list) = &self.opt.yes {
+            if yes_list.is_empty() {
+                return true;
+            }
+
             return yes_list.contains(&step);
         }
 
