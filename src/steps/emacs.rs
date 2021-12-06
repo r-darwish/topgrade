@@ -1,11 +1,14 @@
-use crate::execution_context::ExecutionContext;
-use crate::terminal::print_separator;
-use crate::utils::{require, require_option, PathExt};
-use anyhow::Result;
-use directories::BaseDirs;
 #[cfg(any(windows, target_os = "macos"))]
 use std::env;
 use std::path::{Path, PathBuf};
+
+use anyhow::Result;
+use directories::BaseDirs;
+
+use crate::execution_context::ExecutionContext;
+use crate::terminal::print_separator;
+use crate::utils::{require, require_option, PathExt};
+use crate::Step;
 
 const EMACS_UPGRADE: &str = include_str!("emacs.el");
 #[cfg(windows)]
@@ -66,7 +69,7 @@ impl Emacs {
         let mut command = ctx.run_type().execute(doom);
         command.args(&["-y", "upgrade"]);
 
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::Emacs) {
             command.arg("--force");
         }
 

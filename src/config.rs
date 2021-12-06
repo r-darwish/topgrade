@@ -393,9 +393,9 @@ pub struct CommandLineArgs {
     #[structopt(short = "k", long = "keep")]
     keep_at_end: bool,
 
-    /// Say yes to package manager's prompt (experimental)
+    /// Say yes to package manager's prompt
     #[structopt(short = "y", long = "yes")]
-    yes: bool,
+    yes: Option<Vec<Step>>,
 
     /// Don't pull the predefined git repos
     #[structopt(long = "disable-predefined-git-repos")]
@@ -585,8 +585,16 @@ impl Config {
 
     /// Whether to say yes to package managers
     #[allow(dead_code)]
-    pub fn yes(&self) -> bool {
-        self.config_file.assume_yes.unwrap_or(self.opt.yes)
+    pub fn yes(&self, step: Step) -> bool {
+        if let Some(yes) = self.config_file.assume_yes {
+            return yes;
+        }
+
+        if let Some(yes_list) = &self.opt.yes {
+            return yes_list.contains(&step);
+        }
+
+        false
     }
 
     /// Bash-it branch
