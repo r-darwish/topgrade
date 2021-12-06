@@ -1,6 +1,6 @@
-use crate::config;
 use crate::execution_context::ExecutionContext;
 use crate::utils::which;
+use crate::{config, Step};
 use anyhow::Result;
 use std::env::var_os;
 use std::ffi::OsString;
@@ -42,7 +42,7 @@ impl ArchPackageManager for YayParu {
             .args(ctx.config().yay_arguments().split_whitespace())
             .env("PATH", get_execution_path());
 
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("--noconfirm");
         }
         command.check_run()?;
@@ -50,7 +50,7 @@ impl ArchPackageManager for YayParu {
         if ctx.config().cleanup() {
             let mut command = ctx.run_type().execute(&self.executable);
             command.arg("--pacman").arg(&self.pacman).arg("-Scc");
-            if ctx.config().yes() {
+            if ctx.config().yes(Step::System) {
                 command.arg("--noconfirm");
             }
             command.check_run()?;
@@ -82,7 +82,7 @@ impl ArchPackageManager for Trizen {
             .args(ctx.config().trizen_arguments().split_whitespace())
             .env("PATH", get_execution_path());
 
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("--noconfirm");
         }
         command.check_run()?;
@@ -90,7 +90,7 @@ impl ArchPackageManager for Trizen {
         if ctx.config().cleanup() {
             let mut command = ctx.run_type().execute(&self.executable);
             command.arg("-Sc");
-            if ctx.config().yes() {
+            if ctx.config().yes(Step::System) {
                 command.arg("--noconfirm");
             }
             command.check_run()?;
@@ -120,7 +120,7 @@ impl ArchPackageManager for Pacman {
             .arg(&self.executable)
             .arg("-Syu")
             .env("PATH", get_execution_path());
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("--noconfirm");
         }
         command.check_run()?;
@@ -128,7 +128,7 @@ impl ArchPackageManager for Pacman {
         if ctx.config().cleanup() {
             let mut command = ctx.run_type().execute(&self.sudo);
             command.arg(&self.executable).arg("-Scc");
-            if ctx.config().yes() {
+            if ctx.config().yes(Step::System) {
                 command.arg("--noconfirm");
             }
             command.check_run()?;
