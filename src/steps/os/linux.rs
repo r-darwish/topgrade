@@ -4,6 +4,7 @@ use crate::executor::{CommandExt, RunType};
 use crate::steps::os::archlinux;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
+use crate::Step;
 use anyhow::Result;
 use ini::Ini;
 use log::{debug, warn};
@@ -168,7 +169,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
         if ctx.config().rpm_ostree() {
             let mut command = ctx.run_type().execute(ostree);
             command.arg("upgrade");
-            if ctx.config().yes() {
+            if ctx.config().yes(Step::System) {
                 command.arg("-y");
             }
 
@@ -194,7 +195,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
             command.args(args.split_whitespace());
         }
 
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
 
@@ -290,7 +291,7 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
 
         let mut command = ctx.run_type().execute(&sudo);
         command.arg(&apt).arg("dist-upgrade");
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
         if let Some(args) = ctx.config().apt_arguments() {
@@ -303,7 +304,7 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
 
             let mut command = ctx.run_type().execute(&sudo);
             command.arg(&apt).arg("autoremove");
-            if ctx.config().yes() {
+            if ctx.config().yes(Step::System) {
                 command.arg("-y");
             }
             command.check_run()?;
@@ -422,7 +423,7 @@ fn upgrade_neon(ctx: &ExecutionContext) -> Result<()> {
         ctx.run_type().execute(&sudo).arg(&pkcon).arg("refresh").check_run()?;
         let mut exe = ctx.run_type().execute(&sudo);
         let cmd = exe.arg(&pkcon).arg("update");
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             cmd.arg("-y");
         }
         if ctx.config().cleanup() {
@@ -469,7 +470,7 @@ pub fn run_fwupdmgr(ctx: &ExecutionContext) -> Result<()> {
 
     if ctx.config().firmware_upgrade() {
         updmgr.arg("update");
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             updmgr.arg("-y");
         }
     } else {

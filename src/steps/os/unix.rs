@@ -7,6 +7,7 @@ use crate::executor::CommandExt;
 use crate::executor::{Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, PathExt};
+use crate::Step;
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
@@ -106,14 +107,14 @@ pub fn run_pkgin(ctx: &ExecutionContext) -> Result<()> {
 
     let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
     command.arg(&pkgin).arg("update");
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Pkgin) {
         command.arg("-y");
     }
     command.check_run()?;
 
     let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
     command.arg(&pkgin).arg("upgrade");
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Pkgin) {
         command.arg("-y");
     }
     command.check_run()
