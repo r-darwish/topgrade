@@ -1,18 +1,20 @@
-use crate::execution_context::ExecutionContext;
-use crate::executor::{CommandExt, RunType};
-use crate::powershell;
-use crate::terminal::print_separator;
-use crate::utils::require;
-use crate::{error::SkipStep, steps::git::Repositories};
-use anyhow::Result;
-use log::debug;
 use std::convert::TryFrom;
 use std::path::Path;
 use std::{ffi::OsStr, process::Command};
 
+use anyhow::Result;
+use log::debug;
+
+use crate::execution_context::ExecutionContext;
+use crate::executor::{CommandExt, RunType};
+use crate::terminal::print_separator;
+use crate::utils::require;
+use crate::{error::SkipStep, steps::git::Repositories};
+use crate::{powershell, Step};
+
 pub fn run_chocolatey(ctx: &ExecutionContext) -> Result<()> {
     let choco = require("choco")?;
-    let yes = ctx.config().yes();
+    let yes = ctx.config().yes(Step::Chocolatey);
 
     print_separator("Chocolatey");
 
@@ -70,7 +72,7 @@ pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
         .args(&["bash", "-c"])
         .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade));
 
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Wsl) {
         command.arg("-y");
     }
 
