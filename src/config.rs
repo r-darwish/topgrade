@@ -11,7 +11,7 @@ use pretty_env_logger::formatted_timed_builder;
 use regex::Regex;
 use serde::Deserialize;
 use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+use strum::{EnumIter, EnumString, EnumVariantNames, VariantNames};
 use sys_info::hostname;
 use which_crate::which;
 
@@ -510,20 +510,18 @@ impl Config {
     }
 
     fn allowed_steps(opt: &CommandLineArgs, config_file: &ConfigFile) -> Vec<Step> {
-        let mut enabled_steps: Vec<Step> = if !opt.only.is_empty() {
-            opt.only.clone()
-        } else {
-            config_file
-                .only
-                .as_ref()
-                .map_or_else(|| Step::iter().collect(), |v| v.clone())
-        };
+        let mut enabled_steps: Vec<Step> = Vec::new();
+        enabled_steps.extend(&opt.only);
 
-        let disabled_steps: Vec<Step> = if !opt.disable.is_empty() {
-            opt.disable.clone()
-        } else {
-            config_file.disable.as_ref().map_or_else(Vec::new, |v| v.clone())
-        };
+        if let Some(only) = config_file.only.as_ref() {
+            enabled_steps.extend(only)
+        }
+
+        let mut disabled_steps: Vec<Step> = Vec::new();
+        disabled_steps.extend(&opt.disable);
+        if let Some(disabled) = config_file.disable.as_ref() {
+            disabled_steps.extend(disabled);
+        }
 
         enabled_steps.retain(|e| !disabled_steps.contains(e) || opt.only.contains(e));
         enabled_steps
