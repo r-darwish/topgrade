@@ -1,18 +1,20 @@
-use super::utils::editor;
+use std::collections::BTreeMap;
+use std::fs::write;
+use std::path::PathBuf;
+use std::process::Command;
+use std::{env, fs};
+
 use anyhow::Result;
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::BTreeMap;
-use std::fs::write;
-use std::path::PathBuf;
-use std::process::Command;
-use std::{env, fs};
 use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+use strum::{EnumIter, EnumString, EnumVariantNames, VariantNames};
 use which_crate::which;
+
+use super::utils::editor;
 
 pub static EXAMPLE_CONFIG: &str = include_str!("../config.example.toml");
 
