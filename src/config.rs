@@ -1,18 +1,21 @@
-use super::utils::editor;
+use std::collections::BTreeMap;
+use std::fs::write;
+use std::path::PathBuf;
+use std::process::Command;
+use std::{env, fs};
+
 use anyhow::Result;
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use regex::Regex;
 use serde::Deserialize;
-use std::collections::BTreeMap;
-use std::fs::write;
-use std::path::PathBuf;
-use std::process::Command;
-use std::{env, fs};
 use structopt::StructOpt;
 use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+use sys_info::hostname;
 use which_crate::which;
+
+use super::utils::editor;
 
 pub static EXAMPLE_CONFIG: &str = include_str!("../config.example.toml");
 
@@ -826,10 +829,16 @@ impl Config {
     str_value!(linux, emerge_update_flags);
 
     pub fn should_execute_remote(&self, remote: &str) -> bool {
-        self.opt
-            .remote_host_limit
-            .as_ref()
-            .map(|h| h.is_match(remote))
-            .unwrap_or(true)
+        if let Ok(hostname) = hostname() {
+            if remote == hostname {
+                return false;
+            }
+        }
+
+        if let Some(limit) = self.opt.remote_host_limit.as_ref() {
+            return limit.is_match(remote);
+        }
+
+        true
     }
 }
