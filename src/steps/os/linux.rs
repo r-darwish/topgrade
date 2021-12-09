@@ -180,7 +180,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
         let mut command = ctx.run_type().execute(&sudo);
         command
-            .arg(Path::new("dnf-3").if_exists().unwrap_or_else(|| Path::new("yum")))
+            .arg(which("dnf").unwrap_or_else(|| Path::new("yum").to_path_buf()))
             .arg(if ctx.config().redhat_distro_sync() {
                 "distro-sync"
             } else {
