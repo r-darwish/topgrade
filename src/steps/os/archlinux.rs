@@ -141,7 +141,7 @@ impl ArchPackageManager for Pacman {
 impl Pacman {
     pub fn get(ctx: &ExecutionContext) -> Option<Self> {
         Some(Self {
-            executable: which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman")),
+            executable: which("powerpill").unwrap_or_else(|| PathBuf::from("pacman")),
             sudo: ctx.sudo().to_owned()?,
         })
     }
@@ -152,7 +152,7 @@ fn box_pacakge_manager<P: 'static + ArchPackageManager>(package_manager: P) -> B
 }
 
 pub fn get_arch_package_manager(ctx: &ExecutionContext) -> Option<Box<dyn ArchPackageManager>> {
-    let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("/usr/bin/pacman"));
+    let pacman = which("powerpill").unwrap_or_else(|| PathBuf::from("pacman"));
 
     match ctx.config().arch_package_manager() {
         config::ArchPackageManager::Autodetect => YayParu::get("paru", &pacman)
