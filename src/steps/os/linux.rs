@@ -180,11 +180,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
         let mut command = ctx.run_type().execute(&sudo);
         command
-            .arg(
-                Path::new("dnf-3")
-                    .if_exists()
-                    .unwrap_or_else(|| Path::new("yum")),
-            )
+            .arg(Path::new("dnf-3").if_exists().unwrap_or_else(|| Path::new("yum")))
             .arg(if ctx.config().redhat_distro_sync() {
                 "distro-sync"
             } else {
@@ -209,10 +205,7 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_bedrock_strata(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["brl", "update"])
-            .check_run()?;
+        ctx.run_type().execute(&sudo).args(&["brl", "update"]).check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -220,13 +213,9 @@ fn upgrade_bedrock_strata(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
-
 fn upgrade_suse(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["zypper", "refresh"])
-            .check_run()?;
+        ctx.run_type().execute(&sudo).args(&["zypper", "refresh"]).check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
@@ -332,10 +321,7 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["eopkg", "upgrade"])
-            .check_run()?;
+        ctx.run_type().execute(&sudo).args(&["eopkg", "upgrade"]).check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -359,10 +345,7 @@ pub fn run_pacstall(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_clearlinux(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["swupd", "update"])
-            .check_run()?;
+        ctx.run_type().execute(&sudo).args(&["swupd", "update"]).check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
@@ -372,10 +355,7 @@ fn upgrade_clearlinux(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_exherbo(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["cave", "sync"])
-            .check_run()?;
+        ctx.run_type().execute(&sudo).args(&["cave", "sync"]).check_run()?;
 
         ctx.run_type()
             .execute(&sudo)
