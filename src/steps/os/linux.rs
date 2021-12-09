@@ -81,7 +81,7 @@ impl Distribution {
     }
 
     pub fn detect() -> Result<Self> {
-        if PathBuf::from("/bedrock/etc/release").exists() {
+        if PathBuf::from("/bedrock").exists() {
             return Ok(Distribution::Bedrock);
         }
 
@@ -134,7 +134,7 @@ fn update_bedrock(ctx: &ExecutionContext) -> Result<()> {
     debug!("brl list: {:?} {:?}", output.stdout, output.stderr);
 
     let parsed_output = String::from_utf8(output.stdout).unwrap();
-    for distribution in parsed_output.split('\n') {
+    for distribution in parsed_output.trim().split('\n') {
         debug!("Bedrock distribution {}", distribution);
         match distribution {
             "arch" => archlinux::upgrade_arch_linux(ctx)?,
