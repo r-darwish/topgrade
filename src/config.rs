@@ -11,7 +11,7 @@ use pretty_env_logger::formatted_timed_builder;
 use regex::Regex;
 use serde::Deserialize;
 use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, VariantNames};
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
 use sys_info::hostname;
 use which_crate::which;
 
@@ -515,6 +515,10 @@ impl Config {
 
         if let Some(only) = config_file.only.as_ref() {
             enabled_steps.extend(only)
+        }
+
+        if enabled_steps.is_empty() {
+            enabled_steps.extend(Step::iter());
         }
 
         let mut disabled_steps: Vec<Step> = Vec::new();
