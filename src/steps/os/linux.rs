@@ -554,6 +554,7 @@ pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
 pub fn run_pacdiff(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo, String::from("sudo is not installed"))?;
     let pacdiff = require("pacdiff")?;
+    require("vim")?;
 
     print_separator("pacdiff");
 
