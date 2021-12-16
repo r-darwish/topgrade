@@ -555,7 +555,7 @@ pub fn run_pacdiff(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo, String::from("sudo is not installed"))?;
     let pacdiff = require("pacdiff")?;
 
-    if (env::var("DIFFPROG").is_err()) {
+    if std::env::var("DIFFPROG").is_err() {
         require("vim")?;
     }
 
