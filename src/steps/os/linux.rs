@@ -8,18 +8,10 @@ use crate::Step;
 use anyhow::Result;
 use ini::Ini;
 use log::{debug, warn};
-use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "UPPERCASE")]
-struct OsRelease {
-    id_like: Option<String>,
-    id: String,
-}
 
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
