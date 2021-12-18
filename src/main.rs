@@ -1,4 +1,22 @@
 #![allow(clippy::cognitive_complexity)]
+
+use std::env;
+use std::io;
+use std::process::exit;
+
+use anyhow::{anyhow, Result};
+use console::Key;
+use log::debug;
+use structopt::clap::crate_version;
+use structopt::StructOpt;
+
+use self::config::{CommandLineArgs, Config, Step};
+use self::error::StepFailed;
+#[cfg(all(windows, feature = "self-update"))]
+use self::error::Upgraded;
+use self::steps::{remote::*, *};
+use self::terminal::*;
+
 mod config;
 mod ctrlc;
 mod error;
@@ -13,23 +31,6 @@ mod self_update;
 mod steps;
 mod terminal;
 mod utils;
-
-use self::config::{CommandLineArgs, Config, Step};
-use self::error::StepFailed;
-#[cfg(all(windows, feature = "self-update"))]
-use self::error::Upgraded;
-
-use self::steps::{remote::*, *};
-use self::terminal::*;
-use anyhow::{anyhow, Result};
-use console::Key;
-use log::debug;
-
-use std::env;
-use std::io;
-use std::process::exit;
-use structopt::clap::crate_version;
-use structopt::StructOpt;
 
 fn run() -> Result<()> {
     ctrlc::set_handler();
@@ -137,8 +138,6 @@ fn run() -> Result<()> {
         runner.execute(Step::System, "config-update", || {
             linux::run_config_update(sudo.as_ref(), run_type)
         })?;
-
-        runner.execute(Step::Pacdiff, "pacdiff", || linux::run_pacdiff(sudo.as_ref(), run_type))?;
 
         runner.execute(Step::BrewFormula, "Brew", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
