@@ -535,22 +535,22 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
     run_type.execute(sudo).arg(pihole).arg("-up").check_run()
 }
 
-pub fn run_etc_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
+pub fn run_config_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo, String::from("sudo is not installed"))?;
-    let etc_update = require("etc-update")?;
-    print_separator("etc-update");
 
-    run_type.execute(sudo).arg(etc_update).check_run()
-}
+    if let Ok(etc_update) = require("etc-update") {
+        print_separator("Configuration update");
+        run_type.execute(sudo).arg(etc_update).check_run()?;
+    } else if let Ok(pacdiff) = require("pacdiff") {
+        if std::env::var("DIFFPROG").is_err() {
+            require("vim")?;
+        }
 
-pub fn run_pacdiff(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo, String::from("sudo is not installed"))?;
-    let pacdiff = require("pacdiff")?;
-    require("vim")?;
+        print_separator("Configuration update");
+        run_type.execute(sudo).arg(pacdiff).check_run()?;
+    }
 
-    print_separator("pacdiff");
-
-    run_type.execute(sudo).arg(pacdiff).check_run()
+    Ok(())
 }
 
 #[cfg(test)]

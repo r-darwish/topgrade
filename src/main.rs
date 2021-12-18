@@ -134,8 +134,8 @@ fn run() -> Result<()> {
                 println!("Error detecting current distribution: {}", e);
             }
         }
-        runner.execute(Step::System, "etc-update", || {
-            linux::run_etc_update(sudo.as_ref(), run_type)
+        runner.execute(Step::System, "config-update", || {
+            linux::run_config_update(sudo.as_ref(), run_type)
         })?;
 
         runner.execute(Step::Pacdiff, "pacdiff", || linux::run_pacdiff(sudo.as_ref(), run_type))?;
