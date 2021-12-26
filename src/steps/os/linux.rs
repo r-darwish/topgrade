@@ -157,7 +157,7 @@ fn upgrade_alpine_linux(ctx: &ExecutionContext) -> Result<()> {
 }
 
 fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
-    let _ = if let Some(ostree) = Path::new("rpm-ostree").if_exists() {
+    if let Some(ostree) = which("rpm-ostree") {
         if ctx.config().rpm_ostree() {
             let mut command = ctx.run_type().execute(ostree);
             command.arg("upgrade");
