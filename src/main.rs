@@ -5,10 +5,9 @@ use std::io;
 use std::process::exit;
 
 use anyhow::{anyhow, Result};
+use clap::{crate_version, Parser};
 use console::Key;
 use log::debug;
-use structopt::clap::crate_version;
-use structopt::StructOpt;
 
 use self::config::{CommandLineArgs, Config, Step};
 use self::error::StepFailed;
@@ -37,7 +36,7 @@ fn run() -> Result<()> {
 
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
-    let opt = CommandLineArgs::from_args();
+    let opt = CommandLineArgs::parse();
     if opt.edit_config() {
         Config::edit(&base_dirs)?;
         return Ok(());

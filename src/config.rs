@@ -5,13 +5,13 @@ use std::process::Command;
 use std::{env, fs};
 
 use anyhow::Result;
+use clap::{ArgEnum, Parser};
 use directories::BaseDirs;
 use log::{debug, LevelFilter};
 use pretty_env_logger::formatted_timed_builder;
 use regex::Regex;
 use serde::Deserialize;
-use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
 use sys_info::hostname;
 use which_crate::which;
 
@@ -62,8 +62,8 @@ macro_rules! get_deprecated {
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
-#[serde(rename_all = "snake_case")]
+#[derive(ArgEnum, EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
+#[clap(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
     Asdf,
@@ -348,68 +348,68 @@ impl ConfigFile {
     }
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "Topgrade", setting = structopt::clap::AppSettings::ColoredHelp)]
+#[derive(Parser, Debug)]
+#[clap(name = "Topgrade", version)]
 /// Command line arguments
 pub struct CommandLineArgs {
     /// Edit the configuration file
-    #[structopt(long = "edit-config")]
+    #[clap(long = "edit-config")]
     edit_config: bool,
 
     /// Show config reference
-    #[structopt(long = "config-reference")]
+    #[clap(long = "config-reference")]
     show_config_reference: bool,
 
     /// Run inside tmux
-    #[structopt(short = "t", long = "tmux")]
+    #[clap(short = 't', long = "tmux")]
     run_in_tmux: bool,
 
     /// Cleanup temporary or old files
-    #[structopt(short = "c", long = "cleanup")]
+    #[clap(short = 'c', long = "cleanup")]
     cleanup: bool,
 
     /// Print what would be done
-    #[structopt(short = "n", long = "dry-run")]
+    #[clap(short = 'n', long = "dry-run")]
     dry_run: bool,
 
     /// Do not ask to retry failed steps
-    #[structopt(long = "no-retry")]
+    #[clap(long = "no-retry")]
     no_retry: bool,
 
     /// Do not perform upgrades for the given steps
-    #[structopt(long = "disable", possible_values = &Step::VARIANTS)]
+    #[clap(long = "disable", arg_enum)]
     disable: Vec<Step>,
 
     /// Perform only the specified steps (experimental)
-    #[structopt(long = "only", possible_values = &Step::VARIANTS)]
+    #[clap(long = "only", arg_enum)]
     only: Vec<Step>,
 
     /// Output logs
-    #[structopt(short = "v", long = "verbose")]
+    #[clap(short = 'v', long = "verbose")]
     verbose: bool,
 
     /// Prompt for a key before exiting
-    #[structopt(short = "k", long = "keep")]
+    #[clap(short = 'k', long = "keep")]
     keep_at_end: bool,
 
     /// Say yes to package manager's prompt
-    #[structopt(short = "y", long = "yes")]
+    #[clap(short = 'y', long = "yes", arg_enum)]
     yes: Option<Vec<Step>>,
 
     /// Don't pull the predefined git repos
-    #[structopt(long = "disable-predefined-git-repos")]
+    #[clap(long = "disable-predefined-git-repos")]
     disable_predefined_git_repos: bool,
 
     /// Alternative configuration file
-    #[structopt(long = "config")]
+    #[clap(long = "config")]
     config: Option<PathBuf>,
 
     /// A regular expression for restricting remote host execution
-    #[structopt(long = "remote-host-limit", parse(try_from_str))]
+    #[clap(long = "remote-host-limit", parse(try_from_str))]
     remote_host_limit: Option<Regex>,
 
     /// Show the reason for skipped steps
-    #[structopt(long = "show-skipped")]
+    #[clap(long = "show-skipped")]
     show_skipped: bool,
 }
 
