@@ -73,7 +73,7 @@ impl Powershell {
         }
 
         if ctx.config().yes(Step::Powershell) {
-            cmd.push("-Confirm")
+            cmd.push("-Force")
         }
 
         println!("Updating modules...");
