@@ -1,3 +1,10 @@
+use std::path::{Path, PathBuf};
+use std::process::Command;
+
+use anyhow::Result;
+use ini::Ini;
+use log::{debug, warn};
+
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, RunType};
@@ -5,11 +12,6 @@ use crate::steps::os::archlinux;
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, which, PathExt};
 use crate::Step;
-use anyhow::Result;
-use ini::Ini;
-use log::{debug, warn};
-use std::path::{Path, PathBuf};
-use std::process::Command;
 
 static OS_RELEASE_PATH: &str = "/etc/os-release";
 
@@ -323,6 +325,9 @@ fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
 
 pub fn run_pacstall(ctx: &ExecutionContext) -> Result<()> {
     let pacstall = require("pacstall")?;
+
+    print_separator("Pacstall");
+
     ctx.run_type().execute(&pacstall).arg("-U").check_run()?;
     ctx.run_type().execute(pacstall).arg("-Up").check_run()
 }
