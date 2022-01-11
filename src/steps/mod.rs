@@ -7,6 +7,8 @@ pub mod powershell;
 pub mod remote;
 #[cfg(unix)]
 pub mod tmux;
+#[cfg(target_os = "linux")]
+pub mod toolbx;
 pub mod vim;
 #[cfg(unix)]
 pub mod zsh;

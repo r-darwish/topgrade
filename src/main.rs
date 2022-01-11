@@ -276,6 +276,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Sdkman, "SDKMAN!", || {
             unix::run_sdkman(&base_dirs, config.cleanup(), run_type)
         })?;
+        runner.execute(Step::Toolbx, "toolbx", || toolbx::run_toolbx(&ctx))?;
     }
 
     #[cfg(not(any(
