@@ -1,18 +1,20 @@
 #![allow(unused_imports)]
 
-use crate::executor::{CommandExt, RunType};
-use crate::terminal::print_separator;
-use crate::utils::{require, PathExt};
-use crate::{error::SkipStep, execution_context::ExecutionContext};
+#[cfg(unix)]
+use std::os::unix::prelude::MetadataExt;
+use std::path::PathBuf;
+use std::process::Command;
+
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
 #[cfg(unix)]
 use nix::unistd::Uid;
-#[cfg(unix)]
-use std::os::unix::prelude::MetadataExt;
-use std::path::PathBuf;
-use std::process::Command;
+
+use crate::executor::{CommandExt, RunType};
+use crate::terminal::print_separator;
+use crate::utils::{require, PathExt};
+use crate::{error::SkipStep, execution_context::ExecutionContext};
 
 #[allow(clippy::upper_case_acronyms)]
 struct NPM {
@@ -33,6 +35,8 @@ impl NPM {
     }
 
     fn upgrade(&self, run_type: RunType, use_sudo: bool) -> Result<()> {
+        print_separator("Node Package Manager");
+
         if use_sudo {
             run_type
                 .execute("sudo")
@@ -77,7 +81,6 @@ fn should_use_sudo(npm: &NPM, ctx: &ExecutionContext) -> Result<bool> {
 pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let npm = require("npm").map(NPM::new)?;
 
-    print_separator("Node Package Manager");
     #[cfg(target_os = "linux")]
     {
         npm.upgrade(ctx.run_type(), should_use_sudo(&npm, ctx)?)
