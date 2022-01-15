@@ -76,6 +76,7 @@ pub enum Step {
     Chocolatey,
     Choosenim,
     Composer,
+    Conda,
     CustomCommands,
     Deno,
     Dotnet,
