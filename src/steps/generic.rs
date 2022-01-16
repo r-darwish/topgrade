@@ -63,6 +63,19 @@ pub fn run_flutter_upgrade(run_type: RunType) -> Result<()> {
     run_type.execute(&flutter).arg("upgrade").check_run()
 }
 
+pub fn run_go(run_type: RunType) -> Result<()> {
+    let go = utils::require("go")?;
+    let gopath = run_type.execute(&go).args(&["env", "GOPATH"]).check_output()?;
+
+    let go_global_update = utils::require("go-global-update")
+        .unwrap_or_else(|_| PathBuf::from(gopath).join("bin/go-global-update"))
+        .require()?;
+
+    print_separator("Go");
+
+    run_type.execute(&go_global_update).check_run()
+}
+
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let gem = utils::require("gem")?;
     base_dirs.home_dir().join(".gem").require()?;
