@@ -244,6 +244,16 @@ pub fn run_pipx_update(run_type: RunType) -> Result<()> {
 
 pub fn run_conda_update(ctx: &ExecutionContext) -> Result<()> {
     let conda = utils::require("conda")?;
+
+    let output = Command::new("conda")
+        .args(&["config", "--show", "auto_activate_base"])
+        .output()?;
+    let string_output = String::from_utf8(output.stdout)?;
+    debug!("Conda output: {}", string_output);
+    if string_output.contains("False") {
+        return Err(SkipStep("auto_activate_base is set to False".to_string()).into());
+    }
+
     print_separator("Conda");
 
     ctx.run_type()
