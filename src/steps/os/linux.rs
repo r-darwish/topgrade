@@ -544,7 +544,11 @@ pub fn run_config_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
         }
 
         print_separator("Configuration update");
-        run_type.execute(sudo).arg(pacdiff).check_run()?;
+        run_type
+            .execute(sudo)
+            .arg("--preserve-env=DIFFPROG")
+            .arg(pacdiff)
+            .check_run()?;
     }
 
     Ok(())
