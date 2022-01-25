@@ -150,7 +150,7 @@ impl Pacman {
     }
 }
 
-fn box_pacakge_manager<P: 'static + ArchPackageManager>(package_manager: P) -> Box<dyn ArchPackageManager> {
+fn box_package_manager<P: 'static + ArchPackageManager>(package_manager: P) -> Box<dyn ArchPackageManager> {
     Box::new(package_manager) as Box<dyn ArchPackageManager>
 }
 
@@ -159,17 +159,17 @@ pub fn get_arch_package_manager(ctx: &ExecutionContext) -> Option<Box<dyn ArchPa
 
     match ctx.config().arch_package_manager() {
         config::ArchPackageManager::Autodetect => YayParu::get("paru", &pacman)
-            .map(box_pacakge_manager)
-            .or_else(|| YayParu::get("yay", &pacman).map(box_pacakge_manager))
+            .map(box_package_manager)
+            .or_else(|| YayParu::get("yay", &pacman).map(box_package_manager))
             .or_else(|| {
                 Trizen::get()
-                    .map(box_pacakge_manager)
-                    .or_else(|| Pacman::get(ctx).map(box_pacakge_manager))
+                    .map(box_package_manager)
+                    .or_else(|| Pacman::get(ctx).map(box_package_manager))
             }),
-        config::ArchPackageManager::Trizen => Trizen::get().map(box_pacakge_manager),
-        config::ArchPackageManager::Paru => YayParu::get("paru", &pacman).map(box_pacakge_manager),
-        config::ArchPackageManager::Yay => YayParu::get("yay", &pacman).map(box_pacakge_manager),
-        config::ArchPackageManager::Pacman => Pacman::get(ctx).map(box_pacakge_manager),
+        config::ArchPackageManager::Trizen => Trizen::get().map(box_package_manager),
+        config::ArchPackageManager::Paru => YayParu::get("paru", &pacman).map(box_package_manager),
+        config::ArchPackageManager::Yay => YayParu::get("yay", &pacman).map(box_package_manager),
+        config::ArchPackageManager::Pacman => Pacman::get(ctx).map(box_package_manager),
     }
 }
 
