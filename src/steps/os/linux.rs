@@ -535,7 +535,7 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
 
 pub fn run_config_update(ctx: &ExecutionContext) -> Result<()> {
     let sudo = require_option(ctx.sudo().as_ref(), String::from("sudo is not installed"))?;
-    if ctx.config().yes(Step::System) {
+    if ctx.config().yes(Step::ConfigUpdate) {
         return Err(SkipStep("Skipped in --yes".to_string()).into());
     }
 
