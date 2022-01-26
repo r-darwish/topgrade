@@ -4,6 +4,7 @@ use std::process::Command;
 use anyhow::Result;
 use ini::Ini;
 use log::{debug, warn};
+use regex::internal::Exec;
 
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
@@ -532,19 +533,22 @@ pub fn run_pihole_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()
     run_type.execute(sudo).arg(pihole).arg("-up").check_run()
 }
 
-pub fn run_config_update(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
-    let sudo = require_option(sudo, String::from("sudo is not installed"))?;
+pub fn run_config_update(ctx: &ExecutionContext) -> Result<()> {
+    let sudo = require_option(ctx.sudo().as_ref(), String::from("sudo is not installed"))?;
+    if ctx.config().yes(Step::System) {
+        return Err(SkipStep("Skipped in --yes".to_string()).into());
+    }
 
     if let Ok(etc_update) = require("etc-update") {
         print_separator("Configuration update");
-        run_type.execute(sudo).arg(etc_update).check_run()?;
+        ctx.run_type().execute(sudo).arg(etc_update).check_run()?;
     } else if let Ok(pacdiff) = require("pacdiff") {
         if std::env::var("DIFFPROG").is_err() {
             require("vim")?;
         }
 
         print_separator("Configuration update");
-        run_type
+        ctx.run_type()
             .execute(sudo)
             .arg("--preserve-env=DIFFPROG")
             .arg(pacdiff)
