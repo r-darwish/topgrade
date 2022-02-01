@@ -164,10 +164,6 @@ fn upgrade_redhat(ctx: &ExecutionContext) -> Result<()> {
         if ctx.config().rpm_ostree() {
             let mut command = ctx.run_type().execute(ostree);
             command.arg("upgrade");
-            if ctx.config().yes(Step::System) {
-                command.arg("-y");
-            }
-
             return command.check_run();
         }
     };
