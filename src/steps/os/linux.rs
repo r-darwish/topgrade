@@ -221,15 +221,19 @@ fn upgrade_suse(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_void(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["xbps-install", "-Su", "xbps"])
-            .check_run()?;
+        let mut command = ctx.run_type().execute(&sudo);
+        command.args(&["xbps-install", "-Su", "xbps"]);
+        if ctx.config().yes(Step::System) {
+            command.arg("-y");
+        }
+        command.check_run()?;
 
-        ctx.run_type()
-            .execute(&sudo)
-            .args(&["xbps-install", "-u"])
-            .check_run()?;
+        let mut command = ctx.run_type().execute(&sudo);
+        command.args(&["xbps-install", "-u"]);
+        if ctx.config().yes(Step::System) {
+            command.arg("-y");
+        }
+        command.check_run()?;
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
     }
