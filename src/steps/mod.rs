@@ -1,6 +1,7 @@
 pub mod emacs;
 pub mod generic;
 pub mod git;
+pub mod kakoune;
 pub mod node;
 pub mod os;
 pub mod powershell;
