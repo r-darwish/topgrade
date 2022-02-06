@@ -4,7 +4,6 @@ use std::process::Command;
 use anyhow::Result;
 use ini::Ini;
 use log::{debug, warn};
-use regex::internal::Exec;
 
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
