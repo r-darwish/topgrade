@@ -23,6 +23,11 @@ if exists(":PackerUpdate")
     PackerSync
 endif
 
+if exists("*dein#update()")
+    echo "dein#update()"
+    call dein#update()
+endif
+
 if exists(":DeinUpdate")
     echo "DeinUpdate"
     DeinUpdate
