@@ -1,15 +1,27 @@
 use anyhow::Result;
 
-use crate::error;
+use crate::error::{self, TopgradeError};
+use crate::executor::CommandExt;
 use crate::terminal::print_separator;
 use crate::{execution_context::ExecutionContext, utils::require};
-use log::debug;
+use log::{debug, error, warn};
 use std::path::Path;
 use std::process::Command;
+
+// A string found in the output of docker for containers that weren't found in
+// the docker registry. We use this to gracefully handle and skip containers
+// that cannot be pulled, likely because they don't exist in the registry in
+// the first place. This happens e.g. when the user tags an image locally
+// themselves or when using docker-compose.
+const NONEXISTENT_REPO: &str = "repository does not exist";
 
 /// Returns a Vector of all containers, with Strings in the format
 /// "REGISTRY/[PATH/]CONTAINER_NAME:TAG"
 fn list_containers(crt: &Path) -> Result<Vec<String>> {
+    debug!(
+        "Querying '{} images --format \"{{{{.Repository}}}}:{{{{.Tag}}}}\"' for containers",
+        crt.display()
+    );
     let output = Command::new(crt)
         .args(&["images", "--format", "{{.Repository}}:{{.Tag}}"])
         .output()?;
@@ -23,6 +35,7 @@ fn list_containers(crt: &Path) -> Result<Vec<String>> {
             continue;
         }
 
+        debug!("Using container '{}'", line);
         retval.push(String::from(line));
     }
 
@@ -43,12 +56,36 @@ pub fn run_containers(ctx: &ExecutionContext) -> Result<()> {
     debug!("Containers to inspect: {:?}", containers);
 
     for container in containers.iter() {
-        let args = vec!["pull", &container[..]];
-
         debug!("Pulling container '{}'", container);
-        if let Err(e) = ctx.run_type().execute(&crt).args(&args).check_run() {
-            // FIXME: Should this print a warning to stderr?
-            debug!("Pulling container '{}' failed: {}", container, e);
+        let args = vec!["pull", &container[..]];
+        let mut exec = ctx.run_type().execute(&crt);
+
+        if let Err(e) = exec.args(&args).check_run() {
+            error!("Pulling container '{}' failed: {}", container, e);
+
+            // Find out if this is 'skippable'
+            // This is necessary e.g. for docker, because unlike podman docker doesn't tell from
+            // which repository a container originates (such as `docker.io`). This has the
+            // practical consequence that all containers, whether self-built, created by
+            // docker-compose or pulled from the docker hub, look exactly the same to us. We can
+            // only find out what went wrong by manually parsing the output of the command...
+            if match exec.check_output() {
+                Ok(s) => s.contains(NONEXISTENT_REPO),
+                Err(e) => match e.downcast_ref::<TopgradeError>() {
+                    Some(TopgradeError::ProcessFailedWithOutput(_, stderr)) => {
+                        if stderr.contains(NONEXISTENT_REPO) {
+                            true
+                        } else {
+                            return Err(e);
+                        }
+                    }
+                    _ => return Err(e),
+                },
+            } {
+                warn!("Skipping unknown container '{}'", container);
+                continue;
+            }
+
             success = false;
         }
     }
@@ -57,7 +94,7 @@ pub fn run_containers(ctx: &ExecutionContext) -> Result<()> {
         // Remove dangling images
         debug!("Removing dangling images");
         if let Err(e) = ctx.run_type().execute(&crt).args(&["image", "prune", "-f"]).check_run() {
-            debug!("Removing dangling images failed: {}", e);
+            error!("Removing dangling images failed: {}", e);
             success = false;
         }
     }
