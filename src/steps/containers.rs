@@ -35,6 +35,12 @@ fn list_containers(crt: &Path) -> Result<Vec<String>> {
             continue;
         }
 
+        if line.contains("<none>") {
+            // Bogus/dangling container or intermediate layer
+            debug!("Skipping bogus container '{}'", line);
+            continue;
+        }
+
         debug!("Using container '{}'", line);
         retval.push(String::from(line));
     }
