@@ -60,23 +60,56 @@ pub fn run_scoop(cleanup: bool, run_type: RunType) -> Result<()> {
     Ok(())
 }
 
-pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
-    let wsl = require("wsl")?;
+fn get_wsl_distributions(wsl: &Path) -> Result<Vec<String>> {
+    let output = Command::new(wsl).args(&["--list", "-q"]).check_output()?;
+    Ok(output
+        .lines()
+        .filter(|s| !s.is_empty())
+        .map(|x| x.replace("\u{0}", "").replace('\r', ""))
+        .collect())
+}
+
+fn upgrade_wsl_distribution(wsl: &Path, dist: &str, ctx: &ExecutionContext) -> Result<()> {
     let topgrade = Command::new(&wsl)
-        .args(&["bash", "-lc", "which topgrade"])
+        .args(&["-d", dist, "bash", "-lc", "which topgrade"])
         .check_output()
         .map_err(|_| SkipStep(String::from("Could not find Topgrade installed in WSL")))?;
 
     let mut command = ctx.run_type().execute(&wsl);
     command
-        .args(&["bash", "-c"])
-        .arg(format!("TOPGRADE_PREFIX=WSL exec {}", topgrade));
+        .args(&["-d", dist, "bash", "-c"])
+        .arg(format!("TOPGRADE_PREFIX={} exec {}", dist, topgrade));
 
     if ctx.config().yes(Step::Wsl) {
         command.arg("-y");
     }
 
     command.check_run()
+}
+
+pub fn run_wsl_topgrade(ctx: &ExecutionContext) -> Result<()> {
+    let wsl = require("wsl")?;
+    let wsl_distributions = get_wsl_distributions(&wsl)?;
+    let mut ran = false;
+
+    debug!("WSL distributions: {:?}", wsl_distributions);
+
+    for distribution in wsl_distributions {
+        let result = upgrade_wsl_distribution(&wsl, &distribution, ctx);
+        debug!("Upgrading {:?}: {:?}", distribution, result);
+        if let Err(e) = result {
+            if e.is::<SkipStep>() {
+                continue;
+            }
+        }
+        ran = true
+    }
+
+    if ran {
+        Ok(())
+    } else {
+        Err(SkipStep(String::from("Could not find Topgrade in any WSL disribution")).into())
+    }
 }
 
 pub fn windows_update(ctx: &ExecutionContext) -> Result<()> {
