@@ -51,6 +51,20 @@ pub fn run_antigen(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
 }
 
+pub fn run_zgenom(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+    let zsh = require("zsh")?;
+    let zshrc = zshrc(base_dirs).require()?;
+    env::var("ZGEN_SOURCE")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zgenom"))
+        .require()?;
+
+    print_separator("zgenom");
+
+    let cmd = format!("source {} && zgenom selfupdate && zgenom update", zshrc.display());
+    run_type.execute(zsh).args(&["-l", "-c", cmd.as_str()]).check_run()
+}
+
 pub fn run_zplug(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     zshrc(base_dirs).require()?;
@@ -69,7 +83,7 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
-    env::var("ZPFX")
+    env::var("ZINIT_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| base_dirs.home_dir().join(".zinit"))
         .require()?;
