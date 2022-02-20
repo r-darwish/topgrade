@@ -50,10 +50,7 @@ fn list_containers(crt: &Path) -> Result<Vec<String>> {
 
 pub fn run_containers(ctx: &ExecutionContext) -> Result<()> {
     // Prefer podman, fall back to docker if not present
-    let crt = match require("podman") {
-        Ok(path) => path,
-        Err(_) => require("docker")?,
-    };
+    let crt = require("podman").or_else(|_| require("docker"))?;
     debug!("Using container runtime '{}'", crt.display());
 
     print_separator("Containers");
@@ -78,14 +75,8 @@ pub fn run_containers(ctx: &ExecutionContext) -> Result<()> {
             if match exec.check_output() {
                 Ok(s) => s.contains(NONEXISTENT_REPO),
                 Err(e) => match e.downcast_ref::<TopgradeError>() {
-                    Some(TopgradeError::ProcessFailedWithOutput(_, stderr)) => {
-                        if stderr.contains(NONEXISTENT_REPO) {
-                            true
-                        } else {
-                            return Err(e);
-                        }
-                    }
-                    _ => return Err(e),
+                    Some(TopgradeError::ProcessFailedWithOutput(_, stderr)) => stderr.contains(NONEXISTENT_REPO),
+                    _ => false,
                 },
             } {
                 warn!("Skipping unknown container '{}'", container);
