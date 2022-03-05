@@ -1,3 +1,4 @@
+pub mod containers;
 pub mod emacs;
 pub mod generic;
 pub mod git;

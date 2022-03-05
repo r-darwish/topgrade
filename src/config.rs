@@ -78,6 +78,7 @@ pub enum Step {
     Composer,
     Conda,
     ConfigUpdate,
+    Containers,
     CustomCommands,
     Deno,
     Dotnet,
