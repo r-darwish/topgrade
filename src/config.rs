@@ -89,6 +89,7 @@ pub enum Step {
     Fossil,
     Gcloud,
     Gem,
+    GithubCliExtensions,
     GitRepos,
     Go,
     Haxelib,

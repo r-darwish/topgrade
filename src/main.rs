@@ -327,6 +327,9 @@ fn run() -> Result<()> {
     runner.execute(Step::Micro, "micro", || generic::run_micro(run_type))?;
     runner.execute(Step::Raco, "raco", || generic::run_raco_update(run_type))?;
     runner.execute(Step::Spicetify, "spicetify", || generic::spicetify_upgrade(&ctx))?;
+    runner.execute(Step::GithubCliExtensions, "Github CLI Extensions", || {
+        generic::run_ghcli_extensions_upgrade(&ctx)
+    })?;
 
     #[cfg(target_os = "linux")]
     {

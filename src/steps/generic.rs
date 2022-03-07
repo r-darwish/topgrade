@@ -475,3 +475,13 @@ pub fn spicetify_upgrade(ctx: &ExecutionContext) -> Result<()> {
     print_separator("Spicetify");
     ctx.run_type().execute(&spicetify).arg("upgrade").check_run()
 }
+
+pub fn run_ghcli_extensions_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let gh = utils::require("gh")?;
+
+    print_separator("GitHub CLI Extensions");
+    ctx.run_type()
+        .execute(&gh)
+        .args(&["extension", "upgrade", "--all"])
+        .check_run()
+}
