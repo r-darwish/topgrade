@@ -1,7 +1,7 @@
-use crate::error::{SkipStep, TopgradeError};
+use crate::error::SkipStep;
 use anyhow::Result;
 
-use crate::executor::{CommandExt, ExecutorOutput, RunType};
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
 use crate::{
     execution_context::ExecutionContext,
@@ -10,10 +10,7 @@ use crate::{
 use directories::BaseDirs;
 use log::debug;
 use std::path::{Path, PathBuf};
-use std::{
-    io::{self, Write},
-    process::Command,
-};
+use std::{io::Write, process::Command};
 
 const UPGRADE_VIM: &str = include_str!("upgrade.vim");
 
@@ -57,24 +54,7 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
         command.env("TOPGRADE_FORCE_PLUGUPDATE", "true");
     }
 
-    let output = command.output()?;
-
-    if let ExecutorOutput::Wet(output) = output {
-        let status = output.status;
-
-        if !status.success() || ctx.config().verbose() {
-            io::stdout().write(&output.stdout).ok();
-            io::stderr().write(&output.stderr).ok();
-        }
-
-        if !status.success() {
-            return Err(TopgradeError::ProcessFailed(status).into());
-        } else {
-            println!("Plugins upgraded")
-        }
-    }
-
-    Ok(())
+    command.check_run()
 }
 
 pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
