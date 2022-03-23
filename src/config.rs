@@ -863,6 +863,7 @@ impl Config {
         true
     }
 
+    #[cfg(windows)]
     pub fn enable_winget(&self) -> bool {
         return self
             .config_file
