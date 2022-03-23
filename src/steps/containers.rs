@@ -19,11 +19,11 @@ const NONEXISTENT_REPO: &str = "repository does not exist";
 /// "REGISTRY/[PATH/]CONTAINER_NAME:TAG"
 fn list_containers(crt: &Path) -> Result<Vec<String>> {
     debug!(
-        "Querying '{} images --format \"{{{{.Repository}}}}:{{{{.Tag}}}}\"' for containers",
+        "Querying '{} image ls --format \"{{{{.Repository}}}}:{{{{.Tag}}}}\"' for containers",
         crt.display()
     );
     let output = Command::new(crt)
-        .args(&["images", "--format", "{{.Repository}}:{{.Tag}}"])
+        .args(&["image", "ls", "--format", "{{.Repository}}:{{.Tag}}"])
         .output()?;
     let output_str = String::from_utf8(output.stdout)?;
 
