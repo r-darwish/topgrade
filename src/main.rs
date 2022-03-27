@@ -339,9 +339,6 @@ fn run() -> Result<()> {
         runner.execute(Step::Pacstall, "pacstall", || linux::run_pacstall(&ctx))?;
     }
 
-    #[cfg(target_os = "macos")]
-    runner.execute(Step::Silnite, "silnite", || macos::run_silnite(&ctx))?;
-
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
             runner.execute(Step::CustomCommands, name, || {

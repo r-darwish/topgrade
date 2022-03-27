@@ -32,13 +32,6 @@ pub fn run_mas(run_type: RunType) -> Result<()> {
     run_type.execute(mas).arg("upgrade").check_run()
 }
 
-pub fn run_silnite(ctx: &ExecutionContext) -> Result<()> {
-    let silnite = require("silnite")?;
-    print_separator("Silnite");
-
-    ctx.run_type().execute(silnite).arg("au").check_run()
-}
-
 pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
     print_separator("macOS system update");
 
