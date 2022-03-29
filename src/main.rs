@@ -7,6 +7,8 @@ use std::process::exit;
 use anyhow::{anyhow, Result};
 use console::Key;
 use log::debug;
+use log::LevelFilter;
+use pretty_env_logger::formatted_timed_builder;
 use structopt::clap::crate_version;
 use structopt::StructOpt;
 
@@ -38,6 +40,14 @@ fn run() -> Result<()> {
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::from_args();
+    let mut builder = formatted_timed_builder();
+
+    if opt.verbose {
+        builder.filter(Some("topgrade"), LevelFilter::Trace);
+    }
+
+    builder.init();
+
     if opt.edit_config() {
         Config::edit(&base_dirs)?;
         return Ok(());
@@ -50,6 +60,7 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+    terminal::display_time(config.display_time());
     terminal::set_desktop_notifications(config.notify_each_step());
 
     debug!("Version: {}", crate_version!());

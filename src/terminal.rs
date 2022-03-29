@@ -48,6 +48,7 @@ struct Terminal {
     prefix: String,
     term: Term,
     set_title: bool,
+    display_time: bool,
     desktop_notification: bool,
     #[cfg(target_os = "linux")]
     notify_send: Option<PathBuf>,
@@ -63,6 +64,7 @@ impl Terminal {
                 .map(|prefix| format!("({}) ", prefix))
                 .unwrap_or_else(|_| String::new()),
             set_title: true,
+            display_time: true,
             desktop_notification: false,
             #[cfg(target_os = "linux")]
             notify_send: which("notify-send"),
@@ -75,6 +77,10 @@ impl Terminal {
 
     fn set_title(&mut self, set_title: bool) {
         self.set_title = set_title
+    }
+
+    fn display_time(&mut self, display_time: bool) {
+        self.display_time = display_time
     }
 
     #[allow(unused_variables)]
@@ -117,14 +123,19 @@ impl Terminal {
         }
 
         let now = Local::now();
-        let message = format!(
-            "{}{:02}:{:02}:{:02} - {}",
-            self.prefix,
-            now.hour(),
-            now.minute(),
-            now.second(),
-            message.as_ref()
-        );
+        let message = if self.display_time {
+            format!(
+                "{}{:02}:{:02}:{:02} - {}",
+                self.prefix,
+                now.hour(),
+                now.minute(),
+                now.second(),
+                message.as_ref()
+            )
+        } else {
+            String::from(message.as_ref())
+        };
+
         match self.width {
             Some(width) => {
                 self.term
@@ -310,4 +321,8 @@ pub fn prompt_yesno(question: &str) -> Result<bool, io::Error> {
 
 pub fn notify_desktop<P: AsRef<str>>(message: P, timeout: Option<Duration>) {
     TERMINAL.lock().unwrap().notify_desktop(message, timeout)
+}
+
+pub fn display_time(display_time: bool) {
+    TERMINAL.lock().unwrap().display_time(display_time);
 }

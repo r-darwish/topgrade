@@ -6,8 +6,7 @@ use std::{env, fs};
 
 use anyhow::Result;
 use directories::BaseDirs;
-use log::{debug, LevelFilter};
-use pretty_env_logger::formatted_timed_builder;
+use log::debug;
 use regex::Regex;
 use serde::Deserialize;
 use structopt::StructOpt;
@@ -247,6 +246,7 @@ pub struct ConfigFile {
     git_arguments: Option<String>,
     tmux_arguments: Option<String>,
     set_title: Option<bool>,
+    display_time: Option<bool>,
     assume_yes: Option<bool>,
     yay_arguments: Option<String>,
     no_retry: Option<bool>,
@@ -343,6 +343,7 @@ impl ConfigFile {
     fn edit(base_dirs: &BaseDirs) -> Result<()> {
         let config_path = Self::ensure(base_dirs)?;
         let editor = editor();
+        debug!("Editor: {:?}", editor);
 
         let command = which(&editor[0])?;
         let args: Vec<&String> = editor.iter().skip(1).collect();
@@ -394,7 +395,7 @@ pub struct CommandLineArgs {
 
     /// Output logs
     #[structopt(short = "v", long = "verbose")]
-    verbose: bool,
+    pub verbose: bool,
 
     /// Prompt for a key before exiting
     #[structopt(short = "k", long = "keep")]
@@ -447,14 +448,6 @@ impl Config {
     ///
     /// The function parses the command line arguments and reading the configuration file.
     pub fn load(base_dirs: &BaseDirs, opt: CommandLineArgs) -> Result<Self> {
-        let mut builder = formatted_timed_builder();
-
-        if opt.verbose {
-            builder.filter(Some("topgrade"), LevelFilter::Trace);
-        }
-
-        builder.init();
-
         let config_directory = config_directory(base_dirs);
         let config_file = if config_directory.is_dir() {
             ConfigFile::read(base_dirs, opt.config.clone()).unwrap_or_else(|e| {
@@ -871,5 +864,9 @@ impl Config {
             .as_ref()
             .and_then(|w| w.enable_winget)
             .unwrap_or(false);
+    }
+
+    pub fn display_time(&self) -> bool {
+        self.config_file.display_time.unwrap_or(true)
     }
 }
