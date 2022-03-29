@@ -70,7 +70,7 @@ fn get_wsl_distributions(wsl: &Path) -> Result<Vec<String>> {
     Ok(output
         .lines()
         .filter(|s| !s.is_empty())
-        .map(|x| x.replace("\u{0}", "").replace('\r', ""))
+        .map(|x| x.replace('\u{0}', "").replace('\r', ""))
         .collect())
 }
 
