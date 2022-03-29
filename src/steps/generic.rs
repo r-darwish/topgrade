@@ -478,6 +478,11 @@ pub fn spicetify_upgrade(ctx: &ExecutionContext) -> Result<()> {
 
 pub fn run_ghcli_extensions_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let gh = utils::require("gh")?;
+    let result = Command::new(&gh).args(&["extensions", "list"]).check_output();
+    if result.is_err() {
+        debug!("GH result {:?}", result);
+        return Err(SkipStep(String::from("GH failed")).into());
+    }
 
     print_separator("GitHub CLI Extensions");
     ctx.run_type()
