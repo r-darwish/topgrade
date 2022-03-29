@@ -31,6 +31,9 @@
 # Do not set the terminal title
 #set_title = false
 
+# Display the time in step titles
+# display_time = true
+
 # Cleanup temporary or old files
 #cleanup = true
 
