@@ -5,7 +5,7 @@ use crate::execution_context::ExecutionContext;
 #[cfg(target_os = "macos")]
 use crate::executor::CommandExt;
 use crate::executor::{Executor, ExecutorExitStatus, RunType};
-use crate::terminal::{print_separator, print_warning};
+use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use crate::Step;
 use anyhow::Result;
