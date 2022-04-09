@@ -1,9 +1,11 @@
 #![allow(dead_code)]
-use crate::config::Config;
 use crate::executor::RunType;
 use crate::git::Git;
+use crate::utils::require_option;
+use crate::{config::Config, executor::Executor};
+use anyhow::Result;
 use directories::BaseDirs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 pub struct ExecutionContext<'a> {
     run_type: RunType,
@@ -28,6 +30,22 @@ impl<'a> ExecutionContext<'a> {
             config,
             base_dirs,
         }
+    }
+
+    pub fn execute_elevated(&self, command: &Path, interactive: bool) -> Result<Executor> {
+        let sudo = require_option(self.sudo.clone(), "Sudo is required for this operation".into())?;
+        let mut cmd = self.run_type.execute(&sudo);
+
+        if sudo.ends_with("sudo") {
+            cmd.arg("--preserve-env=DIFFPROG");
+        }
+
+        if interactive {
+            cmd.arg("-i");
+        }
+
+        cmd.arg(command);
+        Ok(cmd)
     }
 
     pub fn run_type(&self) -> RunType {

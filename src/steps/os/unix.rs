@@ -5,7 +5,7 @@ use crate::execution_context::ExecutionContext;
 #[cfg(target_os = "macos")]
 use crate::executor::CommandExt;
 use crate::executor::{Executor, ExecutorExitStatus, RunType};
-use crate::terminal::{print_separator, print_warning};
+use crate::terminal::print_separator;
 use crate::utils::{require, require_option, PathExt};
 use crate::Step;
 use anyhow::Result;
@@ -232,14 +232,7 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     let run_type = ctx.run_type();
 
     if multi_user {
-        if let Some(sudo) = ctx.sudo() {
-            run_type
-                .execute(&sudo)
-                .args(&["-i", "nix", "upgrade-nix"])
-                .check_run()?;
-        } else {
-            print_warning("Need sudo to upgrade Nix");
-        }
+        ctx.execute_elevated(&nix, true)?.arg("upgrade-nix").check_run()?;
     } else {
         run_type.execute(&nix).arg("upgrade-nix").check_run()?;
     }
