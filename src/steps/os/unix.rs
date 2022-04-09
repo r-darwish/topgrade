@@ -69,10 +69,13 @@ impl BrewVariant {
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let fish = require("fish")?;
-    base_dirs
-        .home_dir()
-        .join(".config/fish/functions/fisher.fish")
-        .require()?;
+
+    if env::var("fisher_path").is_err() {
+        base_dirs
+            .home_dir()
+            .join(".config/fish/functions/fisher.fish")
+            .require()?;
+    }
 
     print_separator("Fisher");
 
