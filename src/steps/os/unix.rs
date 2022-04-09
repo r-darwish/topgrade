@@ -143,8 +143,10 @@ pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
         .args(&[
             "call",
             "--session",
-            "--dest org.freedesktop.DBus",
-            "--object-path /org/freedesktop/DBus",
+            "--dest",
+            "org.freedesktop.DBus",
+            "--object-path",
+            "/org/freedesktop/DBus",
             "--method",
             "org.freedesktop.DBus.ListActivatableNames",
         ])
