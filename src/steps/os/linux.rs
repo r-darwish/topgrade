@@ -547,11 +547,7 @@ pub fn run_config_update(ctx: &ExecutionContext) -> Result<()> {
         }
 
         print_separator("Configuration update");
-        ctx.run_type()
-            .execute(sudo)
-            .arg("--preserve-env=DIFFPROG")
-            .arg(pacdiff)
-            .check_run()?;
+        ctx.execute_elevated(&pacdiff)?.check_run()?;
     }
 
     Ok(())
