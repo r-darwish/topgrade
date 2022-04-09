@@ -547,7 +547,7 @@ pub fn run_config_update(ctx: &ExecutionContext) -> Result<()> {
         }
 
         print_separator("Configuration update");
-        ctx.execute_elevated(&pacdiff)?.check_run()?;
+        ctx.execute_elevated(&pacdiff, false)?.check_run()?;
     }
 
     Ok(())

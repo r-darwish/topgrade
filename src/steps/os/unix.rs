@@ -229,14 +229,7 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     let run_type = ctx.run_type();
 
     if multi_user {
-        if let Some(sudo) = ctx.sudo() {
-            run_type
-                .execute(&sudo)
-                .args(&["-i", "nix", "upgrade-nix"])
-                .check_run()?;
-        } else {
-            print_warning("Need sudo to upgrade Nix");
-        }
+        ctx.execute_elevated(&nix, true)?.arg("upgrade-nix").check_run()?;
     } else {
         run_type.execute(&nix).arg("upgrade-nix").check_run()?;
     }

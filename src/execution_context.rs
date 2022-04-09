@@ -32,12 +32,16 @@ impl<'a> ExecutionContext<'a> {
         }
     }
 
-    pub fn execute_elevated(&self, command: &Path) -> Result<Executor> {
+    pub fn execute_elevated(&self, command: &Path, interactive: bool) -> Result<Executor> {
         let sudo = require_option(self.sudo.clone(), "Sudo is required for this operation".into())?;
         let mut cmd = self.run_type.execute(&sudo);
 
         if sudo.ends_with("sudo") {
             cmd.arg("--preserve-env=DIFFPROG");
+        }
+
+        if interactive {
+            cmd.arg("-i");
         }
 
         cmd.arg(command);
