@@ -1,11 +1,11 @@
 #![allow(dead_code)]
-use crate::utils::require_option;
-use crate::{config::Config, executor::Executor};
 use crate::executor::RunType;
 use crate::git::Git;
+use crate::utils::require_option;
+use crate::{config::Config, executor::Executor};
 use anyhow::Result;
 use directories::BaseDirs;
-use std::path::{PathBuf, Path};
+use std::path::{Path, PathBuf};
 
 pub struct ExecutionContext<'a> {
     run_type: RunType,
