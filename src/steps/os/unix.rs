@@ -133,6 +133,7 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "plug update"]).check_run()
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
     let gdbus = require("gdbus")?;
     require_option(

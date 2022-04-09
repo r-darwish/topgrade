@@ -280,6 +280,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
         runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
+        #[cfg(not(target_os = "macos"))]
         runner.execute(Step::GnomeShellExtensions, "Gnome Shell Extensions", || {
             unix::upgrade_gnome_extensions(&ctx)
         })?;
