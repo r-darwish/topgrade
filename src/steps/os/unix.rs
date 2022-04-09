@@ -2,9 +2,7 @@
 use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-#[cfg(target_os = "macos")]
-use crate::executor::CommandExt;
-use crate::executor::{Executor, ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::{print_separator, print_warning};
 use crate::utils::{require, require_option, PathExt};
 use crate::Step;
@@ -141,6 +139,22 @@ pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
         env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p.contains("GNOME")),
         "Desktop doest not appear to be gnome".to_string(),
     )?;
+    let output = Command::new("gdbus")
+        .args(&[
+            "call",
+            "--session",
+            "--dest org.freedesktop.DBus",
+            "--object-path /org/freedesktop/DBus",
+            "--method",
+            "org.freedesktop.DBus.ListActivatableNames",
+        ])
+        .check_output()?;
+
+    debug!("Checking for gnome extensions: {}", output);
+    if !output.contains("org.gnome.Shell.Extensions") {
+        return Err(SkipStep(String::from("Gnome shell extensions are unregistered in DBus")).into());
+    }
+
     print_separator("Gnome Shell extensions");
 
     ctx.run_type()
