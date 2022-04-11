@@ -4,7 +4,9 @@ use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{require, require_option, PathExt};
+#[cfg(not(target_os = "macos"))]
+use crate::utils::require_option;
+use crate::utils::{require, PathExt};
 use crate::Step;
 use anyhow::Result;
 use directories::BaseDirs;
