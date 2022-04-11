@@ -228,13 +228,9 @@ impl Terminal {
         self.term
             .write_fmt(format_args!(
                 "\n{}",
-                style(format!(
-                    "{}Retry? (y)es/(N)o/(s)hell{}",
-                    self.prefix,
-                    if interrupted { "/(q)uit" } else { "" }
-                ))
-                .yellow()
-                .bold()
+                style(format!("{}Retry? (y)es/(N)o/(s)hell/(q)uit", self.prefix))
+                    .yellow()
+                    .bold()
             ))
             .ok();
 
