@@ -2,11 +2,11 @@
 use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-#[cfg(target_os = "macos")]
-use crate::executor::CommandExt;
-use crate::executor::{Executor, ExecutorExitStatus, RunType};
+use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::print_separator;
-use crate::utils::{require, require_option, PathExt};
+#[cfg(not(target_os = "macos"))]
+use crate::utils::require_option;
+use crate::utils::{require, PathExt};
 use crate::Step;
 use anyhow::Result;
 use directories::BaseDirs;
@@ -135,12 +135,31 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
     ctx.run_type().execute(&fish).args(&["-c", "plug update"]).check_run()
 }
 
+#[cfg(not(target_os = "macos"))]
 pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
     let gdbus = require("gdbus")?;
     require_option(
         env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p.contains("GNOME")),
         "Desktop doest not appear to be gnome".to_string(),
     )?;
+    let output = Command::new("gdbus")
+        .args(&[
+            "call",
+            "--session",
+            "--dest",
+            "org.freedesktop.DBus",
+            "--object-path",
+            "/org/freedesktop/DBus",
+            "--method",
+            "org.freedesktop.DBus.ListActivatableNames",
+        ])
+        .check_output()?;
+
+    debug!("Checking for gnome extensions: {}", output);
+    if !output.contains("org.gnome.Shell.Extensions") {
+        return Err(SkipStep(String::from("Gnome shell extensions are unregistered in DBus")).into());
+    }
+
     print_separator("Gnome Shell extensions");
 
     ctx.run_type()
