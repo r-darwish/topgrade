@@ -199,6 +199,7 @@ pub enum ArchPackageManager {
     Paru,
     Yay,
     Pacman,
+    Pikaur,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -208,6 +209,7 @@ pub struct Linux {
     arch_package_manager: Option<ArchPackageManager>,
     show_arch_news: Option<bool>,
     trizen_arguments: Option<String>,
+    pikaur_arguments: Option<String>,
     dnf_arguments: Option<String>,
     apt_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
@@ -674,6 +676,16 @@ impl Config {
             .linux
             .as_ref()
             .and_then(|s| s.trizen_arguments.as_deref())
+            .unwrap_or("")
+    }
+
+    /// Extra Pikaur arguments
+    #[allow(dead_code)]
+    pub fn pikaur_arguments(&self) -> &str {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.pikaur_arguments.as_deref())
             .unwrap_or("")
     }
 
