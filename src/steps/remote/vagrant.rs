@@ -4,6 +4,7 @@ use std::{fmt::Display, rc::Rc, str::FromStr};
 
 use anyhow::Result;
 use log::{debug, error};
+use regex::Regex;
 use strum::EnumString;
 
 use crate::execution_context::ExecutionContext;
@@ -199,4 +200,36 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
         .current_dir(&vagrant_box.path)
         .args(&["ssh", "-c", &command])
         .check_run()
+}
+
+pub fn upgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
+    let vagrant = utils::require("vagrant")?;
+    print_separator("Vagrant boxes");
+
+    let outdated = Command::new(&vagrant)
+        .args(&["box", "outdated", "--global"])
+        .check_output()?;
+
+    let re = Regex::new(r"\* '(.*?)' for '(.*?)' is outdated").unwrap();
+
+    let mut found = false;
+    for ele in re.captures_iter(&outdated) {
+        found = true;
+        let _ = ctx
+            .run_type()
+            .execute(&vagrant)
+            .args(&["box", "update", "--box"])
+            .arg(&ele.get(1).unwrap().as_str())
+            .arg("--provider")
+            .arg(ele.get(2).unwrap().as_str())
+            .check_run();
+    }
+
+    if !found {
+        println!("No outdated boxes")
+    } else {
+        ctx.run_type().execute(&vagrant).args(&["box", "prune"]).check_run()?;
+    }
+
+    Ok(())
 }
