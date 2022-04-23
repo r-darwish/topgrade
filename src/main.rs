@@ -392,6 +392,7 @@ fn run() -> Result<()> {
             }
         }
     }
+    runner.execute(Step::Vagrant, "Vagrant boxes", || vagrant::upgrade_vagrant_boxes(&ctx))?;
 
     if !runner.report().data().is_empty() {
         print_separator("Summary");

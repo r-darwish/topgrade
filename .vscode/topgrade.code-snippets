@@ -21,5 +21,15 @@
 		"body": [
 			"return Err(SkipStep(format!(\"$1\").into()));"
 		]
+	},
+	"Step": {
+		"scope": "rust",
+		"prefix": "step",
+		"body": [
+			"pub fn $1(ctx: &ExecutionContext) -> Result<()> {",
+			"    $0",
+			"    Ok(())",
+			"}"
+		]
 	}
 }
