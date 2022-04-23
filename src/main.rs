@@ -5,12 +5,11 @@ use std::io;
 use std::process::exit;
 
 use anyhow::{anyhow, Result};
+use clap::{crate_version, Parser};
 use console::Key;
 use log::debug;
 use log::LevelFilter;
 use pretty_env_logger::formatted_timed_builder;
-use structopt::clap::crate_version;
-use structopt::StructOpt;
 
 use self::config::{CommandLineArgs, Config, Step};
 use self::error::StepFailed;
@@ -39,7 +38,7 @@ fn run() -> Result<()> {
 
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
-    let opt = CommandLineArgs::from_args();
+    let opt = CommandLineArgs::parse();
     let mut builder = formatted_timed_builder();
 
     if opt.verbose {
@@ -394,6 +393,7 @@ fn run() -> Result<()> {
             }
         }
     }
+    runner.execute(Step::Vagrant, "Vagrant boxes", || vagrant::upgrade_vagrant_boxes(&ctx))?;
 
     if !runner.report().data().is_empty() {
         print_separator("Summary");
