@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::collections::BTreeMap;
 use std::fs::write;
 use std::path::PathBuf;
@@ -499,7 +500,7 @@ impl Config {
 
     /// The list of additional git repositories to pull.
     pub fn git_repos(&self) -> &Option<Vec<String>> {
-        get_deprecated!(&self.config_file, git_repos, git, repos)
+        get_deprecated!(self.config_file, git_repos, git, repos)
     }
 
     /// Tell whether the specified step should run.
@@ -569,11 +570,11 @@ impl Config {
 
     /// Extra Git arguments
     pub fn git_arguments(&self) -> &Option<String> {
-        get_deprecated!(&self.config_file, git_arguments, git, arguments)
+        get_deprecated!(self.config_file, git_arguments, git, arguments)
     }
 
     /// Extra Tmux arguments
-    #[allow(dead_code)]
+
     pub fn tmux_arguments(&self) -> &Option<String> {
         &self.config_file.tmux_arguments
     }
@@ -589,7 +590,6 @@ impl Config {
     }
 
     /// Whether to say yes to package managers
-    #[allow(dead_code)]
     pub fn yes(&self, step: Step) -> bool {
         if let Some(yes) = self.config_file.assume_yes {
             return yes;
@@ -607,13 +607,11 @@ impl Config {
     }
 
     /// Bash-it branch
-    #[allow(dead_code)]
     pub fn bashit_branch(&self) -> &str {
         self.config_file.bashit_branch.as_deref().unwrap_or("stable")
     }
 
     /// Whether to accept all Windows updates
-    #[allow(dead_code)]
     pub fn accept_all_windows_updates(&self) -> bool {
         get_deprecated!(
             self.config_file,
@@ -625,7 +623,6 @@ impl Config {
     }
 
     /// Whether to self rename the Topgrade executable during the run
-    #[allow(dead_code)]
     pub fn self_rename(&self) -> bool {
         self.config_file
             .windows
@@ -635,7 +632,6 @@ impl Config {
     }
 
     /// Whether Brew cask should be greedy
-    #[allow(dead_code)]
     pub fn brew_cask_greedy(&self) -> bool {
         self.config_file
             .brew
@@ -663,13 +659,11 @@ impl Config {
     }
 
     /// Whether to send a desktop notification at the beginning of every step
-    #[allow(dead_code)]
     pub fn notify_each_step(&self) -> bool {
         self.config_file.notify_each_step.unwrap_or(false)
     }
 
     /// Extra trizen arguments
-    #[allow(dead_code)]
     pub fn trizen_arguments(&self) -> &str {
         self.config_file
             .linux
@@ -679,7 +673,6 @@ impl Config {
     }
 
     /// Show news on Arch Linux
-    #[allow(dead_code)]
     pub fn show_arch_news(&self) -> bool {
         self.config_file
             .linux
@@ -689,7 +682,6 @@ impl Config {
     }
 
     /// Extra yay arguments
-    #[allow(dead_code)]
     pub fn arch_package_manager(&self) -> ArchPackageManager {
         self.config_file
             .linux
@@ -699,7 +691,6 @@ impl Config {
     }
 
     /// Extra yay arguments
-    #[allow(dead_code)]
     pub fn yay_arguments(&self) -> &str {
         get_deprecated!(self.config_file, yay_arguments, linux, yay_arguments)
             .as_deref()
@@ -707,7 +698,6 @@ impl Config {
     }
 
     /// Extra apt arguments
-    #[allow(dead_code)]
     pub fn apt_arguments(&self) -> Option<&str> {
         self.config_file
             .linux
@@ -716,7 +706,6 @@ impl Config {
     }
 
     /// Extra dnf arguments
-    #[allow(dead_code)]
     pub fn dnf_arguments(&self) -> Option<&str> {
         self.config_file
             .linux
@@ -751,7 +740,6 @@ impl Config {
     }
 
     /// Enable tlmgr on Linux
-    #[allow(dead_code)]
     pub fn enable_tlmgr_linux(&self) -> bool {
         self.config_file
             .linux
@@ -761,7 +749,6 @@ impl Config {
     }
 
     /// Use distro-sync in Red Hat based distrbutions
-    #[allow(dead_code)]
     pub fn redhat_distro_sync(&self) -> bool {
         self.config_file
             .linux
@@ -771,7 +758,6 @@ impl Config {
     }
 
     /// Use rpm-ostree in *when rpm-ostree is detected* (default: true)
-    #[allow(dead_code)]
     pub fn rpm_ostree(&self) -> bool {
         self.config_file
             .linux
@@ -791,7 +777,7 @@ impl Config {
 
     pub fn use_predefined_git_repos(&self) -> bool {
         !self.opt.disable_predefined_git_repos
-            && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
+            && get_deprecated!(self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
 
     pub fn verbose(&self) -> bool {
