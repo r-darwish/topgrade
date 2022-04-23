@@ -77,6 +77,38 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
+pub fn upgrade_ultimate_vimrc(ctx: &ExecutionContext) -> Result<()> {
+    let config_dir = ctx.base_dirs().home_dir().join(".vim_runtime").require()?;
+    let git = require("git")?;
+    let python = require("python3")?;
+    let update_plugins = config_dir.join("update_plugins.py").require()?;
+
+    print_separator("The Ultimate vimrc");
+
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["reset", "--hard"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["clean", "-d", "--force"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["pull", "--rebase"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(python)
+        .current_dir(config_dir)
+        .arg(update_plugins)
+        .check_run()?;
+
+    Ok(())
+}
+
 pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
     let vim = require("vim")?;
 

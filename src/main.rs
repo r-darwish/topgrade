@@ -319,6 +319,7 @@ fn run() -> Result<()> {
     runner.execute(Step::Jetpack, "jetpack", || generic::run_jetpack(run_type))?;
     runner.execute(Step::Vim, "vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
     runner.execute(Step::Vim, "Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
+    runner.execute(Step::Vim, "The Ultimate vimrc", || vim::upgrade_ultimate_vimrc(&ctx))?;
     runner.execute(Step::Vim, "voom", || vim::run_voom(&base_dirs, run_type))?;
     runner.execute(Step::Kakoune, "Kakoune", || kakoune::upgrade_kak_plug(&ctx))?;
     runner.execute(Step::Node, "npm", || node::run_npm_upgrade(&ctx))?;
