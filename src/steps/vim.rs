@@ -100,7 +100,11 @@ pub fn upgrade_ultimate_vimrc(ctx: &ExecutionContext) -> Result<()> {
         .current_dir(&config_dir)
         .args(&["pull", "--rebase"])
         .check_run()?;
-    ctx.run_type().execute(python).current_dir(update_plugins).check_run()?;
+    ctx.run_type()
+        .execute(python)
+        .current_dir(config_dir)
+        .arg(update_plugins)
+        .check_run()?;
 
     Ok(())
 }
