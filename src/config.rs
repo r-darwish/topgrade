@@ -692,7 +692,7 @@ impl Config {
             .unwrap_or(true)
     }
 
-    /// Extra yay arguments
+    /// Get the package manager of an Arch Linux system
     pub fn arch_package_manager(&self) -> ArchPackageManager {
         self.config_file
             .linux
