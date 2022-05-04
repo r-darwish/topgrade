@@ -103,9 +103,9 @@ impl Terminal {
                     if let Some(timeout) = timeout {
                         command.arg("-t");
                         command.arg(format!("{}", timeout.as_millis()));
-                        command.args(&["-a", "Topgrade"]);
-                        command.arg(message.as_ref());
                     }
+                    command.args(&["-a", "Topgrade"]);
+                    command.arg(message.as_ref());
                     command.output().ok();
                 }
             }
@@ -223,7 +223,7 @@ impl Terminal {
             self.term.set_title("Topgrade - Awaiting user");
         }
 
-        self.notify_desktop(&format!("{} failed", step_name), None);
+        self.notify_ddesktop(&format!("{} failed", step_name), None);
 
         self.term
             .write_fmt(format_args!(
