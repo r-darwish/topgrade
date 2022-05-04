@@ -289,13 +289,12 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
         ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
 
         let mut command = ctx.run_type().execute(&sudo);
-        let upgrade_command = if apt.ends_with("nala") {
-            "upgrade"
+        command.arg(&apt);
+        if apt.ends_with("nala") {
+            command.args(&["upgrade", "--no-update"]);
         } else {
-            "dist-upgrade"
+            command.arg("dist-upgrade");
         };
-
-        command.arg(&apt).arg(upgrade_command);
         if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
