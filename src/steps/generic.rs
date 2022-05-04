@@ -263,7 +263,12 @@ pub fn run_conda_update(ctx: &ExecutionContext) -> Result<()> {
 }
 
 pub fn run_pip3_update(run_type: RunType) -> Result<()> {
-    let pip3 = utils::require("pip3")?;
+    let python3 = utils::require("python3")?;
+    Command::new(&python3)
+        .args(&["-m", "pip"])
+        .check_output()
+        .map_err(|_| SkipStep("pip does not exists".to_string()))?;
+
     print_separator("pip3");
     if std::env::var("VIRTUAL_ENV").is_ok() {
         print_warning("This step is will be skipped when running inside a virtual environment");
@@ -271,8 +276,8 @@ pub fn run_pip3_update(run_type: RunType) -> Result<()> {
     }
 
     run_type
-        .execute(&pip3)
-        .args(&["install", "--upgrade", "--user", "pip"])
+        .execute(&python3)
+        .args(&["-m", "pip", "install", "--upgrade", "--user", "pip"])
         .check_run()
 }
 

@@ -7,7 +7,7 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'topgrade'",
+            "name": "Topgrade",
             "console": "integratedTerminal",
             "cargo": {
                 "args": [
@@ -20,27 +20,19 @@
                     "kind": "bin"
                 }
             },
-            "args": [],
+            "args": [
+                "--only",
+                "${input:step}",
+                "-v"
+            ],
             "cwd": "${workspaceFolder}"
         },
+    ],
+    "inputs": [
         {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'topgrade'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=topgrade",
-                    "--package=topgrade"
-                ],
-                "filter": {
-                    "name": "topgrade",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "type": "promptString",
+            "id": "step",
+            "description": "step nname",
         }
     ]
 }
