@@ -103,9 +103,9 @@ impl Terminal {
                     if let Some(timeout) = timeout {
                         command.arg("-t");
                         command.arg(format!("{}", timeout.as_millis()));
-                        command.args(&["-a", "Topgrade"]);
-                        command.arg(message.as_ref());
                     }
+                    command.args(&["-a", "Topgrade"]);
+                    command.arg(message.as_ref());
                     command.output().ok();
                 }
             }
