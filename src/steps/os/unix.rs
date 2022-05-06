@@ -234,6 +234,11 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     let nix = require("nix")?;
     let nix_channel = require("nix-channel")?;
     let nix_env = require("nix-env")?;
+
+    let output = Command::new(&nix_env).args(&["--query", "nix"]).check_output();
+    debug!("nix-env output: {:?}", output);
+    let should_self_upgrade = output.is_ok();
+
     print_separator("Nix");
 
     let multi_user = fs::metadata(&nix)?.uid() == 0;
@@ -250,11 +255,14 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
 
     let run_type = ctx.run_type();
 
-    if multi_user {
-        ctx.execute_elevated(&nix, true)?.arg("upgrade-nix").check_run()?;
-    } else {
-        run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+    if should_self_upgrade {
+        if multi_user {
+            ctx.execute_elevated(&nix, true)?.arg("upgrade-nix").check_run()?;
+        } else {
+            run_type.execute(&nix).arg("upgrade-nix").check_run()?;
+        }
     }
+
     run_type.execute(&nix_channel).arg("--update").check_run()?;
     run_type.execute(&nix_env).arg("--upgrade").check_run()
 }
