@@ -1,12 +1,15 @@
-use crate::execution_context::ExecutionContext;
-use crate::executor::CommandExt;
-use crate::terminal::{is_dumb, print_separator};
-use crate::utils::{require_option, which, PathExt};
-use anyhow::Result;
 #[cfg(windows)]
 use std::path::Path;
 use std::path::PathBuf;
 use std::process::Command;
+
+use anyhow::Result;
+
+use crate::execution_context::ExecutionContext;
+use crate::executor::CommandExt;
+use crate::terminal::{is_dumb, print_separator};
+use crate::utils::{require_option, which, PathExt};
+use crate::Step;
 
 pub struct Powershell {
     path: Option<PathBuf>,
@@ -23,7 +26,7 @@ impl Powershell {
 
         let profile = path.as_ref().and_then(|path| {
             Command::new(path)
-                .args(["-NoProfile", "-Command", "Split-Path $profile"])
+                .args(&["-NoProfile", "-Command", "Split-Path $profile"])
                 .check_output()
                 .map(|output| PathBuf::from(output.trim()))
                 .and_then(|p| p.require())
@@ -44,7 +47,7 @@ impl Powershell {
     #[cfg(windows)]
     pub fn has_module(powershell: &Path, command: &str) -> bool {
         Command::new(&powershell)
-            .args([
+            .args(&[
                 "-NoProfile",
                 "-Command",
                 &format!("Get-Module -ListAvailable {}", command),
@@ -69,14 +72,14 @@ impl Powershell {
             cmd.push("-Verbose")
         }
 
-        if ctx.config().yes() {
-            cmd.push("-Confirm")
+        if ctx.config().yes(Step::Powershell) {
+            cmd.push("-Force")
         }
 
         println!("Updating modules...");
         ctx.run_type()
             .execute(&powershell)
-            .args(["-NoProfile", "-Command", &cmd.join(" ")])
+            .args(&["-NoProfile", "-Command", &cmd.join(" ")])
             .check_run()
     }
 
@@ -103,7 +106,7 @@ impl Powershell {
         };
 
         command
-            .args([
+            .args(&[
                 "-NoProfile",
                 "-Command",
                 &format!(

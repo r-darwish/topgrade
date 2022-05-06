@@ -1,18 +1,21 @@
-use super::utils::editor;
-use anyhow::Result;
-use directories::BaseDirs;
-use log::{debug, LevelFilter};
-use pretty_env_logger::formatted_timed_builder;
-use regex::Regex;
-use serde::Deserialize;
+#![allow(dead_code)]
 use std::collections::BTreeMap;
 use std::fs::write;
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
-use structopt::StructOpt;
-use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator, VariantNames};
+
+use anyhow::Result;
+use clap::{ArgEnum, Parser};
+use directories::BaseDirs;
+use log::debug;
+use regex::Regex;
+use serde::Deserialize;
+use strum::{EnumIter, EnumString, EnumVariantNames, IntoEnumIterator};
+use sys_info::hostname;
 use which_crate::which;
+
+use super::utils::editor;
 
 pub static EXAMPLE_CONFIG: &str = include_str!("../config.example.toml");
 
@@ -59,7 +62,8 @@ macro_rules! get_deprecated {
 
 type Commands = BTreeMap<String, String>;
 
-#[derive(EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
+#[derive(ArgEnum, EnumString, EnumVariantNames, Debug, Clone, PartialEq, Deserialize, EnumIter, Copy)]
+#[clap(rename_all = "snake_case")]
 #[serde(rename_all = "snake_case")]
 #[strum(serialize_all = "snake_case")]
 pub enum Step {
@@ -73,6 +77,9 @@ pub enum Step {
     Chocolatey,
     Choosenim,
     Composer,
+    Conda,
+    ConfigUpdate,
+    Containers,
     CustomCommands,
     Deno,
     Dotnet,
@@ -83,9 +90,14 @@ pub enum Step {
     Fossil,
     Gcloud,
     Gem,
+    GithubCliExtensions,
     GitRepos,
+    Go,
+    Haxelib,
+    GnomeShellExtensions,
     HomeManager,
     Jetpack,
+    Kakoune,
     Krew,
     Macports,
     Mas,
@@ -94,6 +106,7 @@ pub enum Step {
     Nix,
     Node,
     Opam,
+    Pacstall,
     Pearl,
     Pipx,
     Pip3,
@@ -108,15 +121,16 @@ pub enum Step {
     Rustup,
     Scoop,
     Sdkman,
-    Silnite,
     Sheldon,
     Shell,
     Snap,
+    Spicetify,
     Stack,
     System,
     Tldr,
     Tlmgr,
     Tmux,
+    Toolbx,
     Vagrant,
     Vcpkg,
     Vim,
@@ -148,6 +162,7 @@ pub struct Windows {
     accept_all_updates: Option<bool>,
     self_rename: Option<bool>,
     open_remotes_in_new_terminal: Option<bool>,
+    enable_winget: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -177,11 +192,25 @@ pub struct Brew {
     greedy_cask: Option<bool>,
 }
 
+#[derive(Debug, Deserialize, Clone, Copy)]
+#[serde(rename_all = "snake_case")]
+pub enum ArchPackageManager {
+    Autodetect,
+    Trizen,
+    Paru,
+    Yay,
+    Pacman,
+    Pikaur,
+}
+
 #[derive(Deserialize, Default, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Linux {
     yay_arguments: Option<String>,
+    arch_package_manager: Option<ArchPackageManager>,
+    show_arch_news: Option<bool>,
     trizen_arguments: Option<String>,
+    pikaur_arguments: Option<String>,
     dnf_arguments: Option<String>,
     apt_arguments: Option<String>,
     enable_tlmgr: Option<bool>,
@@ -195,6 +224,12 @@ pub struct Linux {
 #[serde(deny_unknown_fields)]
 pub struct Composer {
     self_update: Option<bool>,
+}
+
+#[derive(Deserialize, Default, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct Vim {
+    force_plug_update: Option<bool>,
 }
 
 #[derive(Deserialize, Default, Debug)]
@@ -214,6 +249,7 @@ pub struct ConfigFile {
     git_arguments: Option<String>,
     tmux_arguments: Option<String>,
     set_title: Option<bool>,
+    display_time: Option<bool>,
     assume_yes: Option<bool>,
     yay_arguments: Option<String>,
     no_retry: Option<bool>,
@@ -229,6 +265,7 @@ pub struct ConfigFile {
     git: Option<Git>,
     windows: Option<Windows>,
     npm: Option<NPM>,
+    vim: Option<Vim>,
     firmware: Option<Firmware>,
     vagrant: Option<Vagrant>,
     flatpak: Option<Flatpak>,
@@ -286,7 +323,7 @@ impl ConfigFile {
         })?;
 
         if let Some(ref mut paths) = &mut result.git_repos {
-            for path in paths {
+            for path in paths.iter_mut() {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;
@@ -294,7 +331,7 @@ impl ConfigFile {
         }
 
         if let Some(paths) = result.git.as_mut().and_then(|git| git.repos.as_mut()) {
-            for path in paths {
+            for path in paths.iter_mut() {
                 let expanded = shellexpand::tilde::<&str>(&path.as_ref()).into_owned();
                 debug!("Path {} expanded to {}", path, expanded);
                 *path = expanded;
@@ -309,6 +346,7 @@ impl ConfigFile {
     fn edit(base_dirs: &BaseDirs) -> Result<()> {
         let config_path = Self::ensure(base_dirs)?;
         let editor = editor();
+        debug!("Editor: {:?}", editor);
 
         let command = which(&editor[0])?;
         let args: Vec<&String> = editor.iter().skip(1).collect();
@@ -322,68 +360,68 @@ impl ConfigFile {
     }
 }
 
-#[derive(StructOpt, Debug)]
-#[structopt(name = "Topgrade", setting = structopt::clap::AppSettings::ColoredHelp)]
-/// Command line arguments
+// Command line arguments
+#[derive(Parser, Debug)]
+#[clap(name = "Topgrade", version)]
 pub struct CommandLineArgs {
     /// Edit the configuration file
-    #[structopt(long = "edit-config")]
+    #[clap(long = "edit-config")]
     edit_config: bool,
 
     /// Show config reference
-    #[structopt(long = "config-reference")]
+    #[clap(long = "config-reference")]
     show_config_reference: bool,
 
     /// Run inside tmux
-    #[structopt(short = "t", long = "tmux")]
+    #[clap(short = 't', long = "tmux")]
     run_in_tmux: bool,
 
     /// Cleanup temporary or old files
-    #[structopt(short = "c", long = "cleanup")]
+    #[clap(short = 'c', long = "cleanup")]
     cleanup: bool,
 
     /// Print what would be done
-    #[structopt(short = "n", long = "dry-run")]
+    #[clap(short = 'n', long = "dry-run")]
     dry_run: bool,
 
     /// Do not ask to retry failed steps
-    #[structopt(long = "no-retry")]
+    #[clap(long = "no-retry")]
     no_retry: bool,
 
     /// Do not perform upgrades for the given steps
-    #[structopt(long = "disable", possible_values = &Step::VARIANTS)]
+    #[clap(long = "disable", arg_enum)]
     disable: Vec<Step>,
 
     /// Perform only the specified steps (experimental)
-    #[structopt(long = "only", possible_values = &Step::VARIANTS)]
+    #[clap(long = "only", arg_enum)]
     only: Vec<Step>,
 
     /// Output logs
-    #[structopt(short = "v", long = "verbose")]
-    verbose: bool,
+    #[clap(short = 'v', long = "verbose")]
+    pub verbose: bool,
 
     /// Prompt for a key before exiting
-    #[structopt(short = "k", long = "keep")]
+    #[clap(short = 'k', long = "keep")]
     keep_at_end: bool,
 
-    /// Say yes to package manager's prompt (experimental)
-    #[structopt(short = "y", long = "yes")]
-    yes: bool,
+    /// Say yes to package manager's prompt
+    #[clap(short = 'y', long = "yes", arg_enum)]
+    yes: Option<Vec<Step>>,
 
     /// Don't pull the predefined git repos
-    #[structopt(long = "disable-predefined-git-repos")]
+    #[clap(long = "disable-predefined-git-repos")]
     disable_predefined_git_repos: bool,
 
     /// Alternative configuration file
-    #[structopt(long = "config")]
+    #[clap(long = "config")]
     config: Option<PathBuf>,
 
     /// A regular expression for restricting remote host execution
-    #[structopt(long = "remote-host-limit", parse(try_from_str))]
+    #[clap(long = "remote-host-limit")]
     remote_host_limit: Option<Regex>,
 
     /// Show the reason for skipped steps
-    #[structopt(long = "show-skipped")]
+    #[clap(long = "show-skipped")]
     show_skipped: bool,
 }
 
@@ -413,14 +451,6 @@ impl Config {
     ///
     /// The function parses the command line arguments and reading the configuration file.
     pub fn load(base_dirs: &BaseDirs, opt: CommandLineArgs) -> Result<Self> {
-        let mut builder = formatted_timed_builder();
-
-        if opt.verbose {
-            builder.filter(Some("topgrade"), LevelFilter::Trace);
-        }
-
-        builder.init();
-
         let config_directory = config_directory(base_dirs);
         let config_file = if config_directory.is_dir() {
             ConfigFile::read(base_dirs, opt.config.clone()).unwrap_or_else(|e| {
@@ -471,7 +501,7 @@ impl Config {
 
     /// The list of additional git repositories to pull.
     pub fn git_repos(&self) -> &Option<Vec<String>> {
-        get_deprecated!(&self.config_file, git_repos, git, repos)
+        get_deprecated!(self.config_file, git_repos, git, repos)
     }
 
     /// Tell whether the specified step should run.
@@ -483,20 +513,22 @@ impl Config {
     }
 
     fn allowed_steps(opt: &CommandLineArgs, config_file: &ConfigFile) -> Vec<Step> {
-        let mut enabled_steps: Vec<Step> = if !opt.only.is_empty() {
-            opt.only.clone()
-        } else {
-            config_file
-                .only
-                .as_ref()
-                .map_or_else(|| Step::iter().collect(), |v| v.clone())
-        };
+        let mut enabled_steps: Vec<Step> = Vec::new();
+        enabled_steps.extend(&opt.only);
 
-        let disabled_steps: Vec<Step> = if !opt.disable.is_empty() {
-            opt.disable.clone()
-        } else {
-            config_file.disable.as_ref().map_or_else(Vec::new, |v| v.clone())
-        };
+        if let Some(only) = config_file.only.as_ref() {
+            enabled_steps.extend(only)
+        }
+
+        if enabled_steps.is_empty() {
+            enabled_steps.extend(Step::iter());
+        }
+
+        let mut disabled_steps: Vec<Step> = Vec::new();
+        disabled_steps.extend(&opt.disable);
+        if let Some(disabled) = config_file.disable.as_ref() {
+            disabled_steps.extend(disabled);
+        }
 
         enabled_steps.retain(|e| !disabled_steps.contains(e) || opt.only.contains(e));
         enabled_steps
@@ -539,11 +571,11 @@ impl Config {
 
     /// Extra Git arguments
     pub fn git_arguments(&self) -> &Option<String> {
-        get_deprecated!(&self.config_file, git_arguments, git, arguments)
+        get_deprecated!(self.config_file, git_arguments, git, arguments)
     }
 
     /// Extra Tmux arguments
-    #[allow(dead_code)]
+
     pub fn tmux_arguments(&self) -> &Option<String> {
         &self.config_file.tmux_arguments
     }
@@ -559,19 +591,28 @@ impl Config {
     }
 
     /// Whether to say yes to package managers
-    #[allow(dead_code)]
-    pub fn yes(&self) -> bool {
-        self.config_file.assume_yes.unwrap_or(self.opt.yes)
+    pub fn yes(&self, step: Step) -> bool {
+        if let Some(yes) = self.config_file.assume_yes {
+            return yes;
+        }
+
+        if let Some(yes_list) = &self.opt.yes {
+            if yes_list.is_empty() {
+                return true;
+            }
+
+            return yes_list.contains(&step);
+        }
+
+        false
     }
 
     /// Bash-it branch
-    #[allow(dead_code)]
     pub fn bashit_branch(&self) -> &str {
         self.config_file.bashit_branch.as_deref().unwrap_or("stable")
     }
 
     /// Whether to accept all Windows updates
-    #[allow(dead_code)]
     pub fn accept_all_windows_updates(&self) -> bool {
         get_deprecated!(
             self.config_file,
@@ -583,7 +624,6 @@ impl Config {
     }
 
     /// Whether to self rename the Topgrade executable during the run
-    #[allow(dead_code)]
     pub fn self_rename(&self) -> bool {
         self.config_file
             .windows
@@ -593,7 +633,6 @@ impl Config {
     }
 
     /// Whether Brew cask should be greedy
-    #[allow(dead_code)]
     pub fn brew_cask_greedy(&self) -> bool {
         self.config_file
             .brew
@@ -611,14 +650,21 @@ impl Config {
             .unwrap_or(false)
     }
 
+    /// Whether to force plug update in Vim
+    pub fn force_vim_plug_update(&self) -> bool {
+        self.config_file
+            .vim
+            .as_ref()
+            .and_then(|c| c.force_plug_update)
+            .unwrap_or_default()
+    }
+
     /// Whether to send a desktop notification at the beginning of every step
-    #[allow(dead_code)]
     pub fn notify_each_step(&self) -> bool {
         self.config_file.notify_each_step.unwrap_or(false)
     }
 
     /// Extra trizen arguments
-    #[allow(dead_code)]
     pub fn trizen_arguments(&self) -> &str {
         self.config_file
             .linux
@@ -627,8 +673,35 @@ impl Config {
             .unwrap_or("")
     }
 
-    /// Extra yay arguments
+    /// Extra Pikaur arguments
     #[allow(dead_code)]
+    pub fn pikaur_arguments(&self) -> &str {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.pikaur_arguments.as_deref())
+            .unwrap_or("")
+    }
+
+    /// Show news on Arch Linux
+    pub fn show_arch_news(&self) -> bool {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.show_arch_news)
+            .unwrap_or(true)
+    }
+
+    /// Get the package manager of an Arch Linux system
+    pub fn arch_package_manager(&self) -> ArchPackageManager {
+        self.config_file
+            .linux
+            .as_ref()
+            .and_then(|s| s.arch_package_manager)
+            .unwrap_or(ArchPackageManager::Autodetect)
+    }
+
+    /// Extra yay arguments
     pub fn yay_arguments(&self) -> &str {
         get_deprecated!(self.config_file, yay_arguments, linux, yay_arguments)
             .as_deref()
@@ -636,7 +709,6 @@ impl Config {
     }
 
     /// Extra apt arguments
-    #[allow(dead_code)]
     pub fn apt_arguments(&self) -> Option<&str> {
         self.config_file
             .linux
@@ -645,7 +717,6 @@ impl Config {
     }
 
     /// Extra dnf arguments
-    #[allow(dead_code)]
     pub fn dnf_arguments(&self) -> Option<&str> {
         self.config_file
             .linux
@@ -680,7 +751,6 @@ impl Config {
     }
 
     /// Enable tlmgr on Linux
-    #[allow(dead_code)]
     pub fn enable_tlmgr_linux(&self) -> bool {
         self.config_file
             .linux
@@ -690,7 +760,6 @@ impl Config {
     }
 
     /// Use distro-sync in Red Hat based distrbutions
-    #[allow(dead_code)]
     pub fn redhat_distro_sync(&self) -> bool {
         self.config_file
             .linux
@@ -700,7 +769,6 @@ impl Config {
     }
 
     /// Use rpm-ostree in *when rpm-ostree is detected* (default: true)
-    #[allow(dead_code)]
     pub fn rpm_ostree(&self) -> bool {
         self.config_file
             .linux
@@ -720,7 +788,7 @@ impl Config {
 
     pub fn use_predefined_git_repos(&self) -> bool {
         !self.opt.disable_predefined_git_repos
-            && get_deprecated!(&self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
+            && get_deprecated!(self.config_file, predefined_git_repos, git, pull_predefined).unwrap_or(true)
     }
 
     pub fn verbose(&self) -> bool {
@@ -773,10 +841,30 @@ impl Config {
     str_value!(linux, emerge_update_flags);
 
     pub fn should_execute_remote(&self, remote: &str) -> bool {
-        self.opt
-            .remote_host_limit
+        if let Ok(hostname) = hostname() {
+            if remote == hostname {
+                return false;
+            }
+        }
+
+        if let Some(limit) = self.opt.remote_host_limit.as_ref() {
+            return limit.is_match(remote);
+        }
+
+        true
+    }
+
+    #[cfg(windows)]
+    pub fn enable_winget(&self) -> bool {
+        return self
+            .config_file
+            .windows
             .as_ref()
-            .map(|h| h.is_match(remote))
-            .unwrap_or(true)
+            .and_then(|w| w.enable_winget)
+            .unwrap_or(false);
+    }
+
+    pub fn display_time(&self) -> bool {
+        self.config_file.display_time.unwrap_or(true)
     }
 }

@@ -1,4 +1,23 @@
 #![allow(clippy::cognitive_complexity)]
+
+use std::env;
+use std::io;
+use std::process::exit;
+
+use anyhow::{anyhow, Result};
+use clap::{crate_version, Parser};
+use console::Key;
+use log::debug;
+use log::LevelFilter;
+use pretty_env_logger::formatted_timed_builder;
+
+use self::config::{CommandLineArgs, Config, Step};
+use self::error::StepFailed;
+#[cfg(all(windows, feature = "self-update"))]
+use self::error::Upgraded;
+use self::steps::{remote::*, *};
+use self::terminal::*;
+
 mod config;
 mod ctrlc;
 mod error;
@@ -14,29 +33,20 @@ mod steps;
 mod terminal;
 mod utils;
 
-use self::config::{CommandLineArgs, Config, Step};
-use self::error::StepFailed;
-#[cfg(all(windows, feature = "self-update"))]
-use self::error::Upgraded;
-
-use self::steps::{remote::*, *};
-use self::terminal::*;
-use anyhow::{anyhow, Result};
-use console::Key;
-use log::debug;
-
-use std::env;
-use std::io;
-use std::process::exit;
-use structopt::clap::crate_version;
-use structopt::StructOpt;
-
 fn run() -> Result<()> {
     ctrlc::set_handler();
 
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
-    let opt = CommandLineArgs::from_args();
+    let opt = CommandLineArgs::parse();
+    let mut builder = formatted_timed_builder();
+
+    if opt.verbose {
+        builder.filter(Some("topgrade"), LevelFilter::Trace);
+    }
+
+    builder.init();
+
     if opt.edit_config() {
         Config::edit(&base_dirs)?;
         return Ok(());
@@ -49,6 +59,7 @@ fn run() -> Result<()> {
 
     let config = Config::load(&base_dirs, opt)?;
     terminal::set_title(config.set_title());
+    terminal::display_time(config.display_time());
     terminal::set_desktop_notifications(config.notify_each_step());
 
     debug!("Version: {}", crate_version!());
@@ -76,9 +87,6 @@ fn run() -> Result<()> {
 
     #[cfg(feature = "self-update")]
     {
-        #[cfg(target_os = "linux")]
-        openssl_probe::init_ssl_cert_env_vars();
-
         if !run_type.dry() && env::var("TOPGRADE_NO_SELF_UPGRADE").is_err() {
             let result = self_update::self_update();
 
@@ -134,9 +142,7 @@ fn run() -> Result<()> {
                 println!("Error detecting current distribution: {}", e);
             }
         }
-        runner.execute(Step::System, "etc-update", || {
-            linux::run_etc_update(sudo.as_ref(), run_type)
-        })?;
+        runner.execute(Step::ConfigUpdate, "config-update", || linux::run_config_update(&ctx))?;
 
         runner.execute(Step::BrewFormula, "Brew", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
@@ -258,6 +264,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Shell, "zr", || zsh::run_zr(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "antibody", || zsh::run_antibody(run_type))?;
         runner.execute(Step::Shell, "antigen", || zsh::run_antigen(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "zgenom", || zsh::run_zgenom(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zplug", || zsh::run_zplug(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zinit", || zsh::run_zinit(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zi", || zsh::run_zi(&base_dirs, run_type))?;
@@ -270,6 +277,10 @@ fn run() -> Result<()> {
         runner.execute(Step::Tmux, "tmux", || tmux::run_tpm(&base_dirs, run_type))?;
         runner.execute(Step::Tldr, "TLDR", || unix::run_tldr(run_type))?;
         runner.execute(Step::Pearl, "pearl", || unix::run_pearl(run_type))?;
+        #[cfg(not(any(target_os = "macos", target_os = "android")))]
+        runner.execute(Step::GnomeShellExtensions, "Gnome Shell Extensions", || {
+            unix::upgrade_gnome_extensions(&ctx)
+        })?;
         runner.execute(Step::Sdkman, "SDKMAN!", || {
             unix::run_sdkman(&base_dirs, config.cleanup(), run_type)
         })?;
@@ -288,10 +299,12 @@ fn run() -> Result<()> {
     runner.execute(Step::Choosenim, "choosenim", || generic::run_choosenim(&ctx))?;
     runner.execute(Step::Cargo, "cargo", || generic::run_cargo_update(&ctx))?;
     runner.execute(Step::Flutter, "Flutter", || generic::run_flutter_upgrade(run_type))?;
-    runner.execute(Step::Emacs, "Emacs", || emacs.upgrade(run_type))?;
+    runner.execute(Step::Go, "Go", || generic::run_go(run_type))?;
+    runner.execute(Step::Emacs, "Emacs", || emacs.upgrade(&ctx))?;
     runner.execute(Step::Opam, "opam", || generic::run_opam_update(run_type))?;
     runner.execute(Step::Vcpkg, "vcpkg", || generic::run_vcpkg_update(run_type))?;
     runner.execute(Step::Pipx, "pipx", || generic::run_pipx_update(run_type))?;
+    runner.execute(Step::Conda, "conda", || generic::run_conda_update(&ctx))?;
     runner.execute(Step::Pip3, "pip3", || generic::run_pip3_update(run_type))?;
     runner.execute(Step::Stack, "stack", || generic::run_stack_update(run_type))?;
     runner.execute(Step::Tlmgr, "tlmgr", || generic::run_tlmgr_update(&ctx))?;
@@ -304,13 +317,17 @@ fn run() -> Result<()> {
     runner.execute(Step::Jetpack, "jetpack", || generic::run_jetpack(run_type))?;
     runner.execute(Step::Vim, "vim", || vim::upgrade_vim(&base_dirs, &ctx))?;
     runner.execute(Step::Vim, "Neovim", || vim::upgrade_neovim(&base_dirs, &ctx))?;
+    runner.execute(Step::Vim, "The Ultimate vimrc", || vim::upgrade_ultimate_vimrc(&ctx))?;
     runner.execute(Step::Vim, "voom", || vim::run_voom(&base_dirs, run_type))?;
+    runner.execute(Step::Kakoune, "Kakoune", || kakoune::upgrade_kak_plug(&ctx))?;
     runner.execute(Step::Node, "npm", || node::run_npm_upgrade(&ctx))?;
-    runner.execute(Step::Pnpm, "pnpm", || node::pnpm_global_update(run_type))?;
+    runner.execute(Step::Pnpm, "pnpm", || node::pnpm_global_update(&ctx))?;
+    runner.execute(Step::Containers, "Containers", || containers::run_containers(&ctx))?;
     runner.execute(Step::Deno, "deno", || node::deno_upgrade(&ctx))?;
     runner.execute(Step::Composer, "composer", || generic::run_composer_update(&ctx))?;
     runner.execute(Step::Krew, "krew", || generic::run_krew_upgrade(run_type))?;
     runner.execute(Step::Gem, "gem", || generic::run_gem(&base_dirs, run_type))?;
+    runner.execute(Step::Haxelib, "haxelib", || generic::run_haxelib_update(&ctx))?;
     runner.execute(Step::Sheldon, "sheldon", || generic::run_sheldon(&ctx))?;
     runner.execute(Step::Rtcl, "rtcl", || generic::run_rtcl(&ctx))?;
     runner.execute(Step::Bin, "bin", || generic::bin_update(&ctx))?;
@@ -319,15 +336,18 @@ fn run() -> Result<()> {
     })?;
     runner.execute(Step::Micro, "micro", || generic::run_micro(run_type))?;
     runner.execute(Step::Raco, "raco", || generic::run_raco_update(run_type))?;
+    runner.execute(Step::Spicetify, "spicetify", || generic::spicetify_upgrade(&ctx))?;
+    runner.execute(Step::GithubCliExtensions, "GitHub CLI Extensions", || {
+        generic::run_ghcli_extensions_upgrade(&ctx)
+    })?;
 
     #[cfg(target_os = "linux")]
     {
+        runner.execute(Step::Toolbx, "toolbx", || toolbx::run_toolbx(&ctx))?;
         runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
+        runner.execute(Step::Pacstall, "pacstall", || linux::run_pacstall(&ctx))?;
     }
-
-    #[cfg(target_os = "macos")]
-    runner.execute(Step::Silnite, "silnite", || macos::run_silnite(&ctx))?;
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
@@ -371,6 +391,7 @@ fn run() -> Result<()> {
             }
         }
     }
+    runner.execute(Step::Vagrant, "Vagrant boxes", || vagrant::upgrade_vagrant_boxes(&ctx))?;
 
     if !runner.report().data().is_empty() {
         print_separator("Summary");
@@ -406,10 +427,16 @@ fn run() -> Result<()> {
         print_info("\n(R)eboot\n(S)hell\n(Q)uit");
         loop {
             match get_key() {
-                Ok(Key::Char('s' | 'S')) => run_shell(),
-                Ok(Key::Char('r' | 'R')) => reboot(),
-                Ok(Key::Char('q' | 'Q')) => (),
-                _ => continue,
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
+                    run_shell();
+                }
+                Ok(Key::Char('r')) | Ok(Key::Char('R')) => {
+                    reboot();
+                }
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => (),
+                _ => {
+                    continue;
+                }
             }
             break;
         }

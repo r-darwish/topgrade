@@ -2,11 +2,12 @@
 use crate::error::SkipStep;
 use crate::error::TopgradeError;
 use crate::execution_context::ExecutionContext;
-#[cfg(target_os = "macos")]
-use crate::executor::CommandExt;
-use crate::executor::{Executor, ExecutorExitStatus, RunType};
-use crate::terminal::{print_separator, print_warning};
+use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
+use crate::terminal::print_separator;
+#[cfg(not(target_os = "macos"))]
+use crate::utils::require_option;
 use crate::utils::{require, PathExt};
+use crate::Step;
 use anyhow::Result;
 use directories::BaseDirs;
 use log::debug;
@@ -18,6 +19,7 @@ use std::{env, path::Path};
 
 const INTEL_BREW: &str = "/usr/local/bin/brew";
 const ARM_BREW: &str = "/opt/homebrew/bin/brew";
+
 #[derive(Copy, Clone, Debug)]
 #[allow(dead_code)]
 pub enum BrewVariant {
@@ -67,14 +69,17 @@ impl BrewVariant {
 
 pub fn run_fisher(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let fish = require("fish")?;
-    base_dirs
-        .home_dir()
-        .join(".config/fish/functions/fisher.fish")
-        .require()?;
+
+    if env::var("fisher_path").is_err() {
+        base_dirs
+            .home_dir()
+            .join(".config/fish/functions/fisher.fish")
+            .require()?;
+    }
 
     print_separator("Fisher");
 
-    run_type.execute(&fish).args(["-c", "fisher update"]).check_run()
+    run_type.execute(&fish).args(&["-c", "fisher update"]).check_run()
 }
 
 pub fn run_bashit(ctx: &ExecutionContext) -> Result<()> {
@@ -84,7 +89,7 @@ pub fn run_bashit(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type()
         .execute("bash")
-        .args(["-lic", &format!("bash-it update {}", ctx.config().bashit_branch())])
+        .args(&["-lic", &format!("bash-it update {}", ctx.config().bashit_branch())])
         .check_run()
 }
 
@@ -97,7 +102,7 @@ pub fn run_oh_my_fish(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("oh-my-fish");
 
-    ctx.run_type().execute(&fish).args(["-c", "omf update"]).check_run()
+    ctx.run_type().execute(&fish).args(&["-c", "omf update"]).check_run()
 }
 
 pub fn run_pkgin(ctx: &ExecutionContext) -> Result<()> {
@@ -105,14 +110,14 @@ pub fn run_pkgin(ctx: &ExecutionContext) -> Result<()> {
 
     let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
     command.arg(&pkgin).arg("update");
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Pkgin) {
         command.arg("-y");
     }
     command.check_run()?;
 
     let mut command = ctx.run_type().execute(ctx.sudo().as_ref().unwrap());
     command.arg(&pkgin).arg("upgrade");
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Pkgin) {
         command.arg("-y");
     }
     command.check_run()
@@ -127,7 +132,49 @@ pub fn run_fish_plug(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("fish-plug");
 
-    ctx.run_type().execute(&fish).args(["-c", "plug update"]).check_run()
+    ctx.run_type().execute(&fish).args(&["-c", "plug update"]).check_run()
+}
+
+#[cfg(not(any(target_os = "android", target_os = "macos")))]
+pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
+    let gdbus = require("gdbus")?;
+    require_option(
+        env::var("XDG_CURRENT_DESKTOP").ok().filter(|p| p.contains("GNOME")),
+        "Desktop doest not appear to be gnome".to_string(),
+    )?;
+    let output = Command::new("gdbus")
+        .args(&[
+            "call",
+            "--session",
+            "--dest",
+            "org.freedesktop.DBus",
+            "--object-path",
+            "/org/freedesktop/DBus",
+            "--method",
+            "org.freedesktop.DBus.ListActivatableNames",
+        ])
+        .check_output()?;
+
+    debug!("Checking for gnome extensions: {}", output);
+    if !output.contains("org.gnome.Shell.Extensions") {
+        return Err(SkipStep(String::from("Gnome shell extensions are unregistered in DBus")).into());
+    }
+
+    print_separator("Gnome Shell extensions");
+
+    ctx.run_type()
+        .execute(gdbus)
+        .args(&[
+            "call",
+            "--session",
+            "--dest",
+            "org.gnome.Shell.Extensions",
+            "--object-path",
+            "/org/gnome/Shell/Extensions",
+            "--method",
+            "org.gnome.Shell.Extensions.CheckForUpdates",
+        ])
+        .check_run()
 }
 
 pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
@@ -138,7 +185,7 @@ pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<
     variant.execute(run_type).arg("update").check_run()?;
     variant
         .execute(run_type)
-        .args(["upgrade", "--ignore-pinned", "--formula"])
+        .args(&["upgrade", "--ignore-pinned", "--formula"])
         .check_run()?;
 
     if ctx.config().cleanup() {
@@ -156,19 +203,19 @@ pub fn run_brew_cask(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()>
 
     let cask_upgrade_exists = variant
         .execute(RunType::Wet)
-        .args(["--repository", "buo/cask-upgrade"])
+        .args(&["--repository", "buo/cask-upgrade"])
         .check_output()
         .map(|p| Path::new(p.trim()).exists())?;
 
     let mut brew_args = vec![];
 
     if cask_upgrade_exists {
-        brew_args.extend(["cu", "-y"]);
+        brew_args.extend(&["cu", "-y"]);
         if ctx.config().brew_cask_greedy() {
             brew_args.push("-a");
         }
     } else {
-        brew_args.extend(["upgrade", "--cask"]);
+        brew_args.extend(&["upgrade", "--cask"]);
         if ctx.config().brew_cask_greedy() {
             brew_args.push("--greedy");
         }
@@ -204,11 +251,7 @@ pub fn run_nix(ctx: &ExecutionContext) -> Result<()> {
     let run_type = ctx.run_type();
 
     if multi_user {
-        if let Some(sudo) = ctx.sudo() {
-            run_type.execute(&sudo).args(["-i", "nix", "upgrade-nix"]).check_run()?;
-        } else {
-            print_warning("Need sudo to upgrade Nix");
-        }
+        ctx.execute_elevated(&nix, true)?.arg("upgrade-nix").check_run()?;
     } else {
         run_type.execute(&nix).arg("upgrade-nix").check_run()?;
     }
@@ -235,7 +278,7 @@ pub fn run_asdf(run_type: RunType) -> Result<()> {
             return Err(TopgradeError::ProcessFailed(e).into());
         }
     }
-    run_type.execute(&asdf).args(["plugin", "update", "--all"]).check_run()
+    run_type.execute(&asdf).args(&["plugin", "update", "--all"]).check_run()
 }
 
 pub fn run_home_manager(run_type: RunType) -> Result<()> {
@@ -273,20 +316,32 @@ pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Res
     print_separator("SDKMAN!");
 
     let cmd_selfupdate = format!("source {} && sdk selfupdate", &sdkman_init_path);
-    run_type.execute(&bash).args(["-c", &cmd_selfupdate]).check_run()?;
+    run_type
+        .execute(&bash)
+        .args(&["-c", cmd_selfupdate.as_str()])
+        .check_run()?;
 
     let cmd_update = format!("source {} && sdk update", &sdkman_init_path);
-    run_type.execute(&bash).args(["-c", &cmd_update]).check_run()?;
+    run_type.execute(&bash).args(&["-c", cmd_update.as_str()]).check_run()?;
 
     let cmd_upgrade = format!("source {} && sdk upgrade", &sdkman_init_path);
-    run_type.execute(&bash).args(["-c", &cmd_upgrade]).check_run()?;
+    run_type
+        .execute(&bash)
+        .args(&["-c", cmd_upgrade.as_str()])
+        .check_run()?;
 
     if cleanup {
         let cmd_flush_archives = format!("source {} && sdk flush archives", &sdkman_init_path);
-        run_type.execute(&bash).args(["-c", &cmd_flush_archives]).check_run()?;
+        run_type
+            .execute(&bash)
+            .args(&["-c", cmd_flush_archives.as_str()])
+            .check_run()?;
 
         let cmd_flush_temp = format!("source {} && sdk flush temp", &sdkman_init_path);
-        run_type.execute(&bash).args(["-c", &cmd_flush_temp]).check_run()?;
+        run_type
+            .execute(&bash)
+            .args(&["-c", cmd_flush_temp.as_str()])
+            .check_run()?;
     }
 
     Ok(())

@@ -1,7 +1,7 @@
 use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
 use crate::terminal::{print_separator, prompt_yesno};
-use crate::{error::TopgradeError, utils::require};
+use crate::{error::TopgradeError, utils::require, Step};
 use anyhow::Result;
 use log::debug;
 use std::process::Command;
@@ -10,15 +10,15 @@ pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
     require("port")?;
     let sudo = ctx.sudo().as_ref().unwrap();
     print_separator("MacPorts");
-    ctx.run_type().execute(sudo).args(["port", "selfupdate"]).check_run()?;
+    ctx.run_type().execute(sudo).args(&["port", "selfupdate"]).check_run()?;
     ctx.run_type()
         .execute(sudo)
-        .args(["port", "-u", "upgrade", "outdated"])
+        .args(&["port", "-u", "upgrade", "outdated"])
         .check_run()?;
     if ctx.config().cleanup() {
         ctx.run_type()
             .execute(sudo)
-            .args(["port", "-N", "reclaim"])
+            .args(&["port", "-N", "reclaim"])
             .check_run()?;
     }
 
@@ -32,17 +32,10 @@ pub fn run_mas(run_type: RunType) -> Result<()> {
     run_type.execute(mas).arg("upgrade").check_run()
 }
 
-pub fn run_silnite(ctx: &ExecutionContext) -> Result<()> {
-    let silnite = require("silnite")?;
-    print_separator("Silnite");
-
-    ctx.run_type().execute(silnite).arg("au").check_run()
-}
-
 pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
     print_separator("macOS system update");
 
-    let should_ask = !(ctx.config().yes()) || (ctx.config().dry_run());
+    let should_ask = !(ctx.config().yes(Step::System)) || (ctx.config().dry_run());
     if should_ask {
         println!("Finding available software");
         if system_update_available()? {
@@ -58,7 +51,7 @@ pub fn upgrade_macos(ctx: &ExecutionContext) -> Result<()> {
     }
 
     let mut command = ctx.run_type().execute("softwareupdate");
-    command.args(["--install", "--all"]);
+    command.args(&["--install", "--all"]);
 
     if should_ask {
         command.arg("--no-scan");

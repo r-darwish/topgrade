@@ -1,4 +1,5 @@
 use std::process::ExitStatus;
+
 use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
@@ -16,6 +17,10 @@ pub enum TopgradeError {
     #[error("Unknown Linux Distribution")]
     #[cfg(target_os = "linux")]
     UnknownLinuxDistribution,
+
+    #[error("Failed getting the system package manager")]
+    #[cfg(target_os = "linux")]
+    FailedGettingPackageManager,
 }
 
 #[derive(Error, Debug)]

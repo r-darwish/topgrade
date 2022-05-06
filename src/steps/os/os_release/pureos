@@ -1,0 +1,6 @@
+ID=pureos
+NAME=PureOS
+PRETTY_NAME=PureOS
+
+VERSION_ID=10.0
+VERSION_CODENAME=byzantium

@@ -8,13 +8,13 @@ topgrade \- upgrade everything
 topgrade [\fIoptions\f[]]
 .SH DESCRIPTION
 .PP
-Keeping your system up to date mostly involves invoking more than a single package manager.
-This usually results in big shell one-liners saved in your shell history.
-\fBtopgrade\fR tries to solve this problem by detecting which tools you use and run their appropriate package managers.
+Keeping your system up to date usually involves invoking multiple package managers.
+This results in big, non-portable shell one-liners saved in your shell.
+To remedy this, \fBtopgrade\fR detects which tools you use and runs the appropriate commands to update them.
 .SH OPTIONS
 .TP
 .B \-\-only <only>
-Run specific steps
+Run only specific steps
 .RS
 .RE
 .TP
@@ -29,7 +29,7 @@ Cleanup temporary or old files
 .RE
 .TP
 .B \-n, \-\-dry\-run
-Outputs steps simulation
+List the commands that would be run
 .RS
 .RE
 .TP
@@ -39,7 +39,7 @@ Edit the configuration file
 .RE
 .TP
 .B \-h, \-\-help
-Prints help information
+Print help information
 .RS
 .RE
 .TP
@@ -59,7 +59,7 @@ Run inside tmux
 .RE
 .TP
 .B \-V, \-\-version
-Prints version information
+Print version information
 .RS
 .RE
 .TP
@@ -68,7 +68,10 @@ Output logs
 .RS
 .RE
 .B \-y, \-\-yes
-Say yes to package manager's prompt (experimental)
+Skip package manager's prompts (experimental)
+.SH ARGUMENT FORMAT
+Options can be given in any order.
+A list of steps must be provided as a list of separate arguments, i.e. 'topgrade --only system shell'.
 .SH BUGS
 For a list of bugs see <\fIhttps://github.com/r-darwish/topgrade/issues\fR>.
 .SH AUTHOR

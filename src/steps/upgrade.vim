@@ -11,12 +11,21 @@ endif
 if exists(":PlugUpgrade")
     echo "Plug"
     PlugUpgrade
-    PlugUpdate
+    if $TOPGRADE_FORCE_PLUGUPDATE
+        PlugUpdate!
+    else
+        PlugUpdate
+    endif
 endif
 
 if exists(":PackerUpdate")
     echo "Packer"
     PackerSync
+endif
+
+if exists("*dein#update()")
+    echo "dein#update()"
+    call dein#update()
 endif
 
 if exists(":DeinUpdate")

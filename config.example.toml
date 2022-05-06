@@ -31,6 +31,9 @@
 # Do not set the terminal title
 #set_title = false
 
+# Display the time in step titles
+# display_time = true
+
 # Cleanup temporary or old files
 #cleanup = true
 
@@ -43,7 +46,7 @@
 #]
 
 # Don't pull the predefined git repos
-#predefined_repos = false
+#pull_predefined = false
 
 # Arguments to pass Git when pulling Repositories
 #arguments = "--rebase --autostash"
@@ -63,9 +66,13 @@
 #greedy_cask = true
 
 [linux]
-# Arguments to pass yay when updating packages
+# Arch Package Manager to use. Allowed values: autodetect, trizen, paru, yay, pikaur, pacman.
+#arch_package_manager = "pacman"
+# Arguments to pass yay (or paru) when updating packages
 #yay_arguments = "--nodevel"
+#show_arch_news = true
 #trizen_arguments = "--devel"
+#pikaur_arguments = ""
 #enable_tlmgr = true
 #emerge_sync_flags = "-q"
 #emerge_update_flags = "-uDNa --with-bdeps=y world"

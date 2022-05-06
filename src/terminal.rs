@@ -48,6 +48,7 @@ struct Terminal {
     prefix: String,
     term: Term,
     set_title: bool,
+    display_time: bool,
     desktop_notification: bool,
     #[cfg(target_os = "linux")]
     notify_send: Option<PathBuf>,
@@ -63,6 +64,7 @@ impl Terminal {
                 .map(|prefix| format!("({}) ", prefix))
                 .unwrap_or_else(|_| String::new()),
             set_title: true,
+            display_time: true,
             desktop_notification: false,
             #[cfg(target_os = "linux")]
             notify_send: which("notify-send"),
@@ -75,6 +77,10 @@ impl Terminal {
 
     fn set_title(&mut self, set_title: bool) {
         self.set_title = set_title
+    }
+
+    fn display_time(&mut self, display_time: bool) {
+        self.display_time = display_time
     }
 
     #[allow(unused_variables)]
@@ -97,9 +103,9 @@ impl Terminal {
                     if let Some(timeout) = timeout {
                         command.arg("-t");
                         command.arg(format!("{}", timeout.as_millis()));
-                        command.args(["-a", "Topgrade"]);
-                        command.arg(message.as_ref());
                     }
+                    command.args(&["-a", "Topgrade"]);
+                    command.arg(message.as_ref());
                     command.output().ok();
                 }
             }
@@ -117,14 +123,19 @@ impl Terminal {
         }
 
         let now = Local::now();
-        let message = format!(
-            "{}{:02}:{:02}:{:02} - {}",
-            self.prefix,
-            now.hour(),
-            now.minute(),
-            now.second(),
-            message.as_ref()
-        );
+        let message = if self.display_time {
+            format!(
+                "{}{:02}:{:02}:{:02} - {}",
+                self.prefix,
+                now.hour(),
+                now.minute(),
+                now.second(),
+                message.as_ref()
+            )
+        } else {
+            String::from(message.as_ref())
+        };
+
         match self.width {
             Some(width) => {
                 self.term
@@ -217,30 +228,26 @@ impl Terminal {
         self.term
             .write_fmt(format_args!(
                 "\n{}",
-                style(format!(
-                    "{}Retry? (y)es/(N)o/(s)hell{}",
-                    self.prefix,
-                    if interrupted { "/(q)uit" } else { "" }
-                ))
-                .yellow()
-                .bold()
+                style(format!("{}Retry? (y)es/(N)o/(s)hell/(q)uit", self.prefix))
+                    .yellow()
+                    .bold()
             ))
             .ok();
 
         let answer = loop {
             match self.term.read_key() {
-                Ok(Key::Char('y' | 'Y')) => break Ok(true),
-                Ok(Key::Char('s' | 'S')) => {
+                Ok(Key::Char('y')) | Ok(Key::Char('Y')) => break Ok(true),
+                Ok(Key::Char('s')) | Ok(Key::Char('S')) => {
                     println!("\n\nDropping you to shell. Fix what you need and then exit the shell.\n");
                     run_shell();
                     break Ok(true);
                 }
-                Ok(Key::Char('n' | 'N') | Key::Enter) => break Ok(false),
+                Ok(Key::Char('n')) | Ok(Key::Char('N')) | Ok(Key::Enter) => break Ok(false),
                 Err(e) => {
                     error!("Error reading from terminal: {}", e);
                     break Ok(false);
                 }
-                Ok(Key::Char('q' | 'Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
+                Ok(Key::Char('q')) | Ok(Key::Char('Q')) => return Err(io::Error::from(io::ErrorKind::Interrupted)),
                 _ => (),
             }
         };
@@ -310,4 +317,8 @@ pub fn prompt_yesno(question: &str) -> Result<bool, io::Error> {
 
 pub fn notify_desktop<P: AsRef<str>>(message: P, timeout: Option<Duration>) {
     TERMINAL.lock().unwrap().notify_desktop(message, timeout)
+}
+
+pub fn display_time(display_time: bool) {
+    TERMINAL.lock().unwrap().display_time(display_time);
 }

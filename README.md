@@ -9,26 +9,23 @@
 
 ![Demo](doc/screenshot.gif)
 
-Keeping your system up to date mostly involves invoking more than a single package manager. This
-usually results in big shell one-liners saved in your shell history. Topgrade tries to solve this
-problem by detecting which tools you use and run their appropriate package managers.
+Keeping your system up to date usually involves invoking multiple package managers.
+This results in big, non-portable shell one-liners saved in your shell.
+To remedy this, _topgrade_ detects which tools you use and runs the appropriate commands to update them.
 
 ## Installation
-Arch Linux users can use the [AUR](https://aur.archlinux.org/packages/topgrade/) package.
+- Arch Linux: [AUR](https://aur.archlinux.org/packages/topgrade/) package.
+- NixOS: _topgrade_ package in `nixpkgs`.
+- macOS: [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/install.php).
 
-On NixOS, use the `topgrade` package in `nixpkgs`.
+Other systems users can either use `cargo install` or use the compiled binaries from the release page.
+The compiled binaries contain a self-upgrading feature.
 
-macOS users can install topgrade via [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/install.php).
-
-Other systems users can either use `cargo install` or use the compiled binaries from the release
-page. The compiled binaries contain a self-upgrading feature.
-
-Topgrade isn't guaranteed to work on Rust versions older than the latest stable release. If you
-intend to install Topgrade using Cargo then you should either install Rust using rustup or use a
-distribution which ships the latest version of Rust, such as Arch Linux.
+Topgrade requires Rust 1.51 or above.
 
 ## Usage
-Just run `topgrade`. See [the wiki](https://github.com/r-darwish/topgrade/wiki/Step-list) for the list of things Topgrade supports
+Just run `topgrade`.
+See [the wiki](https://github.com/r-darwish/topgrade/wiki/Step-list) for the list of things Topgrade supports.
 
 ## Customization
 See `config.example.toml` for an example configuration file.
@@ -37,11 +34,11 @@ See `config.example.toml` for an example configuration file.
 
 The configuration should be placed in the following paths depending by the operating system:
 
-* **macOS** - `~/.config/topgrade.toml`
 * **Windows** - `%APPDATA%/topgrade.toml`
-* **Other Unix systems** - `~/.config/topgrade.toml`
+* **macOS** and **other Unix systems** - `${XDG_CONFIG_HOME:-~/.config}/topgrade.toml`
 
 ## Remote execution
-You can specify a key called `remote_topgrades` in the configuration file. This key should contain a
-list of hostnames that have topgrade installed on them. Topgrade will execute Topgrades on these
-remote hosts. To limit the execution only to specific hosts use the `--remote-host-limit` parameter.
+You can specify a key called `remote_topgrades` in the configuration file.
+This key should contain a list of hostnames that have topgrade installed on them.
+Topgrade will use `ssh` to run `topgrade` on remote hosts before acting locally.
+To limit the execution only to specific hosts use the `--remote-host-limit` parameter.

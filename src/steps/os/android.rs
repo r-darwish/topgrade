@@ -1,6 +1,7 @@
 use crate::execution_context::ExecutionContext;
 use crate::terminal::print_separator;
 use crate::utils::require;
+use crate::Step;
 use anyhow::Result;
 
 pub fn upgrade_packages(ctx: &ExecutionContext) -> Result<()> {
@@ -10,7 +11,7 @@ pub fn upgrade_packages(ctx: &ExecutionContext) -> Result<()> {
 
     let mut command = ctx.run_type().execute(&pkg);
     command.arg("upgrade");
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::System) {
         command.arg("-y");
     }
     command.check_run()?;
@@ -21,7 +22,7 @@ pub fn upgrade_packages(ctx: &ExecutionContext) -> Result<()> {
         let apt = require("apt")?;
         let mut command = ctx.run_type().execute(&apt);
         command.arg("autoremove");
-        if ctx.config().yes() {
+        if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
         command.check_run()?;

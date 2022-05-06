@@ -1,5 +1,6 @@
-use crate::{error::SkipStep, execution_context::ExecutionContext, terminal::print_separator, utils};
 use anyhow::Result;
+
+use crate::{error::SkipStep, execution_context::ExecutionContext, terminal::print_separator, utils};
 
 fn prepare_async_ssh_command(args: &mut Vec<&str>) {
     args.insert(0, "ssh");
@@ -17,11 +18,7 @@ pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
     }
 
     let env = format!("TOPGRADE_PREFIX={}", hostname);
-    args.extend(["env", &env, "$SHELL", "-lc", topgrade]);
-
-    if ctx.config().yes() {
-        args.push("-y");
-    }
+    args.extend(&["env", &env, "$SHELL", "-lc", topgrade]);
 
     if ctx.config().run_in_tmux() && !ctx.run_type().dry() {
         #[cfg(unix)]
@@ -45,11 +42,7 @@ pub fn ssh_step(ctx: &ExecutionContext, hostname: &str) -> Result<()> {
         }
 
         let env = format!("TOPGRADE_PREFIX={}", hostname);
-        args.extend(["env", &env, "$SHELL", "-lc", topgrade]);
-
-        if ctx.config().yes() {
-            args.push("-y");
-        }
+        args.extend(&["env", &env, "$SHELL", "-lc", topgrade]);
 
         print_separator(format!("Remote ({})", hostname));
         println!("Connecting to {}...", hostname);

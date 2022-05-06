@@ -1,13 +1,16 @@
-use crate::execution_context::ExecutionContext;
-use crate::executor::CommandExt;
-use crate::terminal::print_separator;
-use crate::{error::SkipStep, utils};
-use anyhow::Result;
-use log::{debug, error};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::{fmt::Display, rc::Rc, str::FromStr};
+
+use anyhow::Result;
+use log::{debug, error};
+use regex::Regex;
 use strum::EnumString;
+
+use crate::execution_context::ExecutionContext;
+use crate::executor::CommandExt;
+use crate::terminal::print_separator;
+use crate::{error::SkipStep, utils, Step};
 
 #[derive(Debug, Copy, Clone, EnumString)]
 #[strum(serialize_all = "lowercase")]
@@ -110,7 +113,7 @@ impl<'a> TemporaryPowerOn<'a> {
 
         ctx.run_type()
             .execute(vagrant)
-            .args([subcommand, &vagrant_box.name])
+            .args(&[subcommand, &vagrant_box.name])
             .current_dir(vagrant_box.path.clone())
             .check_run()?;
         Ok(TemporaryPowerOn {
@@ -137,7 +140,7 @@ impl<'a> Drop for TemporaryPowerOn<'a> {
         self.ctx
             .run_type()
             .execute(self.vagrant)
-            .args([subcommand, &self.vagrant_box.name])
+            .args(&[subcommand, &self.vagrant_box.name])
             .current_dir(self.vagrant_box.path.clone())
             .check_run()
             .ok();
@@ -188,13 +191,45 @@ pub fn topgrade_vagrant_box(ctx: &ExecutionContext, vagrant_box: &VagrantBox) ->
         print_separator(seperator);
     }
     let mut command = format!("env TOPGRADE_PREFIX={} topgrade", vagrant_box.smart_name());
-    if ctx.config().yes() {
+    if ctx.config().yes(Step::Vagrant) {
         command.push_str(" -y");
     }
 
     ctx.run_type()
         .execute(&vagrant.path)
         .current_dir(&vagrant_box.path)
-        .args(["ssh", "-c", &command])
+        .args(&["ssh", "-c", &command])
         .check_run()
+}
+
+pub fn upgrade_vagrant_boxes(ctx: &ExecutionContext) -> Result<()> {
+    let vagrant = utils::require("vagrant")?;
+    print_separator("Vagrant boxes");
+
+    let outdated = Command::new(&vagrant)
+        .args(&["box", "outdated", "--global"])
+        .check_output()?;
+
+    let re = Regex::new(r"\* '(.*?)' for '(.*?)' is outdated").unwrap();
+
+    let mut found = false;
+    for ele in re.captures_iter(&outdated) {
+        found = true;
+        let _ = ctx
+            .run_type()
+            .execute(&vagrant)
+            .args(&["box", "update", "--box"])
+            .arg(&ele.get(1).unwrap().as_str())
+            .arg("--provider")
+            .arg(ele.get(2).unwrap().as_str())
+            .check_run();
+    }
+
+    if !found {
+        println!("No outdated boxes")
+    } else {
+        ctx.run_type().execute(&vagrant).args(&["box", "prune"]).check_run()?;
+    }
+
+    Ok(())
 }

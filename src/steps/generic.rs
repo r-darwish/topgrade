@@ -1,4 +1,15 @@
 #![allow(unused_imports)]
+
+use std::path::PathBuf;
+use std::process::Command;
+use std::{env, path::Path};
+use std::{fs, io::Write};
+
+use anyhow::Result;
+use directories::BaseDirs;
+use log::debug;
+use tempfile::tempfile_in;
+
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, ExecutorOutput, RunType};
 use crate::terminal::{print_separator, shell};
@@ -7,14 +18,6 @@ use crate::{
     error::{SkipStep, TopgradeError},
     terminal::print_warning,
 };
-use anyhow::Result;
-use directories::BaseDirs;
-use log::debug;
-use std::path::PathBuf;
-use std::process::Command;
-use std::{env, path::Path};
-use std::{fs, io::Write};
-use tempfile::tempfile_in;
 
 pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
     let cargo_dir = env::var_os("CARGO_HOME")
@@ -49,7 +52,7 @@ pub fn run_cargo_update(ctx: &ExecutionContext) -> Result<()> {
 
     ctx.run_type()
         .execute(cargo_update)
-        .args(["install-update", "--git", "--all"])
+        .args(&["install-update", "--git", "--all"])
         .check_run()
 }
 
@@ -58,6 +61,19 @@ pub fn run_flutter_upgrade(run_type: RunType) -> Result<()> {
 
     print_separator("Flutter");
     run_type.execute(&flutter).arg("upgrade").check_run()
+}
+
+pub fn run_go(run_type: RunType) -> Result<()> {
+    let go = utils::require("go")?;
+    let gopath = run_type.execute(&go).args(&["env", "GOPATH"]).check_output()?;
+
+    let go_global_update = utils::require("go-global-update")
+        .unwrap_or_else(|_| PathBuf::from(gopath).join("bin/go-global-update"))
+        .require()?;
+
+    print_separator("Go");
+
+    run_type.execute(&go_global_update).check_run()
 }
 
 pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -77,12 +93,36 @@ pub fn run_gem(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     command.check_run()
 }
 
+pub fn run_haxelib_update(ctx: &ExecutionContext) -> Result<()> {
+    let haxelib = utils::require("haxelib")?;
+
+    let haxelib_dir =
+        PathBuf::from(std::str::from_utf8(&Command::new(&haxelib).arg("config").output()?.stdout)?.trim()).require()?;
+
+    let directory_writable = tempfile_in(&haxelib_dir).is_ok();
+    debug!("{:?} writable: {}", haxelib_dir, directory_writable);
+
+    print_separator("haxelib");
+
+    let mut command = if directory_writable {
+        ctx.run_type().execute(&haxelib)
+    } else {
+        let mut c = ctx
+            .run_type()
+            .execute(ctx.sudo().as_ref().ok_or(TopgradeError::SudoRequired)?);
+        c.arg(&haxelib);
+        c
+    };
+
+    command.arg("update").check_run()
+}
+
 pub fn run_sheldon(ctx: &ExecutionContext) -> Result<()> {
     let sheldon = utils::require("sheldon")?;
 
     print_separator("Sheldon");
 
-    ctx.run_type().execute(&sheldon).args(["lock", "--update"]).check_run()
+    ctx.run_type().execute(&sheldon).args(&["lock", "--update"]).check_run()
 }
 
 pub fn run_fossil(run_type: RunType) -> Result<()> {
@@ -90,7 +130,7 @@ pub fn run_fossil(run_type: RunType) -> Result<()> {
 
     print_separator("Fossil");
 
-    run_type.execute(&fossil).args(["all", "sync"]).check_run()
+    run_type.execute(&fossil).args(&["all", "sync"]).check_run()
 }
 
 pub fn run_micro(run_type: RunType) -> Result<()> {
@@ -98,7 +138,7 @@ pub fn run_micro(run_type: RunType) -> Result<()> {
 
     print_separator("micro");
 
-    let stdout = run_type.execute(&micro).args(["-plugin", "update"]).string_output()?;
+    let stdout = run_type.execute(&micro).args(&["-plugin", "update"]).string_output()?;
     std::io::stdout().write_all(stdout.as_bytes())?;
 
     if stdout.contains("Nothing to install / update") || stdout.contains("One or more plugins installed") {
@@ -119,7 +159,7 @@ pub fn run_apm(run_type: RunType) -> Result<()> {
 
     print_separator("Atom Package Manager");
 
-    run_type.execute(&apm).args(["upgrade", "--confirm=false"]).check_run()
+    run_type.execute(&apm).args(&["upgrade", "--confirm=false"]).check_run()
 }
 
 pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
@@ -128,7 +168,7 @@ pub fn run_rustup(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     print_separator("rustup");
 
     if rustup.canonicalize()?.is_descendant_of(base_dirs.home_dir()) {
-        run_type.execute(&rustup).args(["self", "update"]).check_run()?;
+        run_type.execute(&rustup).args(&["self", "update"]).check_run()?;
     }
 
     run_type.execute(&rustup).arg("update").check_run()
@@ -140,8 +180,8 @@ pub fn run_choosenim(ctx: &ExecutionContext) -> Result<()> {
     print_separator("choosenim");
     let run_type = ctx.run_type();
 
-    run_type.execute(&choosenim).args(["update", "self"]).check_run()?;
-    run_type.execute(&choosenim).args(["update", "stable"]).check_run()
+    run_type.execute(&choosenim).args(&["update", "self"]).check_run()?;
+    run_type.execute(&choosenim).args(&["update", "stable"]).check_run()
 }
 
 pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
@@ -149,7 +189,7 @@ pub fn run_krew_upgrade(run_type: RunType) -> Result<()> {
 
     print_separator("Krew");
 
-    run_type.execute(&krew).args(["upgrade"]).check_run()
+    run_type.execute(&krew).args(&["upgrade"]).check_run()
 }
 
 pub fn run_gcloud_components_update(run_type: RunType) -> Result<()> {
@@ -159,7 +199,7 @@ pub fn run_gcloud_components_update(run_type: RunType) -> Result<()> {
 
     run_type
         .execute(&gcloud)
-        .args(["components", "update", "--quiet"])
+        .args(&["components", "update", "--quiet"])
         .check_run()
 }
 
@@ -168,7 +208,7 @@ pub fn run_jetpack(run_type: RunType) -> Result<()> {
 
     print_separator("Jetpack");
 
-    run_type.execute(&jetpack).args(["global", "update"]).check_run()
+    run_type.execute(&jetpack).args(&["global", "update"]).check_run()
 }
 
 pub fn run_rtcl(ctx: &ExecutionContext) -> Result<()> {
@@ -192,7 +232,7 @@ pub fn run_vcpkg_update(run_type: RunType) -> Result<()> {
     let vcpkg = utils::require("vcpkg")?;
     print_separator("vcpkg");
 
-    run_type.execute(&vcpkg).args(["upgrade", "--no-dry-run"]).check_run()
+    run_type.execute(&vcpkg).args(&["upgrade", "--no-dry-run"]).check_run()
 }
 
 pub fn run_pipx_update(run_type: RunType) -> Result<()> {
@@ -202,8 +242,33 @@ pub fn run_pipx_update(run_type: RunType) -> Result<()> {
     run_type.execute(&pipx).arg("upgrade-all").check_run()
 }
 
+pub fn run_conda_update(ctx: &ExecutionContext) -> Result<()> {
+    let conda = utils::require("conda")?;
+
+    let output = Command::new("conda")
+        .args(&["config", "--show", "auto_activate_base"])
+        .output()?;
+    let string_output = String::from_utf8(output.stdout)?;
+    debug!("Conda output: {}", string_output);
+    if string_output.contains("False") {
+        return Err(SkipStep("auto_activate_base is set to False".to_string()).into());
+    }
+
+    print_separator("Conda");
+
+    ctx.run_type()
+        .execute(&conda)
+        .args(&["update", "--all", "-y"])
+        .check_run()
+}
+
 pub fn run_pip3_update(run_type: RunType) -> Result<()> {
-    let pip3 = utils::require("pip3")?;
+    let python3 = utils::require("python3")?;
+    Command::new(&python3)
+        .args(&["-m", "pip"])
+        .check_output()
+        .map_err(|_| SkipStep("pip does not exists".to_string()))?;
+
     print_separator("pip3");
     if std::env::var("VIRTUAL_ENV").is_ok() {
         print_warning("This step is will be skipped when running inside a virtual environment");
@@ -211,8 +276,8 @@ pub fn run_pip3_update(run_type: RunType) -> Result<()> {
     }
 
     run_type
-        .execute(&pip3)
-        .args(["install", "--upgrade", "--user", "pip"])
+        .execute(&python3)
+        .args(&["-m", "pip", "install", "--upgrade", "--user", "pip"])
         .check_run()
 }
 
@@ -225,9 +290,9 @@ pub fn run_stack_update(run_type: RunType) -> Result<()> {
 
 pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
     cfg_if::cfg_if! {
-        if #[cfg(target_os = "linux")] {
+        if #[cfg(any(target_os = "linux", target_os = "android"))] {
             if !ctx.config().enable_tlmgr_linux() {
-                return Err(SkipStep(String::from("tlmgr must be explicity enabled in the configuration to run in Linux")).into());
+                return Err(SkipStep(String::from("tlmgr must be explicity enabled in the configuration to run in Android/Linux")).into());
             }
         }
     }
@@ -263,7 +328,7 @@ pub fn run_tlmgr_update(ctx: &ExecutionContext) -> Result<()> {
         c.arg(&tlmgr);
         c
     };
-    command.args(["update", "--self", "--all"]);
+    command.args(&["update", "--self", "--all"]);
 
     command.check_run()
 }
@@ -305,7 +370,7 @@ pub fn run_custom_command(name: &str, command: &str, ctx: &ExecutionContext) -> 
 pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
     let composer = utils::require("composer")?;
     let composer_home = Command::new(&composer)
-        .args(["global", "config", "--absolute", "--quiet", "home"])
+        .args(&["global", "config", "--absolute", "--quiet", "home"])
         .check_output()
         .map_err(|e| (SkipStep(format!("Error getting the composer directory: {}", e))))
         .map(|s| PathBuf::from(s.trim()))?
@@ -343,7 +408,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
         }
     }
 
-    let output = Command::new(&composer).args(["global", "update"]).output()?;
+    let output = Command::new(&composer).args(&["global", "update"]).output()?;
     let status = output.status;
     if !status.success() {
         return Err(TopgradeError::ProcessFailed(status).into());
@@ -364,7 +429,7 @@ pub fn run_composer_update(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
     let dotnet = utils::require("dotnet")?;
 
-    let output = Command::new(dotnet).args(["tool", "list", "--global"]).output()?;
+    let output = Command::new(dotnet).args(&["tool", "list", "--global"]).output()?;
 
     if !output.status.success() {
         return Err(SkipStep(format!("dotnet failed with exit code {:?}", output.status)).into());
@@ -387,7 +452,7 @@ pub fn run_dotnet_upgrade(ctx: &ExecutionContext) -> Result<()> {
         let package_name = package.split_whitespace().next().unwrap();
         ctx.run_type()
             .execute("dotnet")
-            .args(["tool", "update", package_name, "--global"])
+            .args(&["tool", "update", package_name, "--global"])
             .check_run()?;
     }
 
@@ -399,7 +464,7 @@ pub fn run_raco_update(run_type: RunType) -> Result<()> {
 
     print_separator("Racket Package Manager");
 
-    run_type.execute(&raco).args(["pkg", "update", "--all"]).check_run()
+    run_type.execute(&raco).args(&["pkg", "update", "--all"]).check_run()
 }
 
 pub fn bin_update(ctx: &ExecutionContext) -> Result<()> {
@@ -407,4 +472,26 @@ pub fn bin_update(ctx: &ExecutionContext) -> Result<()> {
 
     print_separator("Bin");
     ctx.run_type().execute(&bin).arg("update").check_run()
+}
+
+pub fn spicetify_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let spicetify = utils::require("spicetify")?;
+
+    print_separator("Spicetify");
+    ctx.run_type().execute(&spicetify).arg("upgrade").check_run()
+}
+
+pub fn run_ghcli_extensions_upgrade(ctx: &ExecutionContext) -> Result<()> {
+    let gh = utils::require("gh")?;
+    let result = Command::new(&gh).args(&["extensions", "list"]).check_output();
+    if result.is_err() {
+        debug!("GH result {:?}", result);
+        return Err(SkipStep(String::from("GH failed")).into());
+    }
+
+    print_separator("GitHub CLI Extensions");
+    ctx.run_type()
+        .execute(&gh)
+        .args(&["extension", "upgrade", "--all"])
+        .check_run()
 }

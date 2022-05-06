@@ -27,7 +27,7 @@ pub fn vimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
 
 fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
     #[cfg(unix)]
-    let base_dir =
+        let base_dir =
         // Bypass directories crate as nvim doesn't use the macOS-specific directories.
         std::env::var_os("XDG_CONFIG_HOME").map_or_else(|| base_dirs.home_dir().join(".config"), PathBuf::from);
 
@@ -45,14 +45,19 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
     tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
     debug!("Wrote vim script to {:?}", tempfile.path());
 
-    let output = ctx
-        .run_type()
-        .execute(&vim)
-        .arg("-u")
+    let mut command = ctx.run_type().execute(&vim);
+
+    command
+        .args(&["-u"])
         .arg(vimrc)
-        .args(["-U", "NONE", "-V1", "-nNesS"])
-        .arg(tempfile.path())
-        .output()?;
+        .args(&["-U", "NONE", "-V1", "-nNesS"])
+        .arg(tempfile.path());
+
+    if ctx.config().force_vim_plug_update() {
+        command.env("TOPGRADE_FORCE_PLUGUPDATE", "true");
+    }
+
+    let output = command.output()?;
 
     if let ExecutorOutput::Wet(output) = output {
         let status = output.status;
@@ -68,6 +73,38 @@ fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
             println!("Plugins upgraded")
         }
     }
+
+    Ok(())
+}
+
+pub fn upgrade_ultimate_vimrc(ctx: &ExecutionContext) -> Result<()> {
+    let config_dir = ctx.base_dirs().home_dir().join(".vim_runtime").require()?;
+    let git = require("git")?;
+    let python = require("python3")?;
+    let update_plugins = config_dir.join("update_plugins.py").require()?;
+
+    print_separator("The Ultimate vimrc");
+
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["reset", "--hard"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["clean", "-d", "--force"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(&git)
+        .current_dir(&config_dir)
+        .args(&["pull", "--rebase"])
+        .check_run()?;
+    ctx.run_type()
+        .execute(python)
+        .current_dir(config_dir)
+        .arg(update_plugins)
+        .check_run()?;
 
     Ok(())
 }
