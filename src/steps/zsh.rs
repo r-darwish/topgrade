@@ -80,6 +80,21 @@ pub fn run_zinit(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     run_type.execute(zsh).args(["-i", "-c", &cmd]).check_run()
 }
 
+pub fn run_zi(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
+    let zsh = require("zsh")?;
+    let zshrc = zshrc(base_dirs).require()?;
+
+    env::var("ZPFX")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".zi"))
+        .require()?;
+
+    print_separator("zi");
+
+    let cmd = format!("source {} && zi self-update && zi update --all", zshrc.display(),);
+    run_type.execute(zsh).args(["-i", "-c", &cmd]).check_run()
+}
+
 pub fn run_zim(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     env::var("ZIM_HOME")
