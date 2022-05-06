@@ -286,12 +286,16 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
         let apt = which("apt-fast")
             .or_else(|| which("nala"))
             .unwrap_or_else(|| PathBuf::from("apt-get"));
-        ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
+
+        let is_nala = apt.ends_with("nala");
+        if !is_nala {
+            ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
+        }
 
         let mut command = ctx.run_type().execute(&sudo);
         command.arg(&apt);
-        if apt.ends_with("nala") {
-            command.args(&["upgrade", "--no-update"]);
+        if is_nala {
+            command.arg("upgrade");
         } else {
             command.arg("dist-upgrade");
         };
