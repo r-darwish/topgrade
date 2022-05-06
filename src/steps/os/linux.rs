@@ -283,11 +283,18 @@ fn upgrade_gentoo(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
-        let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("apt-get"));
+        let apt = which("apt-fast")
+            .or_else(|| which("nala"))
+            .unwrap_or_else(|| PathBuf::from("apt-get"));
         ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
 
         let mut command = ctx.run_type().execute(&sudo);
-        command.arg(&apt).arg("dist-upgrade");
+        command.arg(&apt);
+        if apt.ends_with("nala") {
+            command.args(&["upgrade", "--no-update"]);
+        } else {
+            command.arg("dist-upgrade");
+        };
         if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
