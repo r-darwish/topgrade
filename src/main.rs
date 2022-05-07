@@ -360,9 +360,11 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            runner.execute(Step::CustomCommands, name, || {
-                generic::run_custom_command(name, command, &ctx)
-            })?;
+            if config.should_run_custom_command(name) {
+                runner.execute(Step::CustomCommands, name, || {
+                    generic::run_custom_command(name, command, &ctx)
+                })?;
+            }
         }
     }
 

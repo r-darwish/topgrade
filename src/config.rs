@@ -397,6 +397,10 @@ pub struct CommandLineArgs {
     #[clap(long = "only", arg_enum)]
     only: Vec<Step>,
 
+    /// Run only specific custom commands
+    #[clap(long = "custom-commands")]
+    custom_commands: Vec<String>,
+
     /// Set environment variables
     #[clap(long = "env")]
     env: Vec<String>,
@@ -875,5 +879,13 @@ impl Config {
 
     pub fn display_time(&self) -> bool {
         self.config_file.display_time.unwrap_or(true)
+    }
+
+    pub fn should_run_custom_command(&self, name: &str) -> bool {
+        if self.opt.custom_commands.is_empty() {
+            return true;
+        }
+
+        self.opt.custom_commands.iter().any(|s| s == name)
     }
 }
