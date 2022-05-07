@@ -23,8 +23,6 @@
             "args": [
                 "--only",
                 "${input:step}",
-                "--custom-commands",
-                "hi",
                 "-v"
             ],
             "cwd": "${workspaceFolder}"
