@@ -23,6 +23,8 @@
             "args": [
                 "--only",
                 "${input:step}",
+                "--custom-commands",
+                "hi",
                 "-v"
             ],
             "cwd": "${workspaceFolder}"
@@ -32,7 +34,7 @@
         {
             "type": "promptString",
             "id": "step",
-            "description": "step nname",
+            "description": "step name",
         }
     ]
 }
