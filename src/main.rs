@@ -39,6 +39,14 @@ fn run() -> Result<()> {
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::parse();
+
+    for env in opt.env_variables() {
+        let mut splitted = env.split('=');
+        let var = splitted.next().unwrap();
+        let value = splitted.next().unwrap();
+        env::set_var(var, value);
+    }
+
     let mut builder = formatted_timed_builder();
 
     if opt.verbose {
