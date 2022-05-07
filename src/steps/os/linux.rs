@@ -313,6 +313,19 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
     Ok(())
 }
 
+pub fn run_deb_get(ctx: &ExecutionContext) -> Result<()> {
+    let deb_get = require("deb-get")?;
+
+    ctx.execute_elevated(&deb_get, false)?.arg("update").check_run()?;
+    ctx.execute_elevated(&deb_get, false)?.arg("upgrade").check_run()?;
+
+    if ctx.config().cleanup() {
+        ctx.execute_elevated(&deb_get, false)?.arg("clean").check_run()?;
+    }
+
+    Ok(())
+}
+
 fn upgrade_solus(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = ctx.sudo() {
         ctx.run_type().execute(&sudo).args(&["eopkg", "upgrade"]).check_run()?;
