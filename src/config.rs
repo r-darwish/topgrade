@@ -881,11 +881,11 @@ impl Config {
         self.config_file.display_time.unwrap_or(true)
     }
 
-    pub fn should_run_custom_command(&self, name: &String) -> bool {
+    pub fn should_run_custom_command(&self, name: &str) -> bool {
         if self.opt.custom_commands.is_empty() {
             return true;
         }
 
-        self.opt.custom_commands.contains(name)
+        self.opt.custom_commands.iter().any(|s| s == name)
     }
 }
