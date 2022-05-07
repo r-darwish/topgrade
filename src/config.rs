@@ -396,6 +396,10 @@ pub struct CommandLineArgs {
     #[clap(long = "only", arg_enum)]
     only: Vec<Step>,
 
+    /// Set environment variables
+    #[clap(long = "env")]
+    env: Vec<String>,
+
     /// Output logs
     #[clap(short = 'v', long = "verbose")]
     pub verbose: bool,
@@ -432,6 +436,10 @@ impl CommandLineArgs {
 
     pub fn show_config_reference(&self) -> bool {
         self.show_config_reference
+    }
+
+    pub fn env_variables(&self) -> &Vec<String> {
+        &self.env
     }
 }
 
