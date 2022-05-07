@@ -316,6 +316,8 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
 pub fn run_deb_get(ctx: &ExecutionContext) -> Result<()> {
     let deb_get = require("deb-get")?;
 
+    print_separator("deb-get");
+
     ctx.execute_elevated(&deb_get, false)?.arg("update").check_run()?;
     ctx.execute_elevated(&deb_get, false)?.arg("upgrade").check_run()?;
 
