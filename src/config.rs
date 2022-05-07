@@ -81,6 +81,7 @@ pub enum Step {
     ConfigUpdate,
     Containers,
     CustomCommands,
+    DebGet,
     Deno,
     Dotnet,
     Emacs,
