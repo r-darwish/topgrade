@@ -32,7 +32,7 @@
         {
             "type": "promptString",
             "id": "step",
-            "description": "step nname",
+            "description": "step name",
         }
     ]
 }

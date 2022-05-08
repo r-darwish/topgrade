@@ -39,6 +39,14 @@ fn run() -> Result<()> {
     let base_dirs = directories::BaseDirs::new().ok_or_else(|| anyhow!("No base directories"))?;
 
     let opt = CommandLineArgs::parse();
+
+    for env in opt.env_variables() {
+        let mut splitted = env.split('=');
+        let var = splitted.next().unwrap();
+        let value = splitted.next().unwrap();
+        env::set_var(var, value);
+    }
+
     let mut builder = formatted_timed_builder();
 
     if opt.verbose {
@@ -267,6 +275,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Shell, "zgenom", || zsh::run_zgenom(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zplug", || zsh::run_zplug(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zinit", || zsh::run_zinit(&base_dirs, run_type))?;
+        runner.execute(Step::Shell, "zi", || zsh::run_zi(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "zim", || zsh::run_zim(&base_dirs, run_type))?;
         runner.execute(Step::Shell, "oh-my-zsh", || zsh::run_oh_my_zsh(&ctx))?;
         runner.execute(Step::Shell, "fisher", || unix::run_fisher(&base_dirs, run_type))?;
@@ -342,6 +351,7 @@ fn run() -> Result<()> {
 
     #[cfg(target_os = "linux")]
     {
+        runner.execute(Step::DebGet, "deb-get", || linux::run_deb_get(&ctx))?;
         runner.execute(Step::Toolbx, "toolbx", || toolbx::run_toolbx(&ctx))?;
         runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
@@ -350,9 +360,11 @@ fn run() -> Result<()> {
 
     if let Some(commands) = config.commands() {
         for (name, command) in commands {
-            runner.execute(Step::CustomCommands, name, || {
-                generic::run_custom_command(name, command, &ctx)
-            })?;
+            if config.should_run_custom_command(name) {
+                runner.execute(Step::CustomCommands, name, || {
+                    generic::run_custom_command(name, command, &ctx)
+                })?;
+            }
         }
     }
 
