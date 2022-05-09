@@ -283,11 +283,22 @@ fn upgrade_gentoo(ctx: &ExecutionContext) -> Result<()> {
 
 fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
     if let Some(sudo) = &ctx.sudo() {
-        let apt = which("apt-fast").unwrap_or_else(|| PathBuf::from("apt-get"));
-        ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
+        let apt = which("apt-fast")
+            .or_else(|| which("nala"))
+            .unwrap_or_else(|| PathBuf::from("apt-get"));
+
+        let is_nala = apt.ends_with("nala");
+        if !is_nala {
+            ctx.run_type().execute(&sudo).arg(&apt).arg("update").check_run()?;
+        }
 
         let mut command = ctx.run_type().execute(&sudo);
-        command.arg(&apt).arg("dist-upgrade");
+        command.arg(&apt);
+        if is_nala {
+            command.arg("upgrade");
+        } else {
+            command.arg("dist-upgrade");
+        };
         if ctx.config().yes(Step::System) {
             command.arg("-y");
         }
@@ -308,6 +319,20 @@ fn upgrade_debian(ctx: &ExecutionContext) -> Result<()> {
         }
     } else {
         print_warning("No sudo detected. Skipping system upgrade");
+    }
+
+    Ok(())
+}
+
+pub fn run_deb_get(ctx: &ExecutionContext) -> Result<()> {
+    let deb_get = require("deb-get")?;
+
+    print_separator("deb-get");
+
+    ctx.execute_elevated(&deb_get, false)?.arg("upgrade").check_run()?;
+
+    if ctx.config().cleanup() {
+        ctx.execute_elevated(&deb_get, false)?.arg("clean").check_run()?;
     }
 
     Ok(())
