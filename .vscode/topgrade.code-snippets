@@ -19,7 +19,7 @@
 		"scope": "rust",
 		"prefix": "skipstep",
 		"body": [
-			"return Err(SkipStep(format!(\"$1\").into()));"
+			"return Err(SkipStep(format!(\"$1\")).into());"
 		]
 	},
 	"Step": {
