@@ -153,7 +153,7 @@ fn run() -> Result<()> {
         runner.execute(Step::ConfigUpdate, "config-update", || linux::run_config_update(&ctx))?;
 
         runner.execute(Step::BrewFormula, "Brew", || {
-            unix::run_brew_formula(&ctx, unix::BrewVariant::Linux)
+            unix::run_brew_formula(&ctx, unix::BrewVariant::Path)
         })?;
     }
 
@@ -172,11 +172,17 @@ fn run() -> Result<()> {
         runner.execute(Step::BrewFormula, "Brew (Intel)", || {
             unix::run_brew_formula(&ctx, unix::BrewVariant::MacIntel)
         })?;
+        runner.execute(Step::BrewFormula, "Brew", || {
+            unix::run_brew_formula(&ctx, unix::BrewVariant::Path)
+        })?;
         runner.execute(Step::BrewCask, "Brew Cask (ARM)", || {
             unix::run_brew_cask(&ctx, unix::BrewVariant::MacArm)
         })?;
         runner.execute(Step::BrewCask, "Brew Cask (Intel)", || {
             unix::run_brew_cask(&ctx, unix::BrewVariant::MacIntel)
+        })?;
+        runner.execute(Step::BrewCask, "Brew Cask", || {
+            unix::run_brew_cask(&ctx, unix::BrewVariant::Path)
         })?;
         runner.execute(Step::Macports, "MacPorts", || macos::run_macports(&ctx))?;
     }

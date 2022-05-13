@@ -19,7 +19,7 @@
 		"scope": "rust",
 		"prefix": "skipstep",
 		"body": [
-			"return Err(SkipStep(format!(\"$1\").into()));"
+			"return Err(SkipStep(format!(\"$1\")).into());"
 		]
 	},
 	"Step": {
@@ -30,6 +30,13 @@
 			"    $0",
 			"    Ok(())",
 			"}"
+		]
+	},
+	"macos": {
+		"scope": "rust",
+		"prefix": "macos",
+		"body": [
+			"#[cfg(target_os = \"macos\")]"
 		]
 	}
 }
