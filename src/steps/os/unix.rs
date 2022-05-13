@@ -1,6 +1,6 @@
 #[cfg(target_os = "linux")]
 use crate::error::SkipStep;
-use crate::error::{TopgradeError, SkipStep};
+use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
 use crate::terminal::print_separator;
