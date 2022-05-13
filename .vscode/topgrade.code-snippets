@@ -31,5 +31,12 @@
 			"    Ok(())",
 			"}"
 		]
+	},
+	"macos": {
+		"scope": "rust",
+		"prefix": "macos",
+		"body": [
+			"#[cfg(target_os = \"macos\")]"
+		]
 	}
 }

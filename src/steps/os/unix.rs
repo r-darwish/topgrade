@@ -1,5 +1,3 @@
-#[cfg(target_os = "linux")]
-use crate::error::SkipStep;
 use crate::error::{SkipStep, TopgradeError};
 use crate::execution_context::ExecutionContext;
 use crate::executor::{CommandExt, Executor, ExecutorExitStatus, RunType};
@@ -37,6 +35,7 @@ impl BrewVariant {
         }
     }
 
+    #[cfg(target_os = "macos")]
     fn is_path(&self) -> bool {
         matches!(self, BrewVariant::Path)
     }
@@ -70,6 +69,7 @@ impl BrewVariant {
         }
     }
 
+    #[cfg(target_os = "macos")]
     fn is_macos_custom(binary_name: PathBuf) -> bool {
         !(binary_name.as_os_str() == INTEL_BREW || binary_name.as_os_str() == ARM_BREW)
     }
@@ -186,6 +186,7 @@ pub fn upgrade_gnome_extensions(ctx: &ExecutionContext) -> Result<()> {
 }
 
 pub fn run_brew_formula(ctx: &ExecutionContext, variant: BrewVariant) -> Result<()> {
+    #[allow(unused_variables)]
     let binary_name = require(variant.binary_name())?;
 
     #[cfg(target_os = "macos")]
