@@ -38,4 +38,9 @@ if exists(":PaqUpdate")
     PaqUpdate
 endif
 
+if exists(":CocUpdateSync")
+    echo "CocUpdateSync"
+    CocUpdateSync
+endif
+
 quitall
