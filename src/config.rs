@@ -390,11 +390,11 @@ pub struct CommandLineArgs {
     no_retry: bool,
 
     /// Do not perform upgrades for the given steps
-    #[clap(long = "disable", arg_enum)]
+    #[clap(long = "disable", arg_enum, multiple_values = true)]
     disable: Vec<Step>,
 
     /// Perform only the specified steps (experimental)
-    #[clap(long = "only", arg_enum)]
+    #[clap(long = "only", arg_enum, multiple_values = true)]
     only: Vec<Step>,
 
     /// Run only specific custom commands
@@ -402,7 +402,7 @@ pub struct CommandLineArgs {
     custom_commands: Vec<String>,
 
     /// Set environment variables
-    #[clap(long = "env")]
+    #[clap(long = "env", multiple_values = true)]
     env: Vec<String>,
 
     /// Output logs
@@ -414,7 +414,7 @@ pub struct CommandLineArgs {
     keep_at_end: bool,
 
     /// Say yes to package manager's prompt
-    #[clap(short = 'y', long = "yes", arg_enum)]
+    #[clap(short = 'y', long = "yes", arg_enum, multiple_values = true, min_values = 0)]
     yes: Option<Vec<Step>>,
 
     /// Don't pull the predefined git repos
