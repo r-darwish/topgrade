@@ -113,7 +113,6 @@ pub enum Step {
     Pip3,
     Pkg,
     Pkgin,
-    Pnpm,
     Powershell,
     Raco,
     Remotes,

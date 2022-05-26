@@ -19,11 +19,15 @@ use crate::{error::SkipStep, execution_context::ExecutionContext};
 #[allow(clippy::upper_case_acronyms)]
 struct NPM {
     command: PathBuf,
+    pnpm: Option<PathBuf>,
 }
 
 impl NPM {
     fn new(command: PathBuf) -> Self {
-        Self { command }
+        Self {
+            command,
+            pnpm: require("pnpm").ok(),
+        }
     }
 
     #[cfg(target_os = "linux")]
@@ -40,7 +44,7 @@ impl NPM {
         if use_sudo {
             run_type
                 .execute("sudo")
-                .arg(&self.command)
+                .arg(self.pnpm.as_ref().unwrap_or(&self.command))
                 .args(&["update", "-g"])
                 .check_run()?;
         } else {
@@ -90,25 +94,6 @@ pub fn run_npm_upgrade(ctx: &ExecutionContext) -> Result<()> {
     {
         npm.upgrade(ctx.run_type(), false)
     }
-}
-
-pub fn pnpm_global_update(ctx: &ExecutionContext) -> Result<()> {
-    let pnpm = require("pnpm")?;
-
-    print_separator("Performant Node Package Manager");
-    #[cfg(target_os = "linux")]
-    if should_use_sudo(&require("npm").map(NPM::new)?, ctx)? {
-        ctx.run_type()
-            .execute("sudo")
-            .arg(pnpm)
-            .args(&["update", "-g"])
-            .check_run()
-    } else {
-        ctx.run_type().execute(&pnpm).args(&["update", "-g"]).check_run()
-    }
-
-    #[cfg(not(target_os = "linux"))]
-    ctx.run_type().execute(&pnpm).args(&["update", "-g"]).check_run()
 }
 
 pub fn deno_upgrade(ctx: &ExecutionContext) -> Result<()> {
