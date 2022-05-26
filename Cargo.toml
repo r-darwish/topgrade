@@ -40,10 +40,10 @@ notify-rust = "4.5.0"
 
 [target.'cfg(unix)'.dependencies]
 nix = "0.24.1"
-self_update_crate = { version = "0.30.0", optional = true, package = "self_update", features = ["archive-tar", "compression-flate2", "rustls"] }
+self_update_crate = { version = "0.30.0", default-features = false, optional = true, package = "self_update", features = ["archive-tar", "compression-flate2", "rustls"] }
 
 [target.'cfg(windows)'.dependencies]
-self_update_crate = { version = "0.30.0", optional = true, package = "self_update", features = ["archive-zip", "compression-zip-deflate", "rustls"] }
+self_update_crate = { version = "0.30.0", default-features = false, optional = true, package = "self_update", features = ["archive-zip", "compression-zip-deflate", "rustls"] }
 winapi = "0.3.9"
 parselnk = "0.1.0"
 
