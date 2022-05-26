@@ -98,10 +98,7 @@ pub fn run_zi(base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
     let zsh = require("zsh")?;
     let zshrc = zshrc(base_dirs).require()?;
 
-    env::var("ZPFX")
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| base_dirs.home_dir().join(".zi"))
-        .require()?;
+    base_dirs.home_dir().join(".zi").require()?;
 
     print_separator("zi");
 
