@@ -41,6 +41,11 @@ fn list_containers(crt: &Path) -> Result<Vec<String>> {
             continue;
         }
 
+        if line.starts_with("vsc-") {
+            debug!("Skipping visual studio code dev container '{}'", line);
+            continue;
+        }
+
         debug!("Using container '{}'", line);
         retval.push(String::from(line));
     }
