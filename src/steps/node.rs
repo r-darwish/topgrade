@@ -10,6 +10,7 @@ use directories::BaseDirs;
 use log::debug;
 #[cfg(unix)]
 use nix::unistd::Uid;
+use semver::Version;
 
 use crate::executor::{CommandExt, RunType};
 use crate::terminal::print_separator;
@@ -32,23 +33,42 @@ impl NPM {
 
     #[cfg(target_os = "linux")]
     fn root(&self) -> Result<PathBuf> {
+        let version = self.version()?;
+        let args = if version < Version::new(8, 11, 0) {
+            ["root", "-g"]
+        } else {
+            ["root", "--location=global"]
+        };
         Command::new(&self.command)
-            .args(&["root", "-g"])
+            .args(args)
             .check_output()
             .map(|s| PathBuf::from(s.trim()))
     }
 
+    fn version(&self) -> Result<Version> {
+        let version_str = Command::new(&self.command)
+            .args(&["--version"])
+            .check_output()
+            .map(|s| s.trim().to_owned());
+        Version::parse(&version_str?).map_err(|err| err.into())
+    }
+
     fn upgrade(&self, run_type: RunType, use_sudo: bool) -> Result<()> {
         print_separator("Node Package Manager");
-
+        let version = self.version()?;
+        let args = if version < Version::new(8, 11, 0) {
+            ["update", "-g"]
+        } else {
+            ["update", "--location=global"]
+        };
         if use_sudo {
             run_type
                 .execute("sudo")
                 .arg(self.pnpm.as_ref().unwrap_or(&self.command))
-                .args(&["update", "-g"])
+                .args(args)
                 .check_run()?;
         } else {
-            run_type.execute(&self.command).args(&["update", "-g"]).check_run()?;
+            run_type.execute(&self.command).args(args).check_run()?;
         }
 
         Ok(())
