@@ -1853,6 +1853,7 @@ dependencies = [
  "regex",
  "rust-ini",
  "self_update",
+ "semver",
  "serde",
  "shellexpand",
  "strum 0.24.0",
