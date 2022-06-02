@@ -56,7 +56,7 @@ impl NPM {
     fn upgrade(&self, run_type: RunType, use_sudo: bool) -> Result<()> {
         print_separator("Node Package Manager");
         let version = self.version()?;
-        let args = if version < Version::new(8, 11, 0) {
+        let args = if version < Version::new(8, 11, 0) && self.pnpm.is_none() {
             ["update", "-g"]
         } else {
             ["update", "--location=global"]
