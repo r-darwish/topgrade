@@ -1,9 +1,12 @@
+use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
 use crate::executor::RunType;
 use crate::terminal::{print_separator, prompt_yesno};
 use crate::{error::TopgradeError, utils::require, Step};
 use anyhow::Result;
 use log::debug;
+use std::fs;
+use std::path::Path;
 use std::process::Command;
 
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
@@ -71,4 +74,26 @@ fn system_update_available() -> Result<bool> {
     let string_output = String::from_utf8(output.stderr)?;
     debug!("{:?}", string_output);
     Ok(!string_output.contains("No new software available"))
+}
+
+pub fn run_sparkle(ctx: &ExecutionContext) -> Result<()> {
+    let sparkle_binary = &"/Applications/sparkle.app/Contents/MacOS/sparkle";
+    if !Path::exists(Path::new(sparkle_binary)) {
+        return Err(SkipStep("Sparkle does not exist".to_string()).into());
+    }
+
+    print_separator("Sparkle");
+
+    for application in (fs::read_dir("/Applications")?).flatten() {
+        let sparkle_path = application.path().join("Contents/Frameworks/Sparkle.framework");
+        if sparkle_path.exists() {
+            let sparkle_path = sparkle_path.to_str().unwrap();
+            let mut command = ctx.run_type().execute(sparkle_binary);
+            command.args(&["bundle", "--check", "--application"]);
+            command.arg(application.path());
+            command.arg(sparkle_path);
+            command.spawn()?.wait()?;
+        }
+    }
+    Ok(())
 }

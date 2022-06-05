@@ -124,6 +124,7 @@ pub enum Step {
     Sheldon,
     Shell,
     Snap,
+    Sparkle,
     Spicetify,
     Stack,
     System,
