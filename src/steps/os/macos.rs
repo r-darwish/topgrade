@@ -1,12 +1,10 @@
-use crate::error::SkipStep;
 use crate::execution_context::ExecutionContext;
-use crate::executor::RunType;
+use crate::executor::{RunType, CommandExt};
 use crate::terminal::{print_separator, prompt_yesno};
 use crate::{error::TopgradeError, utils::require, Step};
 use anyhow::Result;
 use log::debug;
 use std::fs;
-use std::path::Path;
 use std::process::Command;
 
 pub fn run_macports(ctx: &ExecutionContext) -> Result<()> {
@@ -77,21 +75,16 @@ fn system_update_available() -> Result<bool> {
 }
 
 pub fn run_sparkle(ctx: &ExecutionContext) -> Result<()> {
-    let sparkle_binary = &"/Applications/sparkle.app/Contents/MacOS/sparkle";
-    if !Path::exists(Path::new(sparkle_binary)) {
-        return Err(SkipStep("Sparkle does not exist".to_string()).into());
-    }
-
+    let sparkle = require("sparkle")?;
+    
     print_separator("Sparkle");
 
     for application in (fs::read_dir("/Applications")?).flatten() {
-        let sparkle_path = application.path().join("Contents/Frameworks/Sparkle.framework");
-        if sparkle_path.exists() {
-            let sparkle_path = sparkle_path.to_str().unwrap();
-            let mut command = ctx.run_type().execute(sparkle_binary);
-            command.args(&["bundle", "--check", "--application"]);
+        let probe = Command::new(&sparkle).args(&["--probe", "--application"]).arg(application.path()).check_output();
+        if probe.is_ok() {
+            let mut command = ctx.run_type().execute(&sparkle);
+            command.args(&["bundle", "--check-immediately", "--application"]);
             command.arg(application.path());
-            command.arg(sparkle_path);
             command.spawn()?.wait()?;
         }
     }
