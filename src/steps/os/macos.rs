@@ -1,5 +1,5 @@
 use crate::execution_context::ExecutionContext;
-use crate::executor::{RunType, CommandExt};
+use crate::executor::{CommandExt, RunType};
 use crate::terminal::{print_separator, prompt_yesno};
 use crate::{error::TopgradeError, utils::require, Step};
 use anyhow::Result;
@@ -76,11 +76,14 @@ fn system_update_available() -> Result<bool> {
 
 pub fn run_sparkle(ctx: &ExecutionContext) -> Result<()> {
     let sparkle = require("sparkle")?;
-    
+
     print_separator("Sparkle");
 
     for application in (fs::read_dir("/Applications")?).flatten() {
-        let probe = Command::new(&sparkle).args(&["--probe", "--application"]).arg(application.path()).check_output();
+        let probe = Command::new(&sparkle)
+            .args(&["--probe", "--application"])
+            .arg(application.path())
+            .check_output();
         if probe.is_ok() {
             let mut command = ctx.run_type().execute(&sparkle);
             command.args(&["bundle", "--check-immediately", "--application"]);
