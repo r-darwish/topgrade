@@ -235,12 +235,14 @@ pub fn get_arch_package_manager(ctx: &ExecutionContext) -> Option<Box<dyn ArchPa
             .or_else(|| YayParu::get("yay", &pacman).map(box_package_manager))
             .or_else(|| Trizen::get().map(box_package_manager))
             .or_else(|| Pikaur::get().map(box_package_manager))
+            .or_else(|| Pamac::get().map(box_package_manager))
             .or_else(|| Pacman::get(ctx).map(box_package_manager)),
         config::ArchPackageManager::Trizen => Trizen::get().map(box_package_manager),
         config::ArchPackageManager::Paru => YayParu::get("paru", &pacman).map(box_package_manager),
         config::ArchPackageManager::Yay => YayParu::get("yay", &pacman).map(box_package_manager),
         config::ArchPackageManager::Pacman => Pacman::get(ctx).map(box_package_manager),
         config::ArchPackageManager::Pikaur => Pikaur::get().map(box_package_manager),
+        config::ArchPackageManager::Pamac => Pamac::get().map(box_package_manager),
     }
 }
 
