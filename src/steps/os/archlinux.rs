@@ -190,6 +190,38 @@ impl ArchPackageManager for Pikaur {
     }
 }
 
+pub struct Pamac {
+    executable: PathBuf,
+}
+
+impl Pamac {
+    fn get() -> Option<Self> {
+        Some(Self {
+            executable: which("pamac")?,
+        })
+    }
+}
+impl ArchPackageManager for Pamac {
+    fn upgrade(&self, ctx: &ExecutionContext) -> Result<()> {
+        let mut command = ctx.run_type().execute(&self.executable);
+
+        command
+            .arg("upgrade")
+            .args(ctx.config().pamac_arguments().split_whitespace())
+            .env("PATH", get_execution_path());
+
+        if ctx.config().yes(Step::System) {
+            command.arg("--no-confirm");
+        }
+
+        command.check_run()?;
+
+        // TODO: cleanup
+
+        Ok(())
+    }
+}
+
 fn box_package_manager<P: 'static + ArchPackageManager>(package_manager: P) -> Box<dyn ArchPackageManager> {
     Box::new(package_manager) as Box<dyn ArchPackageManager>
 }
