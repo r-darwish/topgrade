@@ -216,7 +216,14 @@ impl ArchPackageManager for Pamac {
 
         command.check_run()?;
 
-        // TODO: cleanup
+        if ctx.config().cleanup() {
+            let mut command = ctx.run_type().execute(&self.executable);
+            command.arg("clean");
+            if ctx.config().yes(Step::System) {
+                command.arg("--no-confirm");
+            }
+            command.check_run()?;
+        }
 
         Ok(())
     }
