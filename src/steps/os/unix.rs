@@ -349,15 +349,13 @@ pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Res
         .unwrap_or_else(|_| base_dirs.home_dir().join(".sdkman"))
         .join("etc")
         .join("config")
-        .require()
-        .map(|p| format!("{}", &p.display()))?;
+        .require()?;
 
     let sdkman_config = Ini::load_from_file(sdkman_config_path)?;
-    let selfupdate_enabled: String = sdkman_config
+    let selfupdate_enabled = sdkman_config
         .general_section()
         .get("sdkman_selfupdate_feature")
-        .unwrap_or("false")
-        .into();
+        .unwrap_or("false");
 
     if selfupdate_enabled == "true" {
         let cmd_selfupdate = format!("source {} && sdk selfupdate", &sdkman_init_path);
