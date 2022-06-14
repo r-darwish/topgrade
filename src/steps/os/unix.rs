@@ -8,6 +8,7 @@ use crate::utils::{require, PathExt};
 use crate::Step;
 use anyhow::Result;
 use directories::BaseDirs;
+use ini::Ini;
 use log::debug;
 use std::fs;
 use std::os::unix::fs::MetadataExt;
@@ -343,11 +344,28 @@ pub fn run_sdkman(base_dirs: &BaseDirs, cleanup: bool, run_type: RunType) -> Res
 
     print_separator("SDKMAN!");
 
-    let cmd_selfupdate = format!("source {} && sdk selfupdate", &sdkman_init_path);
-    run_type
-        .execute(&bash)
-        .args(&["-c", cmd_selfupdate.as_str()])
-        .check_run()?;
+    let sdkman_config_path = env::var("SDKMAN_DIR")
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| base_dirs.home_dir().join(".sdkman"))
+        .join("etc")
+        .join("config")
+        .require()
+        .map(|p| format!("{}", &p.display()))?;
+
+    let sdkman_config = Ini::load_from_file(sdkman_config_path)?;
+    let selfupdate_enabled: String = sdkman_config
+        .general_section()
+        .get("sdkman_selfupdate_feature")
+        .unwrap_or("false")
+        .into();
+
+    if selfupdate_enabled == "true" {
+        let cmd_selfupdate = format!("source {} && sdk selfupdate", &sdkman_init_path);
+        run_type
+            .execute(&bash)
+            .args(&["-c", cmd_selfupdate.as_str()])
+            .check_run()?;
+    }
 
     let cmd_update = format!("source {} && sdk update", &sdkman_init_path);
     run_type.execute(&bash).args(&["-c", cmd_update.as_str()]).check_run()?;
