@@ -32,6 +32,14 @@
 			"}"
 		]
 	},
+	"Require Binary": {
+		"scope": "rust",
+		"prefix": "req",
+		"description": "Require a binary to be installed",
+		"body": [
+			"let ${1:binary} = require(\"${1:binary}\")?;"
+		]
+	},
 	"macos": {
 		"scope": "rust",
 		"prefix": "macos",
