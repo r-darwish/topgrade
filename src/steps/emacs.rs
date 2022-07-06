@@ -67,7 +67,7 @@ impl Emacs {
         print_separator("Doom Emacs");
 
         let mut command = ctx.run_type().execute(doom);
-        command.args(&["-y", "upgrade"]);
+        command.args(&["upgrade"]);
 
         if ctx.config().yes(Step::Emacs) {
             command.arg("--force");
