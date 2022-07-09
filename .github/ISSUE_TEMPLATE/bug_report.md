@@ -15,6 +15,7 @@ labels: is:bug
 ## Additional Details
 - Which operating system or Linux distribution are you using?
 - How did you install Topgrade?
+- Which version are you running? <!-- Check with `topgrade -V` -->
 
 <!--
 Run `topgrade --dry-run` to see which commands Topgrade is running.
