@@ -78,13 +78,13 @@ impl Emacs {
 
     pub fn upgrade(&self, ctx: &ExecutionContext) -> Result<()> {
         let emacs = require("emacs")?;
-        let init_file = require_option(self.directory.as_ref(), String::from("Emacs directory does not exist"))?
-            .join("init.el")
-            .require()?;
-
         if let Some(doom) = &self.doom {
             return Emacs::update_doom(doom, ctx);
         }
+
+        let init_file = require_option(self.directory.as_ref(), String::from("Emacs directory does not exist"))?
+            .join("init.el")
+            .require()?;
 
         print_separator("Emacs");
 
