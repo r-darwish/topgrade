@@ -108,6 +108,7 @@ pub enum Step {
     Node,
     Opam,
     Pacstall,
+    Pkgfile,
     Pearl,
     Pipx,
     Pip3,
