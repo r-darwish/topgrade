@@ -534,6 +534,13 @@ pub fn flatpak_update(ctx: &ExecutionContext) -> Result<()> {
 
     Ok(())
 }
+pub fn run_pkgfile(sudo: Option<&PathBuf>, ctx: &ExecutionContext) -> Result<()> {
+    let sudo = require_option(sudo, String::from("sudo is not installed"))?;
+    let pkgfile = require("pkgfile")?;
+    print_separator("pkgfile");
+
+    ctx.run_type().execute(sudo).arg(pkgfile).arg("--update").check_run()
+}
 
 pub fn run_snap(sudo: Option<&PathBuf>, run_type: RunType) -> Result<()> {
     let sudo = require_option(sudo, String::from("sudo is not installed"))?;
