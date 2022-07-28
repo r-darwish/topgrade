@@ -17,6 +17,7 @@ To remedy this, _topgrade_ detects which tools you use and runs the appropriate 
 - Arch Linux: [AUR](https://aur.archlinux.org/packages/topgrade/) package.
 - NixOS: _topgrade_ package in `nixpkgs`.
 - macOS: [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/install.php).
+- FreeBSD: [Ports](https://www.freshports.org/sysutils/topgrade/).
 
 Other systems users can either use `cargo install` or use the compiled binaries from the release page.
 The compiled binaries contain a self-upgrading feature.
