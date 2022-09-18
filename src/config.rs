@@ -98,6 +98,7 @@ pub enum Step {
     GnomeShellExtensions,
     HomeManager,
     Jetpack,
+    Julia,
     Kakoune,
     Krew,
     Macports,
