@@ -1,8 +1,6 @@
 ![Topgrade](doc/topgrade.png)
 
-[![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
-[![AppVeyor](https://ci.appveyor.com/api/projects/status/github/r-darwish/topgrade?svg=true)](https://ci.appveyor.com/project/r-darwish/topgrade)
-![GitHub release](https://img.shields.io/github/release/r-darwish/topgrade.svg)
+![GitHub release](https://img.shields.io/github/release/topgrade-rs/topgrade.svg)
 [![Crates.io](https://img.shields.io/crates/v/topgrade.svg)](https://crates.io/crates/topgrade)
 [![AUR](https://img.shields.io/aur/version/topgrade.svg)](https://aur.archlinux.org/packages/topgrade/)
 ![homebrew](https://img.shields.io/homebrew/v/topgrade.svg)
@@ -12,6 +10,10 @@
 Keeping your system up to date usually involves invoking multiple package managers.
 This results in big, non-portable shell one-liners saved in your shell.
 To remedy this, _topgrade_ detects which tools you use and runs the appropriate commands to update them.
+
+## Why this repo ?
+
+This is a fork of the original project by r-darwish.
 
 ## Installation
 - Arch Linux: [AUR](https://aur.archlinux.org/packages/topgrade/) package.
