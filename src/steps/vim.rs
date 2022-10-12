@@ -9,7 +9,7 @@ use crate::{
 };
 use directories::BaseDirs;
 use log::debug;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::{
     io::{self, Write},
     process::Command,
@@ -40,18 +40,17 @@ fn nvimrc(base_dirs: &BaseDirs) -> Result<PathBuf> {
         .or_else(|_| base_dir.join("nvim/init.lua").require())
 }
 
-fn upgrade(vim: &Path, vimrc: &Path, ctx: &ExecutionContext) -> Result<()> {
+fn upgrade_script() -> Result<tempfile::NamedTempFile> {
     let mut tempfile = tempfile::NamedTempFile::new()?;
     tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
     debug!("Wrote vim script to {:?}", tempfile.path());
+    Ok(tempfile)
+}
 
-    let mut command = ctx.run_type().execute(&vim);
-
-    command
-        .args(&["-u"])
-        .arg(vimrc)
-        .args(&["-U", "NONE", "-V1", "-nNesS"])
-        .arg(tempfile.path());
+fn upgrade(command: &mut crate::executor::Executor, ctx: &ExecutionContext) -> Result<()> {
+    let mut tempfile = tempfile::NamedTempFile::new()?;
+    tempfile.write_all(UPGRADE_VIM.replace('\r', "").as_bytes())?;
+    debug!("Wrote vim script to {:?}", tempfile.path());
 
     if ctx.config().force_vim_plug_update() {
         command.env("TOPGRADE_FORCE_PLUGUPDATE", "true");
@@ -114,13 +113,22 @@ pub fn upgrade_vim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
 
     let output = Command::new(&vim).arg("--version").check_output()?;
     if !output.starts_with("VIM") {
-        return Err(SkipStep(String::from("vim binary might by actually nvim")).into());
+        return Err(SkipStep(String::from("vim binary might be actually nvim")).into());
     }
 
     let vimrc = vimrc(base_dirs)?;
 
     print_separator("Vim");
-    upgrade(&vim, &vimrc, ctx)
+
+    upgrade(
+        ctx.run_type()
+            .execute(&vim)
+            .args(&["-u"])
+            .arg(vimrc)
+            .args(&["-U", "NONE", "-V1", "-nNesS"])
+            .arg(upgrade_script()?.path()),
+        ctx,
+    )
 }
 
 pub fn upgrade_neovim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()> {
@@ -128,7 +136,16 @@ pub fn upgrade_neovim(base_dirs: &BaseDirs, ctx: &ExecutionContext) -> Result<()
     let nvimrc = nvimrc(base_dirs)?;
 
     print_separator("Neovim");
-    upgrade(&nvim, &nvimrc, ctx)
+
+    upgrade(
+        ctx.run_type()
+            .execute(&nvim)
+            .args(&["-u"])
+            .arg(nvimrc)
+            .args(&["--headless", "-V1", "-nS"])
+            .arg(upgrade_script()?.path()),
+        ctx,
+    )
 }
 
 pub fn run_voom(_base_dirs: &BaseDirs, run_type: RunType) -> Result<()> {
