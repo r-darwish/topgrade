@@ -361,6 +361,7 @@ fn run() -> Result<()> {
         runner.execute(Step::Flatpak, "Flatpak", || linux::flatpak_update(&ctx))?;
         runner.execute(Step::Snap, "snap", || linux::run_snap(sudo.as_ref(), run_type))?;
         runner.execute(Step::Pacstall, "pacstall", || linux::run_pacstall(&ctx))?;
+        runner.execute(Step::Pkgfile, "pkgfile", || linux::run_pkgfile(sudo.as_ref(), &ctx))?;
     }
 
     if let Some(commands) = config.commands() {
