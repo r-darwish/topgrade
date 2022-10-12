@@ -1,5 +1,11 @@
 ![Topgrade](doc/topgrade.png)
 
+# No longer maintained
+
+This repository is no longer maintained. An effort was made by the community to keep maintaining the project at https://github.com/topgrade-rs/topgrade. I am not involved in this effort nor do I know the people behind it, so I encourage you to inspect their work before using the fork.
+
+I'm not the owner of the packages that ship Topgrade for various package managers, so their maintainers will need to decide what to do. I'm only the owner of the package in creates.io, which will no longer be updated.
+
 [![Travis](https://api.travis-ci.org/r-darwish/topgrade.svg?branch=master)](https://travis-ci.org/r-darwish/topgrade)
 [![AppVeyor](https://ci.appveyor.com/api/projects/status/github/r-darwish/topgrade?svg=true)](https://ci.appveyor.com/project/r-darwish/topgrade)
 ![GitHub release](https://img.shields.io/github/release/r-darwish/topgrade.svg)
